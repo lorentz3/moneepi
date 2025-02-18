@@ -2,9 +2,9 @@ import 'package:myfinance2/model/transaction_type.dart';
 
 class Category {
   final int? id;
-  final String name;
+  String name;
   final TransactionType type;
-  final int sort;
+  int sort;
   final int? parentId;
   final double? monthThreshold;
   final double? yearThreshold;
@@ -15,7 +15,7 @@ class Category {
     return {
       'id': id, 
       'name': name, 
-      'type': type,
+      'type': type.name,
       'sort': sort, 
       'parentId': parentId, 
       'monthThreshold': monthThreshold,
@@ -26,7 +26,7 @@ class Category {
   Map<String, dynamic> toMapCreate() {
     return {
       'name': name,
-      'type': type,
+      'type': type.name,
       'sort': sort, 
       'parentId': parentId, 
       'monthThreshold': monthThreshold,
@@ -37,7 +37,7 @@ class Category {
   factory Category.fromJson(Map<String, dynamic> json) => Category(
     id: json['id'],
     name: json['name'], 
-    type: json['type'],
+    type: TransactionType.values.byName(json['type']),
     sort: json['sort'], 
     parentId: json['parentId'], 
     monthThreshold: json['monthThreshold'],

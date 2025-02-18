@@ -172,13 +172,13 @@ class AccountsPageState extends State<AccountsPage> {
   }
 
   Future<void> _showDeleteDialog(Account account) async {
-    // TODO check if categories exist for this account
-    bool categoryExists = false;
+    // TODO check if expenses exist for this account
+    bool expenseExists = false;
     return showDialog<void>(
       context: context,
       barrierDismissible: true, 
       builder: (BuildContext context) {
-        if (categoryExists) {
+        if (expenseExists) {
           return AlertDialog(
             content: const Text("The account cannot be deleted, there are Categories referencing this account.")
           );

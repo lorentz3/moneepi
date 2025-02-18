@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
+import 'package:myfinance2/pages/categories_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +45,7 @@ class _HomePageState extends State<HomePage> {
             onSelected: (value) => _handleClick(value, context),
             itemBuilder: (context) => [
               const PopupMenuItem(value: "Accounts", child: Text("Accounts")),
-              const PopupMenuItem(value: "Categories", child: Text("Categories")),
+              const PopupMenuItem(value: "ExpenseCategories", child: Text("Expense categories")),
             ],
           )
         ],
@@ -69,11 +71,11 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(builder: (context) => const AccountsPage())
         ).then((_) => setState(() {}));
         break;
-      case "Categories":
-        /*Navigator.push(
+      case "ExpenseCategories":
+        Navigator.push(
           context, 
-          MaterialPageRoute(builder: (context) => const ManageExamsPage())
-        ).then((_) => setState(() {}));*/
+          MaterialPageRoute(builder: (context) => const CategoriesPage(type: TransactionType.EXPENSE,))
+        ).then((_) => setState(() {}));
         break;
     }
   }

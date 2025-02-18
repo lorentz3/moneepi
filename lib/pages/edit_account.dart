@@ -59,11 +59,6 @@ class EditAccountPageState extends State<EditAccountPage> {
               ),
             ),
             ElevatedButton(
-              /*style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.all(16.0),
-                textStyle: const TextStyle(fontSize: 20),
-              ),*/
               onPressed: _accountName != null && _accountName != '' ? _saveAccount : null,
               child: const Text('Save'),
             ),

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/edit_account.dart';
+import 'package:myfinance2/pages/edit_category.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 
 class CategoriesPage extends StatefulWidget {
-  const CategoriesPage({super.key});
+  final TransactionType type;
+
+  const CategoriesPage({super.key, required this.type});
 
   @override
   State createState() => CategoriesPageState();
@@ -28,12 +32,12 @@ class CategoriesPageState extends State<CategoriesPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Categories"),
+          title: Text(_getTitle(widget.type)),
           actions: [
             PopupMenuButton(
               onSelected: (value) => _handleClick(value, context),
               itemBuilder: (context) => [
-                const PopupMenuItem(value: "AddDefaultAccounts", child: Text("Add default accounts")),
+                const PopupMenuItem(value: "AddDefaultCategories", child: Text("Add default categories")),
               ],
             )
           ],
@@ -57,7 +61,7 @@ class CategoriesPageState extends State<CategoriesPage> {
                   itemBuilder: (context, index) => Container(
                     width: width,
                     margin: const EdgeInsets.all(10),
-                    height: 30,
+                    height: 20,
                     child: Row(
                       children: [
                         Expanded(
@@ -72,7 +76,7 @@ class CategoriesPageState extends State<CategoriesPage> {
                               Navigator.push(
                                 context, 
                                 MaterialPageRoute(builder: (context) => EditCategoryPage(
-                                  account: elements[index],
+                                  category: elements[index],
                                   isNew: false,
                                   sort: _listSize! + 1
                                   )
@@ -95,9 +99,9 @@ class CategoriesPageState extends State<CategoriesPage> {
                   )
                 );
               }
-              return const Text("No accounts");
+              return const Text("No categories");
             }
-            return const Text("No accounts");
+            return const Text("No categories");
           }
         ),
         floatingActionButton: FloatingActionButton(
@@ -119,21 +123,22 @@ class CategoriesPageState extends State<CategoriesPage> {
   }
 
   _handleClick(String value, BuildContext context){
+    // TODO by widget.type
     switch(value) {
-      case "AddDefaultAccounts":
+      case "AddDefaultCategories":
         showDialog(
           context: context, 
           barrierDismissible: true,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: const Text('Adding default accounts'),
+              title: const Text('Adding default categories'),
               content: SingleChildScrollView(
                 child: ListBody(
                   children: <Widget>[
-                    const Text("This will add app default accounts to your accounts list, like:"),
-                    const Text(" - Bank account"),
-                    const Text(" - Cash"),
-                    const Text(" - Credit card"),
+                    const Text("This will add app default categories to your categories list, like:"),
+                    const Text(" - House"),
+                    const Text(" - Car"),
+                    const Text(" - ..."),
                     const Text("Continue?"),
                   ],
                 ),
@@ -147,7 +152,7 @@ class CategoriesPageState extends State<CategoriesPage> {
                   child: const Text('Continue'),
                   onPressed: () {
                     setState(() {
-                      AccountEntityService.insertDefaultAccounts();
+                      CategoryEntityService.insertDefaultCategories();
                       Navigator.pop(context);
                     });
                   },
@@ -169,14 +174,14 @@ class CategoriesPageState extends State<CategoriesPage> {
     return [];
   }
 
-  Future<void> _showDeleteDialog(Account account) async {
-    // TODO check if categories exist for this account
-    bool categoryExists = false;
+  Future<void> _showDeleteDialog(Category category) async {
+    // TODO check if expenses exist for this acategory
+    bool expenseExists = false;
     return showDialog<void>(
       context: context,
       barrierDismissible: true, 
       builder: (BuildContext context) {
-        if (categoryExists) {
+        if (expenseExists) {
           return AlertDialog(
             content: const Text("The account cannot be deleted, there are Categories referencing this account.")
           );
@@ -186,7 +191,7 @@ class CategoriesPageState extends State<CategoriesPage> {
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[
-                  Text("Delete the account '${account.name}'? You cannot revert this operation."),
+                  Text("Delete the account '${category.name}'? You cannot revert this operation."),
                 ],
               ),
             ),
@@ -199,7 +204,7 @@ class CategoriesPageState extends State<CategoriesPage> {
                 child: const Text('Delete account'),
                 onPressed: () {
                   setState(() {
-                    AccountEntityService.deleteAccount(account.id!);
+                    AccountEntityService.deleteAccount(category.id!);
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text("Account deleted."),
                     ));
@@ -212,5 +217,15 @@ class CategoriesPageState extends State<CategoriesPage> {
         }
       },
     );
+  }
+  
+  String _getTitle(TransactionType type) {
+    switch(type) {
+      case TransactionType.EXPENSE:
+        return "Expense categories";
+      case TransactionType.INCOME:
+        return "Income categories";
+    }
+
   }
 } 

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:myfinance2/model/account.dart';
-import 'package:myfinance2/services/account_entity_service.dart';
+import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/services/category_entity_service.dart';
 
 class EditCategoryPage extends StatefulWidget {
-  final Account account;
+  final Category category;
   final bool? isNew;
   final int sort;
 
-  const EditCategoryPage({super.key, required this.account, required this.isNew, required this.sort});
+  const EditCategoryPage({super.key, required this.category, required this.isNew, required this.sort});
 
 
   @override
@@ -15,15 +15,15 @@ class EditCategoryPage extends StatefulWidget {
 }
 
 class EditCategoryPageState extends State<EditCategoryPage> {
-  String? _accountName;
+  String? _categoryName;
 
   TextEditingController nameController = TextEditingController();  
 
   @override
   void initState() {
     super.initState();
-    _accountName = widget.account.name;
-    nameController.text = widget.account.name;
+    _categoryName = widget.category.name;
+    nameController.text = widget.category.name;
   }
 
   @override
@@ -36,35 +36,46 @@ class EditCategoryPageState extends State<EditCategoryPage> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: widget.isNew! ? const Text("Create new account") : const Text("Edit account")),
+        appBar: AppBar(title: widget.isNew! ? const Text("Create new category") : const Text("Edit category")),
         body: Column(
           children: [
             Container(
               margin: const EdgeInsets.all(20),
               child: TextField(
                 decoration: InputDecoration(
-                  hintText: 'Account name'
+                  hintText: 'Category name'
                 ),
                 controller: nameController,
                 keyboardType: TextInputType.text,
                 onChanged: (value) {
                   setState(() {
                     if(value != ''){
-                      _accountName = value;
+                      _categoryName = value;
                     } else {
-                      _accountName = null;
+                      _categoryName = null;
                     }
                   });
                 },
               ),
             ),
+            /*Row(
+              children: [
+                const Text("Monthly threshold"),
+                TextField(
+                  keyboardType: TextInputType.number,
+                )
+              ],
+            ),
+            Row(
+              children: [
+                const Text("Annual threshold"),
+                TextField(
+                  keyboardType: TextInputType.number,
+                )
+              ],
+            ),*/
             ElevatedButton(
-              /*style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.all(16.0),
-                textStyle: const TextStyle(fontSize: 20),
-              ),*/
-              onPressed: _accountName != null && _accountName != '' ? _saveAccount : null,
+              onPressed: _categoryName != null && _categoryName != '' ? _saveCategory : null,
               child: const Text('Save'),
             ),
           ],
@@ -73,14 +84,14 @@ class EditCategoryPageState extends State<EditCategoryPage> {
     );
   }
 
-  _saveAccount() {
-    Account account = widget.account;
-    account.name = _accountName!;
-    account.sort = widget.sort;
+  _saveCategory() {
+    Category category = widget.category;
+    category.name = _categoryName!;
+    category.sort = widget.sort;
     if(widget.isNew!){
-      AccountEntityService.insertAccount(account);
+      CategoryEntityService.insertCategory(category);
     } else {
-      AccountEntityService.updateAccount(account); // TODO
+      CategoryEntityService.updateCategory(category);
     }
     Navigator.pop(context);
   }
