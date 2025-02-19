@@ -5,20 +5,25 @@ String insertDefaultAccountsQuery = """
         ('💳 Credit card', 0);
       """;
 
-String insertDefaultCategoriesQuery = """  
+String insertDefaultExpenseCategoriesQuery = """  
         INSERT INTO Categories (name, type) VALUES
         ('🏠 House', 'EXPENSE'),
         ('🚘 Car', 'EXPENSE'),
-        ('🏦 Food', 'EXPENSE'),
-        ('🏦 Clothes', 'EXPENSE'),
-        ('🏦 Health', 'EXPENSE'),
-        ('🏦 Personal care', 'EXPENSE'),
-        ('🏦 Gym', 'EXPENSE'),
-        ('🏦 Cellphone', 'EXPENSE'),
-        ('🏦 Leisure', 'EXPENSE'),
-        ('🏦 Vacation', 'EXPENSE'),
-        ('🏦 Insurance', 'EXPENSE'),
-        ('🏦 Tech', 'EXPENSE'),
-        ('🏦 Education', 'EXPENSE'),
-        ('🏦 Gifts', 'EXPENSE');
+        ('🍝 Food', 'EXPENSE'),
+        ('👖 Clothes', 'EXPENSE'),
+        ('💊 Health', 'EXPENSE'),
+        ('🛁 Personal care', 'EXPENSE'),
+        ('🏋️ Gym', 'EXPENSE'),
+        ('📱 Cellphone', 'EXPENSE'),
+        ('🎱 Leisure', 'EXPENSE'),
+        ('✈️ Vacation', 'EXPENSE'),
+        ('💻 Tech', 'EXPENSE'),
+        ('📗 Education', 'EXPENSE'),
+        ('🎁 Gifts', 'EXPENSE');
+      """;
+
+String insertDefaultIncomeCategoriesQuery = """  
+        INSERT INTO Categories (name, type) VALUES
+        ('🏭 Salary', 'INCOME'),
+        ('💰 Reimbursements', 'INCOME');
       """;

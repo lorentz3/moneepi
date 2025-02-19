@@ -6,8 +6,8 @@ class Category {
   final TransactionType type;
   int sort;
   final int? parentId;
-  final double? monthThreshold;
-  final double? yearThreshold;
+  double? monthThreshold;
+  double? yearThreshold;
 
   Category({this.id, required this.name, required this.type, required this.sort, this.parentId, this.monthThreshold, this.yearThreshold});
 

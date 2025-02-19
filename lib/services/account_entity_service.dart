@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:myfinance2/database/database_defaults.dart';
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/model/account.dart';
@@ -12,7 +11,6 @@ class AccountEntityService {
     if(maps.isEmpty){
       return null;
     }
-    debugPrint("loaded: accounts=$maps");
     return List.generate(maps.length, (index) => Account.fromJson(maps[index]));
   } 
 
@@ -42,7 +40,6 @@ class AccountEntityService {
   
   static void insertDefaultAccounts() async {
     final db = await DatabaseHelper.getDb();
-    debugPrint('Inserting default accounts');
     await db.execute(insertDefaultAccountsQuery);
   }
 }

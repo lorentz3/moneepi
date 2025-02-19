@@ -1,19 +1,21 @@
-import 'package:flutter/material.dart';
 import 'package:myfinance2/database/database_defaults.dart';
 import 'package:myfinance2/database/database_helper.dart';
-import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/model/transaction_type.dart';
 
 class CategoryEntityService {
   static const String _tableName = "Categories";
   
-  static Future<List<Category>?> getAllCategories() async {
+  static Future<List<Category>?> getAllCategories(TransactionType type) async {
     final db = await DatabaseHelper.getDb();
-    final List<Map<String, dynamic>> maps = await db.query(_tableName);
+    final List<Map<String, dynamic>> maps =  await db.query(
+      _tableName,
+      where: 'type = ?',
+      whereArgs: [type.toString().split('.').last],
+    );
     if(maps.isEmpty){
       return null;
     }
-    debugPrint("loaded: categories=$maps");
     return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
   } 
 
@@ -41,9 +43,13 @@ class CategoryEntityService {
     );
   }
   
-  static void insertDefaultCategories() async {
+  static void insertDefaultExpenseCategories() async {
     final db = await DatabaseHelper.getDb();
-    debugPrint('Inserting default categories');
-    await db.execute(insertDefaultCategoriesQuery);
+    await db.execute(insertDefaultExpenseCategoriesQuery);
+  }
+  
+  static void insertDefaultIncomeCategories() async {
+    final db = await DatabaseHelper.getDb();
+    await db.execute(insertDefaultIncomeCategoriesQuery);
   }
 }

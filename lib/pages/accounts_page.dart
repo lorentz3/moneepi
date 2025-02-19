@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/model/account.dart';
-import 'package:myfinance2/pages/edit_account.dart';
+import 'package:myfinance2/pages/account_form_page.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
+import 'package:myfinance2/services/transaction_entity_service.dart';
 
 class AccountsPage extends StatefulWidget {
   const AccountsPage({super.key});
@@ -73,10 +74,9 @@ class AccountsPageState extends State<AccountsPage> {
                             onPressed: () {
                               Navigator.push(
                                 context, 
-                                MaterialPageRoute(builder: (context) => EditAccountPage(
+                                MaterialPageRoute(builder: (context) => AccountFormPage(
                                   account: elements[index],
                                   isNew: false,
-                                  sort: _listSize! + 1
                                   )
                                 )
                               ).then((_) => setState(() {}));
@@ -106,10 +106,9 @@ class AccountsPageState extends State<AccountsPage> {
           onPressed: () {
             Navigator.push(
               context, 
-              MaterialPageRoute(builder: (context) => EditAccountPage(
-                account: Account(id: 0, name: "", balance: 0, sort: _listSize! + 1),
+              MaterialPageRoute(builder: (context) => AccountFormPage(
+                account: Account(id: 0, name: "", balance: 0, sort: 0),
                 isNew: true,
-                sort: _listSize! + 1,
               ))
             ).then((_) => setState(() {}));
           },
@@ -172,13 +171,12 @@ class AccountsPageState extends State<AccountsPage> {
   }
 
   Future<void> _showDeleteDialog(Account account) async {
-    // TODO check if expenses exist for this account
-    bool expenseExists = false;
+    bool transactionExists = await TransactionEntityService.transactionExistsByAccountId(account.id!);
     return showDialog<void>(
       context: context,
       barrierDismissible: true, 
       builder: (BuildContext context) {
-        if (expenseExists) {
+        if (transactionExists) {
           return AlertDialog(
             content: const Text("The account cannot be deleted, there are Categories referencing this account.")
           );
