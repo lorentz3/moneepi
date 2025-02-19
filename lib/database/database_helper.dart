@@ -4,7 +4,7 @@ import 'package:path/path.dart';
 import 'database_migrations.dart';
 
 class DatabaseHelper {
-  static const int _version = 1;
+  static const int _version = 2;
   static const String _dbName = "myHealth.db";
 
   static Future<Database> getDb() async {
@@ -19,16 +19,20 @@ class DatabaseHelper {
     debugPrint('Database Version onCreate: $version');
     int maxVersion = migrationScripts.length;
     for (int i = 0; i < maxVersion; i++) {
-      debugPrint('Executing migration script number $i');
-      await db.execute(migrationScripts[i]!);
+      debugPrint('Executing migration script for version $i');
+      for (String script in migrationScripts[i]!) {
+        await db.execute(script);
+      }
     }
   }
 
   static void _onUpgrade(Database db, int oldVersion, int newVersion) async {
     debugPrint('Database Version onUpgrade: OLD: $oldVersion NEW: $newVersion');
     for (int version = oldVersion; version < newVersion; version++) {
-      debugPrint('Executing migration script number $version');
-      await db.execute(migrationScripts[version]!);
+      debugPrint('Executing migration script for version $version');
+      for (String script in migrationScripts[version]!) {
+        await db.execute(script);
+      }
     }
   }
 }

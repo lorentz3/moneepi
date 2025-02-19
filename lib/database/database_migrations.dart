@@ -1,12 +1,13 @@
-Map<int, String> migrationScripts = {
-    0: """  
+Map<int, List<String>> migrationScripts = {
+    0: [
+      """  
         CREATE TABLE Accounts (
           id INTEGER PRIMARY KEY,
           name TEXT NOT NULL,
           balance REAL NOT NULL DEFAULT 0,
           sort INTEGER NOT NULL DEFAULT 0);
       """,
-    1: """
+      """
         CREATE TABLE Categories (
           id INTEGER PRIMARY KEY,
           name TEXT NOT NULL,
@@ -17,7 +18,7 @@ Map<int, String> migrationScripts = {
           yearThreshold REAL,
           FOREIGN KEY(parentId) REFERENCES Categories(id));
       """,
-    2: """  
+      """  
         CREATE TABLE Transactions (
           id INTEGER PRIMARY KEY,
           type TEXT CHECK(type IN ('EXPENSE','INCOME') ) NOT NULL DEFAULT 'EXPENSE',
@@ -26,8 +27,19 @@ Map<int, String> migrationScripts = {
           categoryId INTEGER NOT NULL,
           amount REAL NOT NULL,
           notes TEXT,
-          reimbursed REAL NOT NULL DEFAULT 0,
           FOREIGN KEY(accountId) REFERENCES Accounts(id),
           FOREIGN KEY(categoryId) REFERENCES Categories(id));
       """
+    ],
+    1: [
+      """  
+        CREATE TABLE MonthlyCategoryTransactionSummaries (
+          categoryId INTEGER NOT NULL,
+          month INTEGER NOT NULL,
+          year INTEGER NOT NULL,
+          amount REAL NOT NULL,
+          PRIMARY KEY(categoryId, month, year),
+          FOREIGN KEY(categoryId) REFERENCES Categories(id));
+      """
+    ]
   };

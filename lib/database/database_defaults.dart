@@ -25,5 +25,5 @@ String insertDefaultExpenseCategoriesQuery = """
 String insertDefaultIncomeCategoriesQuery = """  
         INSERT INTO Categories (name, type) VALUES
         ('🏭 Salary', 'INCOME'),
-        ('💰 Reimbursements', 'INCOME');
+        ('💰 Refund', 'INCOME');
       """;

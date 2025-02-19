@@ -199,7 +199,7 @@ class CategoriesPageState extends State<CategoriesPage> {
                     children: <Widget>[
                       const Text("This will add app default categories to your income categories list, like:"),
                       const Text(" - Salary"),
-                      const Text(" - Reimbursement"),
+                      const Text(" - Refunds"),
                       const Text("Continue?"),
                     ],
                   ),

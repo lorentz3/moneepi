@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/model/transaction.dart';
-import 'package:myfinance2/model/transaction_dto.dart';
+import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
@@ -164,11 +164,11 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Text(
                           DateFormat('EEE ').format(DateTime.parse(entry.key)),
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                         Text(
                           DateFormat('dd MMM yyyy').format(DateTime.parse(entry.key)),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ]
                     )

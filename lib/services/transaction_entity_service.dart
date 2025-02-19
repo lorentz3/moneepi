@@ -1,6 +1,7 @@
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/model/transaction.dart';
-import 'package:myfinance2/model/transaction_dto.dart';
+import 'package:myfinance2/dto/transaction_dto.dart';
+import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 
 class TransactionEntityService {
   static const String _tableName = "Transactions";
@@ -11,7 +12,7 @@ class TransactionEntityService {
     final int endTimestamp = DateTime(DateTime.now().year, month + 1, 1).millisecondsSinceEpoch;
 
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
-      SELECT t.id, t.type, t.timestamp, a.name AS accountName, c.name AS categoryName, t.amount, t.reimbursed
+      SELECT t.id, t.type, t.timestamp, a.name AS accountName, c.name AS categoryName, t.amount
       FROM Transactions t 
       LEFT JOIN Accounts a ON t.accountId = a.id
       LEFT JOIN Categories c ON t.categoryId = c.id
@@ -51,6 +52,7 @@ class TransactionEntityService {
       where: "id = ?",
       whereArgs: [transaction.id]
     );
+    MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
   }
 
   static void insertTransaction(Transaction transaction) async {
@@ -58,14 +60,30 @@ class TransactionEntityService {
     await db.insert(_tableName, 
       transaction.toMapCreate()
     );
+    MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
   }
 
-  static void deleteTransaction(int transactionId) async {
+  static void deleteTransaction(Transaction transaction) async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName, 
       where: "id = ?",
-      whereArgs: [transactionId]
+      whereArgs: [transaction.id]
     );
+    MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
   }
   
+  static Future<List<Transaction>?> getAllByCategoryIdAndMonthAndYear(int categoryId, int month, int year) async {
+    final db = await DatabaseHelper.getDb();
+    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+    final List<Map<String, dynamic>> maps =  await db.query(
+      _tableName,
+      where: 'timestamp >= ? AND timestamp < ? AND categoryId = ?',
+      whereArgs: [startTimestamp, endTimestamp, categoryId],
+    );
+    if(maps.isEmpty){
+      return null;
+    }
+    return List.generate(maps.length, (index) => Transaction.fromJson(maps[index]));
+  } 
 }
