@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
+import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
+import 'package:month_year_picker/month_year_picker.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +28,9 @@ class FinanceApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      localizationsDelegates: [
+        MonthYearPickerLocalizations.delegate,
+      ],
       home: const HomePage(),
     );
   }
@@ -37,22 +44,53 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late DateTime selectedDate;
   List<TransactionDto> transactions = [];
-  bool isLoading = true;
+  List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = []; 
+  bool isTransactionListLoading = true;
+  bool isSummaryLoading = true;
+  double _totalAmount = 0.0;
 
   @override
   void initState() {
     super.initState();
+    selectedDate = DateTime.now();
+    _loadAllData();
+  }
+
+  _loadAllData() {
+    _loadSummary();
     _loadTransactions();
   }
 
   Future<void> _loadTransactions() async {
+    setState(() {
+      isTransactionListLoading = true;
+    });
     transactions = await TransactionEntityService.getMonthTransactions(
-      DateTime.now().month,
+      selectedDate.month,
     );
     setState(() {
-      isLoading = false;
+      isTransactionListLoading = false;
     });
+  }
+
+  Future<void> _loadSummary() async {
+    setState(() {
+      isSummaryLoading = true;
+    });
+    monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(selectedDate.month, selectedDate.year);
+    _totalAmount = monthCategoriesSummary.fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
+    setState(() {
+      isSummaryLoading = false;
+    });
+  }
+
+  void _changeMonth(int delta) {
+    setState(() {
+      selectedDate = DateTime(selectedDate.year, selectedDate.month + delta, 1);
+    });
+    _loadAllData();
   }
 
   @override
@@ -61,7 +99,7 @@ class _HomePageState extends State<HomePage> {
     //if (mounted) width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MyFinance'),
+        title: _getMonthSelectorWidget(),
         actions: [
           PopupMenuButton(
             onSelected: (value) => _handleClick(value, context),
@@ -139,73 +177,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   _getMainBody() {
-    final groupedTransactions = _groupTransactionsByDate();
-    return isLoading
-        ? Center(child: CircularProgressIndicator())
-        : transactions.isEmpty
-        ? Center(
-          child: Text(
-            'Welcome to your new personal finance app! Start by configuring your accounts and categories, and then add your transactions!',
-            style: TextStyle(fontSize: 18),
-            textAlign: TextAlign.center,
-          ),
-        )
-        : ListView(
-            children: groupedTransactions.entries.map((entry) {
-              // int index = groupedTransactions.keys.toList().indexOf(entry.key);
-              Color groupBgColor = Colors.blue.shade100;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    color: groupBgColor,
-                    padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                    child: Row(
-                      children: [
-                        Text(
-                          DateFormat('EEE ').format(DateTime.parse(entry.key)),
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          DateFormat('dd MMM yyyy').format(DateTime.parse(entry.key)),
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ]
-                    )
-                  ),
-                  ...entry.value.asMap().entries.map((e) {
-                    int itemIndex = e.key;
-                    TransactionDto transaction = e.value;
-                    Color rowColor = itemIndex % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                    return Container(
-                      color: rowColor,
-                      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(flex: 15, child: Text(transaction.categoryName, textAlign: TextAlign.left)),
-                          Expanded(
-                            flex: 10, 
-                            child: Text(
-                              transaction.type == TransactionType.EXPENSE
-                                  ? ' - € ${transaction.amount.toStringAsFixed(2)} '
-                                  : ' + € ${transaction.amount.toStringAsFixed(2)} ',
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                color: transaction.type == TransactionType.EXPENSE ? const Color.fromARGB(255, 146, 31, 23) : const Color.fromARGB(255, 19, 65, 20),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Expanded(flex: 3, child: Text(transaction.accountName.split(" ")[0], textAlign: TextAlign.center)),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              );
-            }).toList(),
-          );
+    return Column (
+      children: [
+        _getSummaryGraphWidget(),
+        Expanded(child: _getTransactionsWidget()),
+      ],
+    );
+    
   }
 
   Map<String, List<TransactionDto>> _groupTransactionsByDate() {
@@ -218,5 +196,244 @@ class _HomePageState extends State<HomePage> {
       groupedTransactions[dateKey]!.add(transaction);
     }
     return groupedTransactions;
+  }
+  
+  _getMonthSelectorWidget() {
+    return Padding(
+      padding: const EdgeInsets.all(2.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          IconButton(
+            icon: Icon(Icons.chevron_left),
+            onPressed: () => _changeMonth(-1),
+          ),
+          GestureDetector(
+            onTap: _pickMonthYear,
+            child: Text(
+              DateFormat(' MMM yyyy ').format(selectedDate),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.chevron_right),
+            onPressed: () => _changeMonth(1),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickMonthYear() async {
+    final DateTime? picked = await showMonthYearPicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2200),
+    );
+    if (picked == null) {
+      return;
+    }
+    setState(() {
+      selectedDate = DateTime(picked.year, picked.month, 1);
+    });
+    _loadAllData();
+  }
+
+  _getSummaryGraphWidget() {
+    return isSummaryLoading 
+      ? Center(child: CircularProgressIndicator()) : 
+      monthCategoriesSummary.isEmpty ? const SizedBox(height: 10,) : 
+      Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: SizedBox(
+                    height: 200,
+                    width: 200,
+                    child: PieChart(
+                      PieChartData(
+                        sections: _generatePieSections(monthCategoriesSummary),
+                        centerSpaceRadius: 0,
+                        sectionsSpace: 2,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: SizedBox(
+                    height: 200, 
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: monthCategoriesSummary
+                            .where((t) => (t.monthThreshold ?? 0) > 0) 
+                            .map((t) => _buildProgressIndicator(t))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                ),
+                /*Expanded(
+                  flex: 2,
+                  child: Column(
+                    children: monthCategoriesSummary.map((t) => _buildProgressIndicator(t)).toList(),
+                  ),
+                ),*/
+              ],
+            ),
+          ],
+        ),
+      );
+  }
+
+  List<PieChartSectionData> _generatePieSections(List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary) {
+    final totalAmount = monthCategoriesSummary.fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
+
+    return monthCategoriesSummary.asMap().entries.map((entry) {
+      var index = entry.key;
+      var e = entry.value;
+      final percentage = ((e.amount ?? 0.0) / totalAmount) * 100;
+      return PieChartSectionData(
+        color: _getColor(index), // Colori dinamici
+        value: e.amount,
+        title: percentage > 3 ? e.categoryName.split(" ")[0] : '',
+        titlePositionPercentageOffset: 0.85,
+        radius: 90,
+        titleStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+      );
+    }).toList();
+  }
+
+  Color _getColor(int index) {
+    final colors = [Colors.blue[900], Colors.purple[900], Colors.green[900], Colors.brown[700], Colors.red[900],
+      Colors.orange[900], Colors.yellow[900], Colors.lime[900], Colors.pink[900],
+      Colors.cyan[900], Colors.indigo[900], Colors.teal[900],];
+      return colors[index % colors.length]!;
+  }
+
+  Widget _buildProgressIndicator(MonthlyCategoryTransactionSummaryDto summary) {
+    double spent = summary.amount ?? 0.0;
+    double threshold = summary.monthThreshold ?? 0.0;
+    double percentage = (threshold > 0) ? (spent / threshold).clamp(0.0, 1.5) : 0.0;
+    Color progressColor = (spent > threshold) ? Colors.red : Colors.green;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${summary.categoryName}',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          Stack(
+            children: [
+              LinearProgressIndicator(
+                value: percentage,
+                backgroundColor: Colors.grey.shade300,
+                valueColor: AlwaysStoppedAnimation(progressColor),
+                minHeight: 10,
+              ),
+              Positioned.fill(
+                child: Center(
+                  child: Text(
+                    '${(percentage * 100).toStringAsFixed(0)}%',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  _getTransactionsWidget() {
+    final groupedTransactions = _groupTransactionsByDate();
+    Color groupBgColor = Colors.blueGrey.shade100;
+    return isTransactionListLoading
+      ? Center(child: CircularProgressIndicator())
+      : transactions.isEmpty
+      ? Center(
+        child: Text(
+          'Still no transactions for this month!',
+          style: TextStyle(fontSize: 18),
+          textAlign: TextAlign.center,
+        ),
+      )
+      : ListView(
+        children: groupedTransactions.entries.map((entry) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                color: groupBgColor,
+                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                child: Row(
+                  children: [
+                    Text(
+                      DateFormat('EEE ').format(DateTime.parse(entry.key)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                    ),
+                    Text(
+                      DateFormat('dd MMM yyyy').format(DateTime.parse(entry.key)),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ]
+                )
+              ),
+              ...entry.value.asMap().entries.map((e) {
+                int itemIndex = e.key;
+                TransactionDto transaction = e.value;
+                Color rowColor = itemIndex % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                return Container(
+                  color: rowColor,
+                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        flex: 15, 
+                        child: Text(
+                          transaction.categoryName, 
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        )
+                      ),
+                      Expanded(
+                        flex: 10, 
+                        child: Text(
+                          transaction.type == TransactionType.EXPENSE
+                              ? ' - € ${transaction.amount.toStringAsFixed(2)} '
+                              : ' + € ${transaction.amount.toStringAsFixed(2)} ',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            color: transaction.type == TransactionType.EXPENSE ? const Color.fromARGB(255, 206, 35, 23) : const Color.fromARGB(255, 33, 122, 34),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3, 
+                        child: Text(
+                          transaction.accountName.split(" ")[0], 
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        )
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          );
+        }).toList(),
+      );
   }
 }
