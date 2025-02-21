@@ -52,4 +52,17 @@ class CategoryEntityService {
     final db = await DatabaseHelper.getDb();
     await db.execute(insertDefaultIncomeCategoriesQuery);
   }
+
+  static getAllCategoriesWithMonthlyThreshold(TransactionType type) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps =  await db.query(
+      _tableName,
+      where: 'type = ? AND monthThreshold IS NOT NULL',
+      whereArgs: [type.toString().split('.').last],
+    );
+    if(maps.isEmpty){
+      return [];
+    }
+    return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
+  }
 }

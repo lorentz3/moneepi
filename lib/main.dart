@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
+import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
+import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:month_year_picker/month_year_picker.dart';
@@ -49,7 +51,7 @@ class _HomePageState extends State<HomePage> {
   List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = []; 
   bool isTransactionListLoading = true;
   bool isSummaryLoading = true;
-  double _totalAmount = 0.0;
+  bool _monthThresholdsVisible = false;
 
   @override
   void initState() {
@@ -79,8 +81,19 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       isSummaryLoading = true;
     });
+    List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(TransactionType.EXPENSE);
     monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(selectedDate.month, selectedDate.year);
-    _totalAmount = monthCategoriesSummary.fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
+    _monthThresholdsVisible = monthCategoriesSummary.any((element) => element.monthThreshold != null);
+    for (Category c in categoriesWithThreshold) {
+      if (!monthCategoriesSummary.any((element) => element.categoryId == c.id)) {
+        monthCategoriesSummary.add(MonthlyCategoryTransactionSummaryDto(
+          categoryId: c.id!, 
+          categoryName: c.name, 
+          month: selectedDate.month, 
+          year: selectedDate.year,
+          monthThreshold: c.monthThreshold));
+      }
+    }
     setState(() {
       isSummaryLoading = false;
     });
@@ -137,7 +150,7 @@ class _HomePageState extends State<HomePage> {
                   ),
             ),
           ).then((_) => setState(() {
-            _loadTransactions();
+            _loadAllData();
           }));
         },
         child: const Icon(Icons.add),
@@ -151,7 +164,10 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const AccountsPage()),
-        ).then((_) => setState(() {}));
+        ).then((_) => setState(() {
+            _loadAllData();
+          })
+        );
         break;
       case "ExpenseCategories":
         Navigator.push(
@@ -161,7 +177,10 @@ class _HomePageState extends State<HomePage> {
                 (context) =>
                     const CategoriesPage(type: TransactionType.EXPENSE),
           ),
-        ).then((_) => setState(() {}));
+        ).then((_) => setState(() {
+            _loadAllData();
+          })
+        );
         break;
       case "IncomeCategories":
         Navigator.push(
@@ -171,7 +190,10 @@ class _HomePageState extends State<HomePage> {
                 (context) =>
                     const CategoriesPage(type: TransactionType.INCOME),
           ),
-        ).then((_) => setState(() {}));
+        ).then((_) => setState(() {
+            _loadAllData();
+          })
+        );
         break;
     }
   }
@@ -183,7 +205,6 @@ class _HomePageState extends State<HomePage> {
         Expanded(child: _getTransactionsWidget()),
       ],
     );
-    
   }
 
   Map<String, List<TransactionDto>> _groupTransactionsByDate() {
@@ -240,12 +261,14 @@ class _HomePageState extends State<HomePage> {
     _loadAllData();
   }
 
+  final double _pieHeight = 180;
+
   _getSummaryGraphWidget() {
     return isSummaryLoading 
       ? Center(child: CircularProgressIndicator()) : 
       monthCategoriesSummary.isEmpty ? const SizedBox(height: 10,) : 
       Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(4),
         child: Column(
           children: [
             Row(
@@ -253,37 +276,31 @@ class _HomePageState extends State<HomePage> {
                 Expanded(
                   flex: 2,
                   child: SizedBox(
-                    height: 200,
-                    width: 200,
+                    height: _pieHeight,
                     child: PieChart(
                       PieChartData(
                         sections: _generatePieSections(monthCategoriesSummary),
                         centerSpaceRadius: 0,
-                        sectionsSpace: 2,
+                        sectionsSpace: 1,
+                        startDegreeOffset: -90
                       ),
                     ),
                   ),
                 ),
-                Expanded(
+                _monthThresholdsVisible ? Expanded(
                   flex: 2,
                   child: SizedBox(
-                    height: 200, 
+                    height: _pieHeight, 
                     child: SingleChildScrollView(
                       child: Column(
                         children: monthCategoriesSummary
-                            .where((t) => (t.monthThreshold ?? 0) > 0) 
+                            .where((t) => t.monthThreshold != null) 
                             .map((t) => _buildProgressIndicator(t))
                             .toList(),
                       ),
                     ),
                   ),
-                ),
-                /*Expanded(
-                  flex: 2,
-                  child: Column(
-                    children: monthCategoriesSummary.map((t) => _buildProgressIndicator(t)).toList(),
-                  ),
-                ),*/
+                ) : SizedBox(width: 1,),
               ],
             ),
           ],
@@ -303,7 +320,7 @@ class _HomePageState extends State<HomePage> {
         value: e.amount,
         title: percentage > 3 ? e.categoryName.split(" ")[0] : '',
         titlePositionPercentageOffset: 0.85,
-        radius: 90,
+        radius: 85,
         titleStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
       );
     }).toList();
@@ -319,35 +336,58 @@ class _HomePageState extends State<HomePage> {
   Widget _buildProgressIndicator(MonthlyCategoryTransactionSummaryDto summary) {
     double spent = summary.amount ?? 0.0;
     double threshold = summary.monthThreshold ?? 0.0;
-    double percentage = (threshold > 0) ? (spent / threshold).clamp(0.0, 1.5) : 0.0;
-    Color progressColor = (spent > threshold) ? Colors.red : Colors.green;
+    double percentage = 100 * ((threshold > 0) ? (spent / threshold).clamp(0.0, 1.5) : 0.0);
+    Color progressColor = percentage > 80 ? (percentage > 100 ? Colors.red[300]! : Colors.orange[200]!) : Colors.green[300]!;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Stack(
         children: [
-          Text(
-            '${summary.categoryName}',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          Stack(
-            children: [
-              LinearProgressIndicator(
-                value: percentage,
-                backgroundColor: Colors.grey.shade300,
-                valueColor: AlwaysStoppedAnimation(progressColor),
-                minHeight: 10,
-              ),
-              Positioned.fill(
-                child: Center(
-                  child: Text(
-                    '${(percentage * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black),
+          Container(
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: percentage.toInt(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: progressColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
+                Expanded(
+                  flex: (100 - percentage).toInt(),
+                  child: SizedBox(),
+                ),
+              ],
+            ),
+          ),
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      summary.categoryName,
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  Text(
+                    '${(percentage).toStringAsFixed(0)}%',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -404,7 +444,9 @@ class _HomePageState extends State<HomePage> {
                           transaction.categoryName, 
                           textAlign: TextAlign.left,
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        )
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       ),
                       Expanded(
                         flex: 10, 

@@ -81,7 +81,7 @@ class MonthlyCategoryTransactionEntityService {
     final db = await DatabaseHelper.getDb();
 
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
-      SELECT c.name AS categoryName, t.amount, t.month, t.year, c.monthThreshold
+      SELECT c.id AS categoryId, c.name AS categoryName, t.amount, t.month, t.year, c.monthThreshold
       FROM MonthlyCategoryTransactionSummaries t 
       LEFT JOIN Categories c ON t.categoryId = c.id
       WHERE t.month = $month AND t.year = $year AND c.type = 'EXPENSE'
