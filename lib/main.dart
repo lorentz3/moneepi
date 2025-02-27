@@ -82,7 +82,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadSummary() async {
     setState(() {
-      debugPrint("setState isSummaryLoading true");
       isSummaryLoading = true;
     });
     List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(TransactionType.EXPENSE);
@@ -98,9 +97,8 @@ class _HomePageState extends State<HomePage> {
           monthThreshold: c.monthThreshold));
       }
     }
-    await Future.delayed(Duration(seconds: 3));
+    //await Future.delayed(Duration(seconds: 3));
     setState(() {
-      debugPrint("setState isSummaryLoading false");
       isSummaryLoading = false;
     });
   }
@@ -207,11 +205,88 @@ class _HomePageState extends State<HomePage> {
   }
 
   _getMainBody() {
-    return Column (
+    return SingleChildScrollView(
+      child: Column (
+        children: [
+          _getPieChartAndButtons(),
+          _getMonthThresholdBars(),
+          SizedBox(height: 5,),
+          //_getSummaryGraphWidget(),
+          _getTransactionsList(),
+        ],
+      ),
+    );
+  }
+
+  _getPieChartAndButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _getSummaryGraphWidget(),
-        Expanded(child: _getTransactionsWidget()),
-      ],
+        Column(
+          children: [
+            _buildSquareButton("B1"),
+            SizedBox(height: 8),
+            _buildSquareButton("B2"),
+          ],
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: _getPieChart(), // Il tuo grafico a torta
+          ),
+        ),
+        Column(
+          children: [
+            _buildSquareButton("B3"),
+            SizedBox(height: 8),
+            _buildSquareButton("B4"),
+          ],
+        ),
+      ]
+    );
+  }
+
+  _getPieChart() {
+    return SizedBox(
+      height: _pieHeight,
+      child: PieChart(
+        PieChartData(
+          sections: _generatePieSections(monthCategoriesSummary),
+          centerSpaceRadius: 0,
+          sectionsSpace: 1,
+          startDegreeOffset: -90
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSquareButton(String label) {
+    return SizedBox(
+      width: 60, 
+      height: 60, 
+      child: ElevatedButton(
+        onPressed: () {}, // TODO
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          backgroundColor: Colors.grey[300],
+        ),
+        child: Text(label),
+      ),
+    );
+  }
+
+  _getMonthThresholdBars() {
+    return isSummaryLoading
+      ? Center(child: CircularProgressIndicator())
+      : Padding(
+      padding: EdgeInsets.all(5),
+      child: Column(
+        children: monthCategoriesSummary
+            .where((t) => t.monthThreshold != null) 
+            .map((t) => _buildProgressIndicator(t))
+            .toList(),
+        ),
     );
   }
 
@@ -270,51 +345,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   final double _pieHeight = 180;
-
-  _getSummaryGraphWidget() {
-    return isSummaryLoading 
-      ? Center(child: CircularProgressIndicator()) : 
-      monthCategoriesSummary.isEmpty ? const SizedBox(height: 10,) : 
-      Padding(
-        padding: EdgeInsets.all(4),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: SizedBox(
-                    height: _pieHeight,
-                    child: PieChart(
-                      PieChartData(
-                        sections: _generatePieSections(monthCategoriesSummary),
-                        centerSpaceRadius: 0,
-                        sectionsSpace: 1,
-                        startDegreeOffset: -90
-                      ),
-                    ),
-                  ),
-                ),
-                _monthThresholdsVisible ? Expanded(
-                  flex: 2,
-                  child: SizedBox(
-                    height: _pieHeight, 
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: monthCategoriesSummary
-                            .where((t) => t.monthThreshold != null) 
-                            .map((t) => _buildProgressIndicator(t))
-                            .toList(),
-                      ),
-                    ),
-                  ),
-                ) : SizedBox(width: 1,),
-              ],
-            ),
-          ],
-        ),
-      );
-  }
 
   List<PieChartSectionData> _generatePieSections(List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary) {
     final totalAmount = monthCategoriesSummary.fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
@@ -402,7 +432,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _getTransactionsWidget() {
+  _getTransactionsList() {
     final groupedTransactions = _groupTransactionsByDate();
     Color groupBgColor = Colors.blueGrey.shade100;
     return isTransactionListLoading
@@ -415,31 +445,39 @@ class _HomePageState extends State<HomePage> {
           textAlign: TextAlign.center,
         ),
       )
-      : ListView(
-        children: groupedTransactions.entries.map((entry) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                color: groupBgColor,
-                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                child: Row(
-                  children: [
-                    Text(
-                      DateFormat('EEE ').format(DateTime.parse(entry.key)),
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                    ),
-                    Text(
-                      DateFormat('dd MMM yyyy').format(DateTime.parse(entry.key)),
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ]
-                )
+      : Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: groupedTransactions.entries.map((entry) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header con data raggruppata
+            Container(
+              color: groupBgColor,
+              padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+              child: Row(
+                children: [
+                  Text(
+                    DateFormat('EEE ').format(DateTime.parse(entry.key)),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                  ),
+                  Text(
+                    DateFormat('dd MMM yyyy').format(DateTime.parse(entry.key)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              ...entry.value.asMap().entries.map((e) {
-                int itemIndex = e.key;
-                TransactionDto transaction = e.value;
-                Color rowColor = itemIndex % 2 == 0 ? Colors.white : Colors.grey[200]!;
+            ),
+
+            // Lista delle transazioni
+            ListView.builder(
+              shrinkWrap: true, // Si adatta all'altezza del contenuto
+              physics: NeverScrollableScrollPhysics(), // Disabilita lo scroll interno
+              itemCount: entry.value.length,
+              itemBuilder: (context, index) {
+                TransactionDto transaction = entry.value[index];
+                Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+
                 return Container(
                   color: rowColor,
                   padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
@@ -447,9 +485,9 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        flex: 15, 
+                        flex: 15,
                         child: Text(
-                          transaction.categoryName, 
+                          transaction.categoryName,
                           textAlign: TextAlign.left,
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
@@ -457,33 +495,37 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       Expanded(
-                        flex: 10, 
+                        flex: 10,
                         child: Text(
                           transaction.type == TransactionType.EXPENSE
                               ? ' - € ${transaction.amount.toStringAsFixed(2)} '
                               : ' + € ${transaction.amount.toStringAsFixed(2)} ',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            color: transaction.type == TransactionType.EXPENSE ? const Color.fromARGB(255, 206, 35, 23) : const Color.fromARGB(255, 33, 122, 34),
+                            color: transaction.type == TransactionType.EXPENSE
+                                ? Color.fromARGB(255, 206, 35, 23)
+                                : Color.fromARGB(255, 33, 122, 34),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                       Expanded(
-                        flex: 3, 
+                        flex: 3,
                         child: Text(
-                          transaction.accountName.split(" ")[0], 
+                          transaction.accountName.split(" ")[0],
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        )
+                        ),
                       ),
                     ],
                   ),
                 );
-              }),
-            ],
-          );
-        }).toList(),
-      );
+              },
+            ),
+          ],
+        );
+      }).toList(),
+    );
   }
+
 }
