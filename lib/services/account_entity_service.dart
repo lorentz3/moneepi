@@ -5,11 +5,11 @@ import 'package:myfinance2/model/account.dart';
 class AccountEntityService {
   static const String _tableName = "Accounts";
   
-  static Future<List<Account>?> getAllAccounts() async {
+  static Future<List<Account>> getAllAccounts() async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps = await db.query(_tableName);
     if(maps.isEmpty){
-      return null;
+      return [];
     }
     return List.generate(maps.length, (index) => Account.fromJson(maps[index]));
   } 

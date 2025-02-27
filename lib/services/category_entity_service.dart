@@ -6,7 +6,7 @@ import 'package:myfinance2/model/transaction_type.dart';
 class CategoryEntityService {
   static const String _tableName = "Categories";
   
-  static Future<List<Category>?> getAllCategories(TransactionType type) async {
+  static Future<List<Category>> getAllCategories(TransactionType type) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps =  await db.query(
       _tableName,
@@ -14,7 +14,7 @@ class CategoryEntityService {
       whereArgs: [type.toString().split('.').last],
     );
     if(maps.isEmpty){
-      return null;
+      return [];
     }
     return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
   } 

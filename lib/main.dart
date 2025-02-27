@@ -61,24 +61,28 @@ class _HomePageState extends State<HomePage> {
   }
 
   _loadAllData() {
+    debugPrint("loadAllData");
     _loadSummary();
     _loadTransactions();
   }
 
   Future<void> _loadTransactions() async {
     setState(() {
+      debugPrint("setState isTransactionListLoading true");
       isTransactionListLoading = true;
     });
     transactions = await TransactionEntityService.getMonthTransactions(
       selectedDate.month,
     );
     setState(() {
+      debugPrint("setState isTransactionListLoading false");
       isTransactionListLoading = false;
     });
   }
 
   Future<void> _loadSummary() async {
     setState(() {
+      debugPrint("setState isSummaryLoading true");
       isSummaryLoading = true;
     });
     List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(TransactionType.EXPENSE);
@@ -94,7 +98,9 @@ class _HomePageState extends State<HomePage> {
           monthThreshold: c.monthThreshold));
       }
     }
+    await Future.delayed(Duration(seconds: 3));
     setState(() {
+      debugPrint("setState isSummaryLoading false");
       isSummaryLoading = false;
     });
   }
@@ -136,7 +142,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _getMainBody(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
+        onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -149,19 +155,21 @@ class _HomePageState extends State<HomePage> {
                     isNew: true,
                   ),
             ),
-          ).then((_) => setState(() {
+          ).then((_) {
+            debugPrint("Tornato alla prima pagina!");
             _loadAllData();
-          }));
+            setState(() {}); 
+          });
         },
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  _handleClick(String value, BuildContext context) {
+  _handleClick(String value, BuildContext context) async {
     switch (value) {
       case "Accounts":
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const AccountsPage()),
         ).then((_) => setState(() {
@@ -170,7 +178,7 @@ class _HomePageState extends State<HomePage> {
         );
         break;
       case "ExpenseCategories":
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder:
@@ -183,7 +191,7 @@ class _HomePageState extends State<HomePage> {
         );
         break;
       case "IncomeCategories":
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder:

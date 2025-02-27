@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
 import 'package:myfinance2/model/monthly_category_transaction_summary.dart';
@@ -9,13 +8,11 @@ class MonthlyCategoryTransactionEntityService {
   static const String _tableName = "MonthlyCategoryTransactionSummaries";
 
   static void updateMonthlyCategoryTransactionSummary(int categoryId, int month, int year) async {
-    debugPrint("update summary: categoryId=$categoryId, $month, $year");
     List<Transaction>? transactions = await TransactionEntityService.getAllByCategoryIdAndMonthAndYear(categoryId, month, year);
     if (transactions == null || transactions.isEmpty) {
       return;
     }
     double sum = transactions.fold(0.0, (acc, obj) => acc + obj.amount!);
-    debugPrint("update summary: categoryId=$categoryId, $month, $year, sum=$sum");
     MonthlyCategoryTransactionSummary? summary = await getMonthlyCategoryTransactionSummary(categoryId, month, year);
     if (summary == null) {
       MonthlyCategoryTransactionSummary summary = MonthlyCategoryTransactionSummary(
@@ -29,7 +26,6 @@ class MonthlyCategoryTransactionEntityService {
     }
     summary.amount = sum;
     final db = await DatabaseHelper.getDb();
-    debugPrint("update summary: categoryId=${summary.categoryId}");
     await db.update(_tableName,
       summary.toMap(),
       where: 'categoryId = ? AND month = ? AND year = ?',
@@ -51,22 +47,11 @@ class MonthlyCategoryTransactionEntityService {
   }
 
   static void insertMonthlyCategoryTransactionSummary(MonthlyCategoryTransactionSummary transaction) async {
-    debugPrint("insert summary: categoryId=${transaction.categoryId}");
     final db = await DatabaseHelper.getDb();
     await db.insert(_tableName, 
       transaction.toMap()
     );
   }
-  
-  /*static void insertMonthlyCategoryTransactionSummary(MonthlyCategoryTransactionSummary transaction) async {
-    debugPrint("insert summary: ${transaction.toMap()}");
-    final db = await DatabaseHelper.getDb();
-    await db.rawQuery("""
-        INSERT INTO $_tableName (categoryId, month, year, amount) VALUES
-        (${transaction.toMap()});
-    """
-    );
-  }*/
 
   static void deleteMonthlyCategoryTransactionSummary(int transactionId) async {
     final db = await DatabaseHelper.getDb();

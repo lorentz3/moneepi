@@ -20,14 +20,15 @@ class TransactionFormPage extends StatefulWidget {
 class TransactionFormPageState extends State<TransactionFormPage> {
   final _formKey = GlobalKey<FormState>();
   TransactionType _selectedType = TransactionType.EXPENSE;
-  DateTime selectedDate = DateTime.now();
-  TimeOfDay selectedTime = TimeOfDay.now();
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
   int? _selectedAccount;
   int? _selectedCategory;
   double _amount = 0.0;
   String _notes = '';
-  List<Account>? accounts = [];
-  List<Category>? categories = [];
+  List<Account> _accounts = [];
+  List<Category> _categories = [];
+  bool _showTime = false;
 
   @override
   void initState() {
@@ -36,21 +37,22 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   Future<void> _loadData() async {
-    accounts = await AccountEntityService.getAllAccounts();
-    categories = await CategoryEntityService.getAllCategories(_selectedType);
+    debugPrint("load data");
+    _accounts = await AccountEntityService.getAllAccounts();
+    _categories = await CategoryEntityService.getAllCategories(_selectedType);
     setState(() { });
   }
   
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
     if (pickedDate != null) {
       setState(() {
-        selectedDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, selectedTime.hour, selectedTime.minute);
+        _selectedDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, _selectedTime.hour, _selectedTime.minute);
       });
     }
   }
@@ -58,19 +60,19 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: selectedTime,
+      initialTime: _selectedTime,
     );
     if (pickedTime != null) {
       setState(() {
-        selectedTime = pickedTime;
-        selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, selectedTime.hour, selectedTime.minute);
+        _selectedTime = pickedTime;
+        _selectedDate = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, _selectedTime.hour, _selectedTime.minute);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (accounts == null || categories == null) {
+    if (_accounts.isEmpty || _categories.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: Text('Expense')),
         body: Padding(
@@ -81,7 +83,8 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                 isSelected: [_selectedType == TransactionType.EXPENSE, _selectedType == TransactionType.INCOME],
                 onPressed: (int index) {
                   setState(() {
-                    _selectedType = index == 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
+                    _selectedType = index == 0 ? TransactionType.EXPENSE : TransactionType.INCOME;    
+                    _selectedCategory = null;
                     _loadData();
                   });
                 },
@@ -111,28 +114,49 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   onPressed: (int index) {
                     setState(() {
                       _selectedType = index == 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
+                      _selectedCategory = null;
                       _loadData();
                     });
                   },
                   children: [
-                    Padding(padding: EdgeInsets.all(8.0), child: Text('Expense')),
-                    Padding(padding: EdgeInsets.all(8.0), child: Text('Income')),
+                    Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5), child: Text('Expense')),
+                    Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5), child: Text('Income')),
                   ],
                 ),
-                ListTile(
-                  title: Text("Date: ${selectedDate.toLocal().toString().split(' ')[0]}"),
-                  trailing: Icon(Icons.calendar_today),
-                  onTap: () => _selectDate(context),
+                SizedBox(height: 5,),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ElevatedButton(
+                    onPressed: () => _selectDate(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[200],
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Text("Date: "),
+                        Text(_selectedDate.toLocal().toString().split(' ')[0],
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        SizedBox(width: 10,),
+                        Icon(Icons.calendar_today),
+                      ],
+                    ),
+                  ),
                 ),
-                ListTile(
-                  title: Text("Time: ${selectedTime.format(context)}"),
+                _showTime ? ListTile(
+                  title: Text("Time: ${_selectedTime.format(context)}"),
                   trailing: Icon(Icons.access_time),
                   onTap: () => _selectTime(context),
-                ),
+                ) : SizedBox(height: 0,),
                 DropdownButtonFormField<int>(
                   decoration: InputDecoration(labelText: 'Account'),
                   value: _selectedAccount,
-                  items: accounts!.map((account) {
+                  items: _accounts.map((account) {
                     return DropdownMenuItem<int>(
                       value: account.id,
                       child: Text(account.name),
@@ -141,10 +165,37 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   onChanged: (value) => setState(() => _selectedAccount = value),
                   validator: (value) => value == null ? 'Choose an account' : null,
                 ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 0,
+                    children: _accounts.take(5).map((account) {
+                      return ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedAccount = account.id;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _selectedAccount == account.id
+                              ? Colors.deepPurple[200] // Selected
+                              : Colors.grey[300], // Not selected
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        child: Text(account.name, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                  ),
+                ),
                 DropdownButtonFormField<int>(
                   decoration: InputDecoration(labelText: 'Category'),
                   value: _selectedCategory,
-                  items: categories!.map((category) {
+                  items: _categories.map((category) {
                     return DropdownMenuItem<int>(
                       value: category.id,
                       child: Text(category.name),
@@ -152,6 +203,33 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   }).toList(),
                   onChanged: (value) => setState(() => _selectedCategory = value),
                   validator: (value) => value == null ? 'Choose a category' : null,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 0,
+                    children: _categories.take(15).map((category) {
+                      return ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedCategory = category.id;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _selectedCategory == category.id
+                              ? Colors.deepPurple[200]
+                              : Colors.grey[300],
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        child: Text(category.name, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                  ),
                 ),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Amount'),
@@ -183,11 +261,11 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     Transaction transaction = widget.transaction;
     transaction.type = _selectedType;
     transaction.timestamp = DateTime(
-      selectedDate.year,
-      selectedDate.month,
-      selectedDate.day,
-      selectedTime.hour,
-      selectedTime.minute,
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
     );
     transaction.accountId = _selectedAccount!;
     transaction.categoryId = _selectedCategory!;
