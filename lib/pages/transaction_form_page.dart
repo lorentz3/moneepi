@@ -257,7 +257,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  _saveTransaction() {
+  _saveTransaction() async {
     Transaction transaction = widget.transaction;
     transaction.type = _selectedType;
     transaction.timestamp = DateTime(
@@ -272,7 +272,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     transaction.amount = _amount;
     transaction.notes = _notes;
     if(widget.isNew!){
-      TransactionEntityService.insertTransaction(transaction);
+      await TransactionEntityService.insertTransaction(transaction);
     } else {
       TransactionEntityService.updateTransaction(transaction);
     }

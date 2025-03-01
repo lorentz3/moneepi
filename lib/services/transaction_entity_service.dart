@@ -55,12 +55,12 @@ class TransactionEntityService {
     MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
   }
 
-  static void insertTransaction(Transaction transaction) async {
+  static Future<void> insertTransaction(Transaction transaction) async {
     final db = await DatabaseHelper.getDb();
     await db.insert(_tableName, 
       transaction.toMapCreate()
     );
-    MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
+    await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
   }
 
   static void deleteTransaction(Transaction transaction) async {

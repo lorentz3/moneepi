@@ -7,7 +7,7 @@ import 'package:myfinance2/services/transaction_entity_service.dart';
 class MonthlyCategoryTransactionEntityService {
   static const String _tableName = "MonthlyCategoryTransactionSummaries";
 
-  static void updateMonthlyCategoryTransactionSummary(int categoryId, int month, int year) async {
+  static Future<void> updateMonthlyCategoryTransactionSummary(int categoryId, int month, int year) async {
     List<Transaction>? transactions = await TransactionEntityService.getAllByCategoryIdAndMonthAndYear(categoryId, month, year);
     if (transactions == null || transactions.isEmpty) {
       return;
@@ -46,14 +46,14 @@ class MonthlyCategoryTransactionEntityService {
     return MonthlyCategoryTransactionSummary.fromJson(maps[0]);
   }
 
-  static void insertMonthlyCategoryTransactionSummary(MonthlyCategoryTransactionSummary transaction) async {
+  static Future<void> insertMonthlyCategoryTransactionSummary(MonthlyCategoryTransactionSummary transaction) async {
     final db = await DatabaseHelper.getDb();
     await db.insert(_tableName, 
       transaction.toMap()
     );
   }
 
-  static void deleteMonthlyCategoryTransactionSummary(int transactionId) async {
+  static Future<void> deleteMonthlyCategoryTransactionSummary(int transactionId) async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName, 
       where: "id = ?",
