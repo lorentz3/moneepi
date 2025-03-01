@@ -25,9 +25,21 @@ class CategoriesPieChart extends StatelessWidget {
   }
   
   List<PieChartSectionData> _generatePieSections(List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary) {
-    final totalAmount = monthCategoriesSummary.fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
-
-    return monthCategoriesSummary.asMap().entries.map((entry) {
+    final filteredSummary = monthCategoriesSummary.where((e) => (e.amount ?? 0) > 0).toList();
+    final totalAmount = filteredSummary.fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
+    if (totalAmount == 0) {
+      return [
+        PieChartSectionData(
+          color: Colors.grey[400],
+          value: 1,
+          title: 'No transactions',
+          radius: 85,
+          titleStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+      ];
+    }
+    int slicesNumber = filteredSummary.length;
+    return filteredSummary.asMap().entries.map((entry) {
       var index = entry.key;
       var e = entry.value;
       final percentage = ((e.amount ?? 0.0) / totalAmount) * 100;
@@ -35,11 +47,28 @@ class CategoriesPieChart extends StatelessWidget {
         color: _getColor(index),
         value: e.amount,
         title: percentage > 3 ? e.categoryName.split(" ")[0] : '',
-        titlePositionPercentageOffset: 0.85,
+        titlePositionPercentageOffset: _getTitlePositionPercentageOffset(slicesNumber, percentage),
         radius: 85,
-        titleStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+        titleStyle: TextStyle(color: Colors.white, fontSize: _getTitleFontSize(slicesNumber, percentage), fontWeight: FontWeight.bold),
       );
     }).toList();
+  }
+
+  double _getTitlePositionPercentageOffset(int slicesNumber, double percentage) {
+    if (slicesNumber == 1) return 0;
+    if (percentage > 40) return 0.5;
+    if (percentage > 20) return 0.65;
+    if (percentage > 10) return 0.7;
+    if (percentage > 5) return 0.8;
+    return 0.85;
+  }
+  
+  double _getTitleFontSize(int slicesNumber, double percentage) {
+    if (slicesNumber == 1) return 28;
+    if (percentage > 40) return 28;
+    if (percentage > 15) return 20;
+    if (percentage > 5) return 16;
+    return 14;
   }
   
   Color _getColor(int index) {

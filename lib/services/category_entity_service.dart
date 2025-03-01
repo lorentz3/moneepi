@@ -65,4 +65,10 @@ class CategoryEntityService {
     }
     return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
   }
+
+  static Future<bool> existsAtLeastOneCategoryByType(TransactionType type) async {
+    final db = await DatabaseHelper.getDb();
+    final typeName = type.toString().split('.').last;
+    final result = await db.rawQuery('SELECT 1 FROM $_tableName WHERE type = "$typeName" LIMIT 1');
+    return result.isNotEmpty;}
 }

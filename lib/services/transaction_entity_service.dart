@@ -7,10 +7,19 @@ class TransactionEntityService {
   static const String _tableName = "Transactions";
   
   static Future<List<TransactionDto>> getMonthTransactions(int month) async {
-    final db = await DatabaseHelper.getDb();
     final int startTimestamp = DateTime(DateTime.now().year, month, 1).millisecondsSinceEpoch;
     final int endTimestamp = DateTime(DateTime.now().year, month + 1, 1).millisecondsSinceEpoch;
+    return getTransactionsBetween(startTimestamp, endTimestamp);
+  }
+    
+  static Future<List<TransactionDto>> getLastDaysTransactions(int daysNumber) async {
+    final int startTimestamp = DateTime.now().subtract(Duration(days: daysNumber)).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime.now().millisecondsSinceEpoch;
+    return getTransactionsBetween(startTimestamp, endTimestamp);
+  }
 
+  static Future<List<TransactionDto>> getTransactionsBetween(int startTimestamp, int endTimestamp) async {
+    final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
       SELECT t.id, t.type, t.timestamp, a.name AS accountName, c.name AS categoryName, t.amount
       FROM Transactions t 

@@ -5,14 +5,15 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
-import 'package:myfinance2/pages/accounts_page.dart';
-import 'package:myfinance2/pages/categories_page.dart';
+import 'package:myfinance2/pages/settings_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
+import 'package:myfinance2/pages/transactions_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:myfinance2/widgets/categories_pie_chart.dart';
+import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/monthly_thresholds_bar.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
 
@@ -52,6 +53,7 @@ class _HomePageState extends State<HomePage> {
   List<TransactionDto> transactions = [];
   List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
   bool _isSummaryLoading = true;
+  bool _isCurrentMonth = true;
 
   @override
   void initState() {
@@ -61,14 +63,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   _loadAllData() {
+    _isCurrentMonth = selectedDate.month == DateTime.now().month;
     _loadTransactions();
     _loadSummary();
   }
 
   Future<void> _loadTransactions() async {
-    transactions = await TransactionEntityService.getMonthTransactions(
-      selectedDate.month,
-    );
+    if (_isCurrentMonth) {
+      transactions = await TransactionEntityService.getLastDaysTransactions(7);
+    } else {
+      transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month);
+    }
     setState(() {});
   }
 
@@ -93,9 +98,9 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _changeMonth(int delta) {
+ void _updateDate(DateTime newDate) {
     setState(() {
-      selectedDate = DateTime(selectedDate.year, selectedDate.month + delta, 1);
+      selectedDate = newDate;
     });
     _loadAllData();
   }
@@ -104,25 +109,18 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _getMonthSelectorWidget(),
+        title: MonthSelector(selectedDate: selectedDate, onDateChanged: _updateDate),
         actions: [
-          PopupMenuButton(
-            onSelected: (value) => _handleClick(value, context),
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(
-                    value: "Accounts",
-                    child: Text("Accounts"),
-                  ),
-                  const PopupMenuItem(
-                    value: "ExpenseCategories",
-                    child: Text("Expense categories"),
-                  ),
-                  const PopupMenuItem(
-                    value: "IncomeCategories",
-                    child: Text("Income categories"),
-                  ),
-                ],
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsPage()),
+              ).then((_) {
+                _loadAllData(); 
+              });
+            },
           ),
         ],
       ),
@@ -150,53 +148,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _handleClick(String value, BuildContext context) async {
-    switch (value) {
-      case "Accounts":
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const AccountsPage()),
-        ).then((_) => setState(() {
-            _loadAllData();
-          })
-        );
-        break;
-      case "ExpenseCategories":
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) =>
-                    const CategoriesPage(type: TransactionType.EXPENSE),
-          ),
-        ).then((_) => setState(() {
-            _loadAllData();
-          })
-        );
-        break;
-      case "IncomeCategories":
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) =>
-                    const CategoriesPage(type: TransactionType.INCOME),
-          ),
-        ).then((_) => setState(() {
-            _loadAllData();
-          })
-        );
-        break;
-    }
-  }
 
   _getMainBody() {
+    final monthString = DateFormat('MMMM').format(selectedDate);
     return SingleChildScrollView(
       child: Column (
         children: [
           _getPieChartAndButtons(),
           _getMonthThresholdBars(),
-          SizedBox(height: 5,),
+          _buildSectionDivider(_isCurrentMonth ? "Last 7 days transactions" : "$monthString transactions"),
           TransactionsListGroupedByDate(transactions: transactions),
         ],
       ),
@@ -216,9 +176,9 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildSquareButton("Settings", Icons.settings),
+                _buildSquareButton("Transactions", Icons.compare_arrows, () => _navigateToTransactionsPage(context)),
                 SizedBox(height: 10),
-                _buildSquareButton("Movements", Icons.compare_arrows),
+                _buildSquareButton("Accounts", Icons.account_balance_wallet_outlined, () {/*TODO*/}),
               ],
             ),
           ),
@@ -237,9 +197,9 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildSquareButton("Stats", Icons.query_stats),
+                _buildSquareButton("Stats", Icons.query_stats, () {/*TODO*/}),
                 SizedBox(height: 10),
-                _buildSquareButton("Budget", Icons.monetization_on_outlined),
+                _buildSquareButton("Budget", Icons.monetization_on_outlined, () {/*TODO*/}),
               ],
             ),
           ),
@@ -248,32 +208,59 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-Widget _buildSquareButton(String label, IconData icon) {
-  return SizedBox(
-    width: 70,
-    height: 70,
-    child: ElevatedButton(
-      onPressed: () {}, // TODO
-      style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: Colors.deepPurple[100],
-        padding: EdgeInsets.symmetric(vertical: 4),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 30, color: Colors.black54),
-          SizedBox(height: 3), 
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: Colors.black87),
-            textAlign: TextAlign.center,
+  Widget _buildSectionDivider(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Divider(color: Colors.grey[400], thickness: 1),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Divider(color: Colors.grey[400], thickness: 1),
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildSquareButton(String label, IconData icon, VoidCallback onPressed) {
+    return SizedBox(
+      width: 70,
+      height: 70,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          backgroundColor: Colors.deepPurple[100],
+          padding: EdgeInsets.symmetric(vertical: 4),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 30, color: Colors.black54),
+            SizedBox(height: 3), 
+            Text(
+              label,
+              style: TextStyle(fontSize: 11, color: Colors.black87),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   _getMonthThresholdBars() {
     return _isSummaryLoading
@@ -288,46 +275,13 @@ Widget _buildSquareButton(String label, IconData icon) {
         ),
     );
   }
-  
-  _getMonthSelectorWidget() {
-    return Padding(
-      padding: const EdgeInsets.all(2.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          IconButton(
-            icon: Icon(Icons.chevron_left),
-            onPressed: () => _changeMonth(-1),
-          ),
-          GestureDetector(
-            onTap: _pickMonthYear,
-            child: Text(
-              DateFormat(' MMM yyyy ').format(selectedDate),
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.chevron_right),
-            onPressed: () => _changeMonth(1),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Future<void> _pickMonthYear() async {
-    final DateTime? picked = await showMonthYearPicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2200),
-    );
-    if (picked == null) {
-      return;
-    }
-    setState(() {
-      selectedDate = DateTime(picked.year, picked.month, 1);
+  void _navigateToTransactionsPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => TransactionsPage(dateTime: selectedDate,)),
+    ).then((_) {
+      _loadAllData(); // TODO only if something changed
     });
-    _loadAllData();
   }
 }

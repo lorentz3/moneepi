@@ -42,4 +42,10 @@ class AccountEntityService {
     final db = await DatabaseHelper.getDb();
     await db.execute(insertDefaultAccountsQuery);
   }
+
+  static Future<bool> existsAtLeastOneAccount() async {
+    final db = await DatabaseHelper.getDb();
+    final result = await db.rawQuery('SELECT 1 FROM $_tableName LIMIT 1');
+    return result.isNotEmpty;
+  }
 }
