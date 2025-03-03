@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/pages/transaction_form_page.dart';
+import 'package:myfinance2/services/transaction_entity_service.dart';
 
-class TransactionsListGroupedByDate extends StatelessWidget {
+class TransactionsListGroupedByDate extends StatelessWidget { //TODO stateful
   final List<TransactionDto> transactions;
 
   const TransactionsListGroupedByDate({super.key, required this.transactions});
@@ -57,46 +59,59 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                 TransactionDto transaction = entry.value[index];
                 Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
 
-                return Container(
-                  color: rowColor,
-                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        flex: 15,
-                        child: Text(
-                          transaction.categoryName,
-                          textAlign: TextAlign.left,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionFormPage(
+                          transactionId: transaction.id,
+                          isNew: false,
                         ),
                       ),
-                      Expanded(
-                        flex: 10,
-                        child: Text(
-                          transaction.type == TransactionType.EXPENSE
-                              ? ' - € ${transaction.amount.toStringAsFixed(2)} '
-                              : ' + € ${transaction.amount.toStringAsFixed(2)} ',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            color: transaction.type == TransactionType.EXPENSE
-                                ? Color.fromARGB(255, 206, 35, 23)
-                                : Color.fromARGB(255, 33, 122, 34),
-                            fontWeight: FontWeight.bold,
+                    );
+                  },
+                  child: Container(
+                    color: rowColor,
+                    padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          flex: 15,
+                          child: Text(
+                            transaction.categoryName,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          transaction.accountName.split(" ")[0],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        Expanded(
+                          flex: 10,
+                          child: Text(
+                            transaction.type == TransactionType.EXPENSE
+                                ? ' - € ${transaction.amount.toStringAsFixed(2)} '
+                                : ' + € ${transaction.amount.toStringAsFixed(2)} ',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              color: transaction.type == TransactionType.EXPENSE
+                                  ? Color.fromARGB(255, 206, 35, 23)
+                                  : Color.fromARGB(255, 33, 122, 34),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            transaction.accountName.split(" ")[0],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

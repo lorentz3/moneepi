@@ -44,4 +44,5 @@ class Transaction {
     amount: json['amount'],
     notes: json['notes'],
   );
+  
 }

@@ -1,6 +1,7 @@
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/transaction_dto.dart';
+import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 
 class TransactionEntityService {
@@ -54,7 +55,7 @@ class TransactionEntityService {
     return result.isNotEmpty;
   }
 
-  static void updateTransaction(Transaction transaction) async {
+  static Future<void> updateTransaction(Transaction transaction) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
       transaction.toMap(),
@@ -94,5 +95,17 @@ class TransactionEntityService {
       return null;
     }
     return List.generate(maps.length, (index) => Transaction.fromJson(maps[index]));
+  }
+
+  static Future<Transaction> getById(int? id) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName, 
+      where: "id = ?",
+      whereArgs: [id]
+    );
+    if(maps.isEmpty){
+      return Transaction(type: TransactionType.EXPENSE, timestamp: DateTime.now());
+    }
+    return Transaction.fromJson(maps[0]);
   } 
 }

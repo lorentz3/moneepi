@@ -8,10 +8,11 @@ import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 
 class TransactionFormPage extends StatefulWidget {
-  final Transaction transaction;
-  final bool? isNew;
+  final int? transactionId;
+  final Transaction? transaction;
+  final bool isNew;
 
-  const TransactionFormPage({super.key, required this.transaction, required this.isNew});
+  const TransactionFormPage({super.key, this.transactionId, this.transaction, required this.isNew});
 
   @override
   TransactionFormPageState createState() => TransactionFormPageState();
@@ -24,16 +25,36 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   int? _selectedAccount;
   int? _selectedCategory;
-  double _amount = 0.0;
-  String _notes = '';
+  double? _amount = 0.0;
+  String? _notes = '';
   List<Account> _accounts = [];
   List<Category> _categories = [];
   bool _showTime = false;
+  Transaction _transaction = Transaction(type: TransactionType.EXPENSE, timestamp: DateTime.now());
+  int? _transactionId;
+  bool _isNew = false;
 
   @override
   void initState() {
     super.initState();
+    _isNew = widget.isNew;
+    if (_isNew) {
+      _transaction = widget.transaction!;
+    } else {
+      _transactionId = widget.transactionId!;
+      _loadTransaction();
+    }
     _loadData();
+  }
+
+  _loadTransaction() async {  
+    _transaction = await TransactionEntityService.getById(_transactionId);
+    _selectedDate = _transaction.timestamp;
+    _selectedTime = TimeOfDay.fromDateTime(_transaction.timestamp);
+    _selectedAccount = _transaction.accountId;
+    _selectedCategory = _transaction.categoryId;
+    _amount = _transaction.amount;
+    _notes = _transaction.notes;
   }
 
   Future<void> _loadData() async {
@@ -72,9 +93,10 @@ class TransactionFormPageState extends State<TransactionFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    // TODO if isLoading
     if (_accounts.isEmpty || _categories.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text('Expense')),
+        appBar: AppBar(title: _isNew ? Text('New transaction') : Text('Edit transaction')),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -101,7 +123,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text('Expense')),
+      appBar: AppBar(title: _isNew ? Text('New transaction') : Text('Edit transaction')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -139,7 +161,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                     child: Row(
                       children: [
                         Text("Date: "),
-                        Text(_selectedDate.toLocal().toString().split(' ')[0],
+                        Text(_selectedDate.toLocal().toString().split(' ')[0], //TODO date format
                           style: TextStyle(fontSize: 16),
                         ),
                         SizedBox(width: 10,),
@@ -234,6 +256,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Amount'),
                   keyboardType: TextInputType.number,
+                  initialValue: _amount != null ? "$_amount" : "0.0",
                   onChanged: (value) => _amount = double.tryParse(value) ?? 0.0,
                 ),
                 TextFormField(
@@ -258,24 +281,25 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   _saveTransaction() async {
-    Transaction transaction = widget.transaction;
-    transaction.type = _selectedType;
-    transaction.timestamp = DateTime(
+    _transaction.type = _selectedType;
+    _transaction.timestamp = DateTime(
       _selectedDate.year,
       _selectedDate.month,
       _selectedDate.day,
       _selectedTime.hour,
       _selectedTime.minute,
     );
-    transaction.accountId = _selectedAccount!;
-    transaction.categoryId = _selectedCategory!;
-    transaction.amount = _amount;
-    transaction.notes = _notes;
-    if(widget.isNew!){
-      await TransactionEntityService.insertTransaction(transaction);
+    _transaction.accountId = _selectedAccount!;
+    _transaction.categoryId = _selectedCategory!;
+    _transaction.amount = _amount;
+    _transaction.notes = _notes;
+    if(_isNew){
+      await TransactionEntityService.insertTransaction(_transaction);
     } else {
-      TransactionEntityService.updateTransaction(transaction);
+      await TransactionEntityService.updateTransaction(_transaction);
     }
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 }

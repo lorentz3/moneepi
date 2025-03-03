@@ -19,4 +19,5 @@ class TransactionDto {
     categoryName: json['categoryName'], 
     amount: json['amount'],
   );
+
 }
