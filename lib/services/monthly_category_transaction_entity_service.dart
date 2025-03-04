@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
 import 'package:myfinance2/model/monthly_category_transaction_summary.dart';
@@ -9,10 +10,11 @@ class MonthlyCategoryTransactionEntityService {
 
   static Future<void> updateMonthlyCategoryTransactionSummary(int categoryId, int month, int year) async {
     List<Transaction>? transactions = await TransactionEntityService.getAllByCategoryIdAndMonthAndYear(categoryId, month, year);
-    if (transactions == null || transactions.isEmpty) {
-      return;
+    double sum = 0;
+    if (transactions != null && transactions.isNotEmpty) {
+      sum = transactions.fold(0.0, (acc, obj) => acc + obj.amount!);
     }
-    double sum = transactions.fold(0.0, (acc, obj) => acc + obj.amount!);
+    debugPrint("Updating monthly category summary: categoryId=$categoryId, sum=$sum");
     MonthlyCategoryTransactionSummary? summary = await getMonthlyCategoryTransactionSummary(categoryId, month, year);
     if (summary == null) {
       MonthlyCategoryTransactionSummary summary = MonthlyCategoryTransactionSummary(

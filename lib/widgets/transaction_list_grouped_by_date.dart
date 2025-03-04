@@ -3,12 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
-import 'package:myfinance2/services/transaction_entity_service.dart';
 
-class TransactionsListGroupedByDate extends StatelessWidget { //TODO stateful
+class TransactionsListGroupedByDate extends StatelessWidget {
   final List<TransactionDto> transactions;
+  final VoidCallback? onTransactionUpdated;
 
-  const TransactionsListGroupedByDate({super.key, required this.transactions});
+  const TransactionsListGroupedByDate({super.key, required this.transactions, this.onTransactionUpdated});
 
   Map<String, List<TransactionDto>> _groupTransactionsByDate() {
     Map<String, List<TransactionDto>> groupedTransactions = {};
@@ -69,7 +69,9 @@ class TransactionsListGroupedByDate extends StatelessWidget { //TODO stateful
                           isNew: false,
                         ),
                       ),
-                    );
+                    ).then((_) {
+                      onTransactionUpdated?.call();
+                    });
                   },
                   child: Container(
                     color: rowColor,

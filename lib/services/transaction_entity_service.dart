@@ -55,14 +55,17 @@ class TransactionEntityService {
     return result.isNotEmpty;
   }
 
-  static Future<void> updateTransaction(Transaction transaction) async {
+  static Future<void> updateTransaction(Transaction transaction, int? oldAccount, int? oldCategory) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
       transaction.toMap(),
       where: "id = ?",
       whereArgs: [transaction.id]
     );
-    MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
+    await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
+    if (oldCategory != null) {
+      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategory, transaction.timestamp.month, transaction.timestamp.year);
+    } 
   }
 
   static Future<void> insertTransaction(Transaction transaction) async {
@@ -73,13 +76,13 @@ class TransactionEntityService {
     await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
   }
 
-  static void deleteTransaction(Transaction transaction) async {
+  static Future<void> deleteTransaction(Transaction transaction) async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName, 
       where: "id = ?",
       whereArgs: [transaction.id]
     );
-    MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
+    await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
   }
   
   static Future<List<Transaction>?> getAllByCategoryIdAndMonthAndYear(int categoryId, int month, int year) async {

@@ -33,6 +33,8 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   Transaction _transaction = Transaction(type: TransactionType.EXPENSE, timestamp: DateTime.now());
   int? _transactionId;
   bool _isNew = false;
+  int? _oldCategoryId;
+  int? _oldAccountId;
 
   @override
   void initState() {
@@ -55,6 +57,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     _selectedCategory = _transaction.categoryId;
     _amount = _transaction.amount;
     _notes = _transaction.notes;
+    _oldCategoryId = _transaction.categoryId;
+    _oldAccountId = _transaction.accountId;
+    debugPrint("oldCategoryId = $_oldCategoryId");
   }
 
   Future<void> _loadData() async {
@@ -123,7 +128,17 @@ class TransactionFormPageState extends State<TransactionFormPage> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: _isNew ? Text('New transaction') : Text('Edit transaction')),
+      appBar: AppBar(
+        title: _isNew ? Text('New transaction') : Text('Edit transaction'),
+        actions: [
+          _isNew ? SizedBox(height: 1,) : IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () {
+              _showDeleteConfirmationDialog(context);
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -187,7 +202,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   onChanged: (value) => setState(() => _selectedAccount = value),
                   validator: (value) => value == null ? 'Choose an account' : null,
                 ),
-                Align(
+                _isNew ? Align(
                   alignment: Alignment.centerLeft,
                   child: Wrap(
                     spacing: 6,
@@ -213,7 +228,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                       );
                     }).toList(),
                   ),
-                ),
+                ) : SizedBox(height: 1,),
                 DropdownButtonFormField<int>(
                   decoration: InputDecoration(labelText: 'Category'),
                   value: _selectedCategory,
@@ -226,7 +241,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   onChanged: (value) => setState(() => _selectedCategory = value),
                   validator: (value) => value == null ? 'Choose a category' : null,
                 ),
-                Align(
+                _isNew ? Align(
                   alignment: Alignment.centerLeft,
                   child: Wrap(
                     spacing: 6,
@@ -252,7 +267,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                       );
                     }).toList(),
                   ),
-                ),
+                ) : SizedBox(height: 1,),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Amount'),
                   keyboardType: TextInputType.number,
@@ -296,8 +311,49 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     if(_isNew){
       await TransactionEntityService.insertTransaction(_transaction);
     } else {
-      await TransactionEntityService.updateTransaction(_transaction);
+      await TransactionEntityService.updateTransaction(_transaction, _oldAccountId, _oldCategoryId);
     }
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Transaction'),
+          content: Text('This action is irreversible. Are you sure you want to delete this transaction?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Chiude il popup
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, // Bottone di eliminazione in rosso
+                foregroundColor: Colors.white, // Testo bianco per contrasto
+              ),
+              onPressed: () {
+                _deleteTransaction(); // Chiamata alla funzione di eliminazione
+                Navigator.of(context).pop(); // Chiude il popup
+                Navigator.of(context).pop(); // Torna indietro alla homepage
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteTransaction() async {
+    _transaction.accountId = _oldAccountId!;
+    _transaction.categoryId = _oldCategoryId;
+    await TransactionEntityService.deleteTransaction(_transaction);
     if (mounted) {
       Navigator.pop(context);
     }

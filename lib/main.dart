@@ -157,7 +157,12 @@ class _HomePageState extends State<HomePage> {
           _getPieChartAndButtons(),
           _getMonthThresholdBars(),
           _buildSectionDivider(_isCurrentMonth ? "Last 7 days transactions" : "$monthString transactions"),
-          TransactionsListGroupedByDate(transactions: transactions),
+          TransactionsListGroupedByDate(
+            transactions: transactions,
+            onTransactionUpdated: () {
+              _loadAllData();
+            },
+          ),
         ],
       ),
     );
