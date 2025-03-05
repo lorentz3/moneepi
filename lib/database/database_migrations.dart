@@ -3,6 +3,7 @@ Map<int, List<String>> migrationScripts = {
       """  
         CREATE TABLE Accounts (
           id INTEGER PRIMARY KEY,
+          icon TEXT,
           name TEXT NOT NULL,
           balance REAL NOT NULL DEFAULT 0,
           sort INTEGER NOT NULL DEFAULT 0);
@@ -10,6 +11,7 @@ Map<int, List<String>> migrationScripts = {
       """
         CREATE TABLE Categories (
           id INTEGER PRIMARY KEY,
+          icon TEXT,
           name TEXT NOT NULL,
           type TEXT CHECK(type IN ('EXPENSE','INCOME') ) NOT NULL DEFAULT 'EXPENSE',
           sort INTEGER NOT NULL DEFAULT 0,

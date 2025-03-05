@@ -58,6 +58,8 @@ class TransactionsListGroupedByDate extends StatelessWidget {
               itemBuilder: (context, index) {
                 TransactionDto transaction = entry.value[index];
                 Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                String categoryTitle = transaction.categoryIcon != null ? "${transaction.categoryIcon!} ${transaction.categoryName}" : transaction.categoryName;
+                String accountTitle = transaction.accountIcon != null ? transaction.accountIcon! : transaction.accountName[0];
 
                 return InkWell(
                   onTap: () {
@@ -82,7 +84,7 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                         Expanded(
                           flex: 15,
                           child: Text(
-                            transaction.categoryName,
+                            categoryTitle,
                             textAlign: TextAlign.left,
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
@@ -107,7 +109,7 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                         Expanded(
                           flex: 3,
                           child: Text(
-                            transaction.accountName.split(" ")[0],
+                            accountTitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),

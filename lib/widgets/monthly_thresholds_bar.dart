@@ -12,6 +12,7 @@ class MonthlyThresholdsBar extends StatelessWidget {
     double threshold = summary.monthThreshold ?? 0.0;
     double percentage = 100 * ((threshold > 0) ? (spent / threshold).clamp(0.0, 10.99) : 0.0);
     Color progressColor = percentage > 75 ? (percentage > 89 ? Colors.red[300]! : Colors.orange[200]!) : Colors.green[300]!;
+    String barTitle = summary.categoryIcon != null ? "${summary.categoryIcon!} ${summary.categoryName}" : summary.categoryName;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -50,7 +51,7 @@ class MonthlyThresholdsBar extends StatelessWidget {
                   Expanded(
                     flex: 3, // Permette alla categoria di adattarsi allo spazio disponibile
                     child: Text(
-                      summary.categoryName,
+                      barTitle,
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,

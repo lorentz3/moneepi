@@ -53,7 +53,7 @@ class CategoryEntityService {
     await db.execute(insertDefaultIncomeCategoriesQuery);
   }
 
-  static getAllCategoriesWithMonthlyThreshold(TransactionType type) async {
+  static Future<List<Category>> getAllCategoriesWithMonthlyThreshold(TransactionType type) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps =  await db.query(
       _tableName,

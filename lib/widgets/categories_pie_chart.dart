@@ -43,10 +43,11 @@ class CategoriesPieChart extends StatelessWidget {
       var index = entry.key;
       var e = entry.value;
       final percentage = ((e.amount ?? 0.0) / totalAmount) * 100;
+      String title = e.categoryIcon != null ? e.categoryIcon! : e.categoryName[0];
       return PieChartSectionData(
         color: _getColor(index),
         value: e.amount,
-        title: percentage > 3 ? e.categoryName.split(" ")[0] : '',
+        title: percentage > 3 ? title : '',
         titlePositionPercentageOffset: _getTitlePositionPercentageOffset(slicesNumber, percentage),
         radius: 85,
         titleStyle: TextStyle(color: Colors.white, fontSize: _getTitleFontSize(slicesNumber, percentage), fontWeight: FontWeight.bold),

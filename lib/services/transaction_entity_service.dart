@@ -22,8 +22,8 @@ class TransactionEntityService {
   static Future<List<TransactionDto>> getTransactionsBetween(int startTimestamp, int endTimestamp) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
-      SELECT t.id, t.type, t.timestamp, a.name AS accountName, c.name AS categoryName, t.amount
-      FROM Transactions t 
+      SELECT t.id, t.type, t.timestamp, a.icon AS accountIcon, a.name AS accountName, c.icon AS categoryIcon, c.name AS categoryName, t.amount
+      FROM $_tableName t 
       LEFT JOIN Accounts a ON t.accountId = a.id
       LEFT JOIN Categories c ON t.categoryId = c.id
       WHERE timestamp >= $startTimestamp AND timestamp < $endTimestamp

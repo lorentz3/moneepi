@@ -18,6 +18,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
   String? _categoryName;
   double? _monthThreshold;
   double? _yearThreshold;
+  String? _icon;
 
   @override
   void initState() {
@@ -25,6 +26,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
     _categoryName = widget.category.name;
     _monthThreshold = widget.category.monthThreshold;
     _yearThreshold = widget.category.yearThreshold;
+    _icon = widget.category.icon;
   }
 
   @override
@@ -44,6 +46,12 @@ class CategoryFormPageState extends State<CategoryFormPage> {
             key: _formKey,
             child: Column(
               children: [
+                TextFormField(
+                  decoration: InputDecoration(labelText: 'Category symbol', hintText: 'Emoji strongly suggested'),
+                  initialValue: _icon,
+                  onChanged: (value) => _icon = value,
+                  validator: (value) => value != null && value.length > 2 ? 'Symbol must be 1 emoji or max 2 characters' : null,
+                ),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Category name'),
                   initialValue: _categoryName,
@@ -90,6 +98,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
     category.name = _categoryName!;
     category.monthThreshold = _monthThreshold;
     category.yearThreshold = _yearThreshold;
+    category.icon = _icon;
     if(widget.isNew!){
       CategoryEntityService.insertCategory(category);
     } else {

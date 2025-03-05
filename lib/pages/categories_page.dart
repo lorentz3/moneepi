@@ -85,6 +85,10 @@ class CategoriesPageState extends State<CategoriesPage> {
                   child: Row(
                     children: [
                       Expanded(
+                        flex: 1,
+                        child: elements[index].icon != null ? Text(elements[index].icon!) : const Text(" - "),
+                      ),
+                      Expanded(
                         flex: 10,
                         child: Text(elements[index].name),
                       ),

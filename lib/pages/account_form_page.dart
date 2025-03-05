@@ -16,11 +16,13 @@ class AccountFormPage extends StatefulWidget {
 class AccountFormPageState extends State<AccountFormPage> {
   final _formKey = GlobalKey<FormState>();
   String? _accountName;
+  String? _icon;
 
   @override
   void initState() {
     super.initState();
     _accountName = widget.account.name;
+    _icon = widget.account.icon;
   }
 
   @override
@@ -41,6 +43,12 @@ class AccountFormPageState extends State<AccountFormPage> {
             child:
             Column(
               children: [
+                TextFormField(
+                  decoration: InputDecoration(labelText: 'Account symbol', hintText: 'Emoji strongly suggested'),
+                  initialValue: _icon,
+                  onChanged: (value) => _icon = value,
+                  validator: (value) => value != null && value.length > 2 ? 'Symbol must be 1 emoji or max 2 characters' : null,
+                ),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Account name'),
                   initialValue: _accountName,
@@ -67,10 +75,11 @@ class AccountFormPageState extends State<AccountFormPage> {
   _saveAccount() {
     Account account = widget.account;
     account.name = _accountName!;
-    if(widget.isNew!){
+    account.icon = _icon;
+    if (widget.isNew!) {
       AccountEntityService.insertAccount(account);
     } else {
-      AccountEntityService.updateAccount(account); // TODO
+      AccountEntityService.updateAccount(account);
     }
     Navigator.pop(context);
   }

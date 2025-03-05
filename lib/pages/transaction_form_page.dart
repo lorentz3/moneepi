@@ -12,7 +12,7 @@ class TransactionFormPage extends StatefulWidget {
   final Transaction? transaction;
   final bool isNew;
 
-  const TransactionFormPage({super.key, this.transactionId, this.transaction, required this.isNew});
+  const TransactionFormPage({super.key, this.transactionId, this.transaction, required this.isNew,});
 
   @override
   TransactionFormPageState createState() => TransactionFormPageState();
@@ -208,6 +208,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                     spacing: 6,
                     runSpacing: 0,
                     children: _accounts.take(5).map((account) {
+                      String accountTitle = account.icon != null ? "${account.icon!} ${account.name}" : account.name;
                       return ElevatedButton(
                         onPressed: () {
                           setState(() {
@@ -224,7 +225,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        child: Text(account.name, overflow: TextOverflow.ellipsis),
+                        child: Text(accountTitle, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                   ),
@@ -247,6 +248,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                     spacing: 6,
                     runSpacing: 0,
                     children: _categories.take(15).map((category) {
+                      String categoryTitle = category.icon != null ? "${category.icon!} ${category.name}" : category.name;
                       return ElevatedButton(
                         onPressed: () {
                           setState(() {
@@ -263,7 +265,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        child: Text(category.name, overflow: TextOverflow.ellipsis),
+                        child: Text(categoryTitle, overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                   ),
@@ -338,9 +340,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                 foregroundColor: Colors.white, // Testo bianco per contrasto
               ),
               onPressed: () {
-                _deleteTransaction(); // Chiamata alla funzione di eliminazione
-                Navigator.of(context).pop(); // Chiude il popup
-                Navigator.of(context).pop(); // Torna indietro alla homepage
+                _deleteTransaction();
               },
               child: Text('Delete'),
             ),
@@ -355,6 +355,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     _transaction.categoryId = _oldCategoryId;
     await TransactionEntityService.deleteTransaction(_transaction);
     if (mounted) {
+      Navigator.pop(context);
       Navigator.pop(context);
     }
   }
