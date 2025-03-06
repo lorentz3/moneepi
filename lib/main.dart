@@ -5,6 +5,7 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/pages/accounts_summaries_page.dart';
 import 'package:myfinance2/pages/settings_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
 import 'package:myfinance2/pages/transactions_page.dart';
@@ -183,7 +184,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 _buildSquareButton("Transactions", Icons.compare_arrows, () => _navigateToTransactionsPage(context)),
                 SizedBox(height: 10),
-                _buildSquareButton("Accounts", Icons.account_balance_wallet_outlined, () {/*TODO*/}),
+                _buildSquareButton("Accounts", Icons.account_balance_wallet_outlined, () => _navigateToAccountsSummariesPage()),
               ],
             ),
           ),
@@ -288,5 +289,12 @@ class _HomePageState extends State<HomePage> {
     ).then((_) {
       _loadAllData(); // TODO only if something changed
     });
+  }
+
+  void _navigateToAccountsSummariesPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AccountSummaryPage()),
+    );
   }
 }

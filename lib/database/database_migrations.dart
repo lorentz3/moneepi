@@ -43,5 +43,16 @@ Map<int, List<String>> migrationScripts = {
           PRIMARY KEY(categoryId, month, year),
           FOREIGN KEY(categoryId) REFERENCES Categories(id));
       """
+    ],
+    2: [
+      """  
+        CREATE TABLE MonthlyAccountSummaries (
+          accountId INTEGER NOT NULL,
+          month INTEGER NOT NULL,
+          year INTEGER NOT NULL,
+          amount REAL NOT NULL,
+          PRIMARY KEY(accountId, month, year),
+          FOREIGN KEY(accountId) REFERENCES Accounts(id));
+      """
     ]
   };
