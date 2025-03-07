@@ -16,6 +16,7 @@ import 'package:month_year_picker/month_year_picker.dart';
 import 'package:myfinance2/widgets/categories_pie_chart.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/monthly_thresholds_bar.dart';
+import 'package:myfinance2/widgets/section_divider.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
 
 void main() {
@@ -157,7 +158,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           _getPieChartAndButtons(),
           _getMonthThresholdBars(),
-          _buildSectionDivider(_isCurrentMonth ? "Last 7 days transactions" : "$monthString transactions"),
+          SectionDivider(text: _isCurrentMonth ? "Last 7 days transactions" : "$monthString transactions"),
           TransactionsListGroupedByDate(
             transactions: transactions,
             onTransactionUpdated: () {
@@ -211,33 +212,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ]
-    );
-  }
-
-  Widget _buildSectionDivider(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: Divider(color: Colors.grey[400], thickness: 1),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Divider(color: Colors.grey[400], thickness: 1),
-          ),
-        ],
-      ),
     );
   }
 

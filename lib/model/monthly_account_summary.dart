@@ -2,17 +2,24 @@ class MonthlyAccountSummary {
   final int accountId;
   final int month;
   final int year;
-  double? amount;
+  double? expenseAmount;
+  double? incomeAmount;
 
-  MonthlyAccountSummary({required this.accountId, required this.month, required this.year, 
-    this.amount});
+  MonthlyAccountSummary({
+    required this.accountId, 
+    required this.month, 
+    required this.year, 
+    this.expenseAmount, 
+    this.incomeAmount,
+  });
 
   Map<String, dynamic> toMap() {
     return {
       'accountId': accountId,
       'month': month,
       'year': year,
-      'amount': amount,
+      'expenseAmount': expenseAmount,
+      'incomeAmount': incomeAmount,
     };
   }
   
@@ -20,6 +27,7 @@ class MonthlyAccountSummary {
     accountId: json['accountId'], 
     month: json['month'],
     year: json['year'],
-    amount: json['amount'],
+    expenseAmount: json['expenseAmount'],
+    incomeAmount: json['incomeAmount'],
   );
 }

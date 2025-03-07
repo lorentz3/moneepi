@@ -3,8 +3,12 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/monthly_account_summary_dto.dart';
 import 'package:myfinance2/model/account.dart';
+import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/pages/color_identity.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
+import 'package:myfinance2/widgets/month_selector.dart';
+import 'package:myfinance2/widgets/section_divider.dart';
 
 class AccountSummaryPage extends StatefulWidget {
 
@@ -34,6 +38,16 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
     setState(() {});
   }
 
+  _loadMonthlySummaries() async {
+    _monthlySummaries = await MonthlyAccountEntityService.getAllMonthAccountsSummaries(_selectedDate.month, _selectedDate.year);
+  }
+
+  void _updateDate(DateTime newDate) async {
+    _selectedDate = newDate;
+    await _loadMonthlySummaries();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,11 +55,16 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            SectionDivider(text: "Current balances"),
             _buildCurrentBalances(),
-            SizedBox(height: 16),
-            _buildBalanceChart(),
-            SizedBox(height: 16),
+            SectionDivider(text: "Expenses"),
+            _buildBalanceChart(TransactionType.EXPENSE),
+            SectionDivider(text: "Incomes"),
+            _buildBalanceChart(TransactionType.INCOME),
+            MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center,),
+            SectionDivider(text: "Current month totals"),
             _buildMonthlySummary(),
+            SizedBox(height: 100),
           ],
         ),
       ),
@@ -53,117 +72,188 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
   }
 
   Widget _buildCurrentBalances() {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.all(8),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Saldi Attuali", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Column(
-              children: _accounts.map((account) => ListTile(
-                title: account.icon != null ? Text("${account.icon} ${account.name}") : Text(account.name),
-                trailing: Text("€ ${account.balance.toStringAsFixed(2)}"),
-              )).toList(),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: _accounts.asMap().entries.map((entry) {
+            int index = entry.key;
+            var account = entry.value;
+            //Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+            String accountTitle = account.icon != null ? "${account.icon} ${account.name}" : account.name;
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    flex: 15,
+                    child: Text(
+                      accountTitle,
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        fontSize: 18, 
+                        fontWeight: FontWeight.bold,
+                        color: getColor(index),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 10,
+                    child: Text(
+                      account.balance < 0
+                          ? ' - € ${account.balance.toStringAsFixed(2)} '
+                          : ' + € ${account.balance.toStringAsFixed(2)} ',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        color: account.balance < 0
+                            ? Color.fromARGB(255, 206, 35, 23)
+                            : Color.fromARGB(255, 33, 122, 34),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ]
+              )
+            );
+          }).toList(),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildMonthlySummary() {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.all(8),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Riepilogo Mensile", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Placeholder(fallbackHeight: 40), // Qui va il tuo selettore di mese
-            SizedBox(height: 8),
-            Column(
-              children: _monthlySummaries.map((summary) => ListTile(
-                leading: summary.accountIcon != null ? Icon(Icons.account_balance) : null,
-                title: Text(summary.accountName),
-                subtitle: Text("Mese: ${summary.month}/${summary.year}"),
-                trailing: Text("€${summary.amount?.toStringAsFixed(2) ?? '0.00'}"),
-              )).toList(),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: _monthlySummaries.where((summary) => summary.month == _selectedDate.month && summary.year == _selectedDate.year).map((summary) {
+            String accountTitle = summary.accountIcon != null ? "${summary.accountIcon} ${summary.accountName}" : summary.accountName;
+            String expenseAmount = summary.expenseAmount != null ? summary.expenseAmount!.toStringAsFixed(2) : "0.00";
+            String incomeAmount = summary.incomeAmount != null ? summary.incomeAmount!.toStringAsFixed(2) : "0.00";
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    flex: 10,
+                    child: Text(
+                      accountTitle,
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        fontSize: 14, 
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Text(' - € $expenseAmount',
+                      textAlign: TextAlign.right,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 12, 
+                        color: Color.fromARGB(255, 206, 35, 23),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Text(' + € $incomeAmount',
+                      textAlign: TextAlign.right,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 12, 
+                        color: Color.fromARGB(255, 33, 122, 34),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ]
+              )
+            );
+          }).toList(),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildBalanceChart() {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.all(8),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Andamento Bilancio", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Padding(
-                            padding: EdgeInsets.only(right: 5),
-                            child: Text("€${value.toStringAsFixed(0)}", style: TextStyle(fontSize: 10)),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          int index = value.toInt();
-                          if (index >= 0 && index < 12) {
-                            DateTime now = DateTime.now();
-                            DateTime monthDate = DateTime(now.year, now.month - 11 + index);
-                            return Text(DateFormat('MMM').format(monthDate), style: TextStyle(fontSize: 10));
-                          }
-                          return Text('');
-                        },
-                      ),
+  Widget _buildBalanceChart(TransactionType type) {
+    return Padding(
+      padding: EdgeInsets.only(left: 16, right: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 150,
+            child: LineChart(
+              LineChartData(
+                titlesData: FlTitlesData(
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        int index = value.toInt();
+                        if (index >= 0 && index < 12) {
+                          DateTime yearDate = DateTime(_selectedDate.year);
+                          return (_selectedDate.month - 11 + index) == 1 ? Text(DateFormat('yyyy').format(yearDate), style: TextStyle(fontSize: 9)) : const Text("");
+                        }
+                        return Text('');
+                      },
                     ),
                   ),
-                  lineBarsData: _generateLineChartData(),
-                  minY: 0,
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border.all(color: Colors.black, width: 1),
+                  leftTitles: AxisTitles(),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Text("€ ${value.toStringAsFixed(0)}", style: TextStyle(fontSize: 10)),
+                        );
+                      },
+                    ),
                   ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        int index = value.toInt();
+                        if (index >= 0 && index < 12) {
+                          DateTime monthDate = DateTime(_selectedDate.year, _selectedDate.month - 11 + index);
+                          return Text(DateFormat('MMM').format(monthDate), style: TextStyle(fontSize: 10));
+                        }
+                        return Text('');
+                      },
+                    ),
+                  ),
+                ),
+                lineBarsData: _generateLineChartData(type),
+                minY: 0,
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: Colors.black, width: 1),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  List<LineChartBarData> _generateLineChartData() {
-    DateTime now = DateTime.now();
-    List<int> last12Months = List.generate(12, (index) => now.month - 11 + index);
-    List<int> last12Years = List.generate(12, (index) => now.year - (now.month - 11 + index < 1 ? 1 : 0));
+  List<LineChartBarData> _generateLineChartData(TransactionType type) {
+    List<int> last12Months = List.generate(12, (index) => _selectedDate.month - 11 + index);
+    List<int> last12Years = List.generate(12, (index) => _selectedDate.year - (_selectedDate.month - 11 + index < 1 ? 1 : 0));
 
     Map<int, List<FlSpot>> accountData = {};
     for (var summary in _monthlySummaries) {
@@ -172,16 +262,17 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
       }
       int idx = last12Months.indexOf(summary.month);
       if (idx != -1 && last12Years[idx] == summary.year) {
-        accountData[summary.accountId]![idx] = FlSpot(idx.toDouble(), summary.amount ?? 0.0);
+        accountData[summary.accountId]![idx] = FlSpot(idx.toDouble(), type == TransactionType.EXPENSE ? summary.expenseAmount ?? 0.0 : summary.incomeAmount ?? 0.0);
       }
     }
 
     return accountData.entries.map((entry) {
       return LineChartBarData(
         spots: entry.value,
-        isCurved: true,
+        isCurved: false,
         barWidth: 3,
         isStrokeCapRound: true,
+        color: getLightColor(entry.key - 1),
         belowBarData: BarAreaData(show: false),
       );
     }).toList();

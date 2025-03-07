@@ -25,7 +25,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   int? _selectedAccount;
   int? _selectedCategory;
-  double? _amount = 0.0;
+  double? _amount;
   String? _notes = '';
   List<Account> _accounts = [];
   List<Category> _categories = [];
@@ -273,8 +273,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Amount'),
                   keyboardType: TextInputType.number,
-                  initialValue: _amount != null ? "$_amount" : "0.0",
+                  initialValue: _amount != null ? "$_amount" : "",
                   onChanged: (value) => _amount = double.tryParse(value) ?? 0.0,
+                  validator: (value) => value == null || value == '' ? 'Insert a valid amount' : null,
                 ),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Notes'),

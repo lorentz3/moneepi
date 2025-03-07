@@ -50,7 +50,8 @@ Map<int, List<String>> migrationScripts = {
           accountId INTEGER NOT NULL,
           month INTEGER NOT NULL,
           year INTEGER NOT NULL,
-          amount REAL NOT NULL,
+          expenseAmount REAL NOT NULL,
+          incomeAmount REAL NOT NULL,
           PRIMARY KEY(accountId, month, year),
           FOREIGN KEY(accountId) REFERENCES Accounts(id));
       """

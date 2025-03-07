@@ -3,6 +3,7 @@ import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/dto/monthly_account_summary_dto.dart';
 import 'package:myfinance2/model/monthly_account_summary.dart';
 import 'package:myfinance2/model/transaction.dart';
+import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 
 class MonthlyAccountEntityService {
@@ -10,23 +11,27 @@ class MonthlyAccountEntityService {
 
   static Future<void> updateMonthlyAccountSummary(int accountId, int month, int year) async {
     List<Transaction>? transactions = await TransactionEntityService.getAllByAccountIdAndMonthAndYear(accountId, month, year);
-    double sum = 0;
+    double expenseSum = 0;
+    double incomeSum = 0;
     if (transactions != null && transactions.isNotEmpty) {
-      sum = transactions.fold(0.0, (acc, obj) => acc + obj.amount!);
+      expenseSum = transactions.where((t) => t.type == TransactionType.EXPENSE).fold(0.0, (acc, obj) => acc + obj.amount!);
+      incomeSum = transactions.where((t) => t.type == TransactionType.INCOME).fold(0.0, (acc, obj) => acc + obj.amount!);
     }
-    debugPrint("Updating monthly account summary: accountId=$accountId, sum=$sum");
+    debugPrint("Updating monthly account summary: accountId=$accountId, sum=$expenseSum");
     MonthlyAccountSummary? summary = await getMonthlyAccountSummary(accountId, month, year);
     if (summary == null) {
       MonthlyAccountSummary summary = MonthlyAccountSummary(
         accountId: accountId,
         month: month,
         year: year,
-        amount: sum
+        expenseAmount: expenseSum,
+        incomeAmount: incomeSum,
       );
       insertMonthlyAccountSummary(summary);
       return;
     }
-    summary.amount = sum;
+    summary.expenseAmount = expenseSum;
+    summary.incomeAmount = incomeSum;
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName,
       summary.toMap(),
@@ -65,13 +70,16 @@ class MonthlyAccountEntityService {
   }
 
   static Future<List<MonthlyAccountSummaryDto>> getAllMonthAccountsSummaries(int month, int year) async {
+    debugPrint("month $month year $year");
     final db = await DatabaseHelper.getDb();
+    final String condition = month == 12 ? "t.month <= $month AND t.year = $year"
+      : "(t.month <= $month AND t.year = $year) OR (t.month > $month AND t.year = ${year - 1})";
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
-      SELECT a.id AS accountId, a.icon AS accountIcon, a.name AS accountName, t.amount, t.month, t.year
+      SELECT a.id AS accountId, a.icon AS accountIcon, a.name AS accountName, t.expenseAmount, t.incomeAmount, t.month, t.year
       FROM $_tableName t 
       LEFT JOIN Accounts a ON t.accountId = a.id
-      WHERE t.month = $month AND t.year = $year
-      ORDER BY t.amount DESC
+      WHERE $condition
+      ORDER BY a.sort DESC
     """
     );
     return List.generate(maps.length, (index) => MonthlyAccountSummaryDto.fromJson(maps[index]));

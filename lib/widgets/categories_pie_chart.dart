@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
+import 'package:myfinance2/pages/color_identity.dart';
 
 class CategoriesPieChart extends StatelessWidget {
   final List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary; 
@@ -45,7 +46,7 @@ class CategoriesPieChart extends StatelessWidget {
       final percentage = ((e.amount ?? 0.0) / totalAmount) * 100;
       String title = e.categoryIcon != null ? e.categoryIcon! : e.categoryName[0];
       return PieChartSectionData(
-        color: _getColor(index),
+        color: getColor(index),
         value: e.amount,
         title: percentage > 3 ? title : '',
         titlePositionPercentageOffset: _getTitlePositionPercentageOffset(slicesNumber, percentage),
@@ -70,12 +71,5 @@ class CategoriesPieChart extends StatelessWidget {
     if (percentage > 15) return 20;
     if (percentage > 5) return 16;
     return 14;
-  }
-  
-  Color _getColor(int index) {
-    final colors = [Colors.blue[900], Colors.purple[900], Colors.green[900], Colors.brown[700], Colors.red[900],
-      Colors.orange[900], Colors.yellow[900], Colors.lime[900], Colors.pink[900],
-      Colors.cyan[900], Colors.indigo[900], Colors.teal[900],];
-      return colors[index % colors.length]!;
   }
 }

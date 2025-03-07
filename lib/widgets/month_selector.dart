@@ -5,11 +5,13 @@ import 'package:month_year_picker/month_year_picker.dart';
 class MonthSelector extends StatefulWidget {
   final DateTime selectedDate;
   final Function(DateTime) onDateChanged; // Callback per aggiornare la variabile
+  final MainAxisAlignment? alignment;
 
   const MonthSelector({
     super.key,
     required this.selectedDate,
     required this.onDateChanged,
+    this.alignment,
   });
 
   @override
@@ -18,11 +20,15 @@ class MonthSelector extends StatefulWidget {
 
 class MonthSelectorState extends State<MonthSelector> {
   late DateTime _currentDate;
+  MainAxisAlignment _alignment = MainAxisAlignment.start;
 
   @override
   void initState() {
     super.initState();
     _currentDate = widget.selectedDate;
+    if (widget.alignment != null) {
+      _alignment = widget.alignment!;
+    }
   }
 
   void _changeMonth(int offset) {
@@ -53,7 +59,7 @@ class MonthSelectorState extends State<MonthSelector> {
     return Padding(
       padding: const EdgeInsets.all(2.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: _alignment,
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
