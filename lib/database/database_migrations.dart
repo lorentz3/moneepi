@@ -55,5 +55,25 @@ Map<int, List<String>> migrationScripts = {
           PRIMARY KEY(accountId, month, year),
           FOREIGN KEY(accountId) REFERENCES Accounts(id));
       """
+    ],
+    3: [
+      """  
+        CREATE TABLE Groups (
+          id INTEGER PRIMARY KEY,
+          icon TEXT,
+          name TEXT NOT NULL,
+          type TEXT CHECK(type IN ('EXPENSE','INCOME') ) NOT NULL DEFAULT 'EXPENSE',
+          sort INTEGER NOT NULL DEFAULT 0,
+          monthThreshold REAL,
+          yearThreshold REAL);
+      """,
+      """  
+        CREATE TABLE Categories_Groups (
+          groupId INTEGER NOT NULL,
+          categoryId INTEGER NOT NULL,
+          PRIMARY KEY(groupId, categoryId),
+          FOREIGN KEY(groupId) REFERENCES Groups(id),
+          FOREIGN KEY(categoryId) REFERENCES Categories(id));
+      """,
     ]
   };

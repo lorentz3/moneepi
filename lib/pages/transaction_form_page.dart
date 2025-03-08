@@ -63,7 +63,6 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   Future<void> _loadData() async {
-    debugPrint("load data");
     _accounts = await AccountEntityService.getAllAccounts();
     _categories = await CategoryEntityService.getAllCategories(_selectedType);
     setState(() { });

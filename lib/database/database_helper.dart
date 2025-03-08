@@ -4,7 +4,7 @@ import 'package:path/path.dart';
 import 'database_migrations.dart';
 
 class DatabaseHelper {
-  static const int _version = 3;
+  static final int _version = migrationScripts.length;
   static const String _dbName = "myHealth.db";
 
   static Future<Database> getDb() async {
