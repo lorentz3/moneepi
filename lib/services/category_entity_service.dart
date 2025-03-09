@@ -70,5 +70,13 @@ class CategoryEntityService {
     final db = await DatabaseHelper.getDb();
     final typeName = type.toString().split('.').last;
     final result = await db.rawQuery('SELECT 1 FROM $_tableName WHERE type = "$typeName" LIMIT 1');
-    return result.isNotEmpty;}
+    return result.isNotEmpty;
+  }
+
+  static Future<void> updateMonthThresholdById(int? categoryId, double? monthThreshold) async {
+    final db = await DatabaseHelper.getDb();
+    await db.execute("""
+      UPDATE $_tableName SET monthThreshold = $monthThreshold WHERE id = $categoryId
+    """);
+  }
 }

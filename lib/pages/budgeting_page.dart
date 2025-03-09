@@ -1,62 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:myfinance2/model/category.dart';
-import 'package:myfinance2/model/transaction_type.dart';
-import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/pages/monthly_threshold_page.dart';
+import 'package:myfinance2/widgets/square_button.dart';
 
 class BudgetingPage extends StatefulWidget {
   const BudgetingPage({super.key});
 
   @override
-  BudgetingPageState createState() => BudgetingPageState();
+  State createState() => BudgetingPageState();
 }
 
 class BudgetingPageState extends State<BudgetingPage> {
-  List<Category> _categories = [];
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    //_updateButtonFlags();
   }
-  
-  Future<void> _loadCategories() async {
-    _categories = await CategoryEntityService.getAllCategories(TransactionType.EXPENSE);
-    setState(() { });
-  }
+
+  /*_updateButtonFlags() async {
+    _hasAccounts = await AccountEntityService.existsAtLeastOneAccount();
+    _hasExpenseCategories = await CategoryEntityService.existsAtLeastOneCategoryByType(TransactionType.EXPENSE);
+    _hasIncomeCategories = await CategoryEntityService.existsAtLeastOneCategoryByType(TransactionType.INCOME);
+    setState(() {});
+  }*/
 
   @override
   Widget build(BuildContext context) {
+    double buttonSize = (MediaQuery.of(context).size.width - 32) / 4; // 32 = 8 padding per lato * 4
+
     return Scaffold(
       appBar: AppBar(title: Text("Budgeting")),
-      body: ListView.builder(
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          return ListTile(
-            leading: Text(
-              category.icon ?? "🔘",
-              style: TextStyle(fontSize: 24),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: GridView.count(
+          crossAxisCount: 4,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          children: [
+            SquareButton(
+              label: "Monthly Thresholds",
+              icon: Icons.data_thresholding_outlined,
+              size: buttonSize,
+              highlight: false,
+              highlightText: "",
+              onPressed: () => _navigateToMonthlyThresholdPage(context),
             ),
-            title: Text(category.name, style: TextStyle(fontWeight: FontWeight.bold)),
-            trailing: SizedBox(
-              width: 100,
-              child: TextField(
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                ),
-                controller: TextEditingController(text: category.monthThreshold?.toStringAsFixed(2) ?? ""),
-                onSubmitted: (value) {
-                  setState(() {
-                    category.monthThreshold = double.tryParse(value) ?? category.monthThreshold;
-                  });
-                },
-              ),
+            SquareButton(
+              label: "Categories Groups",
+              icon: Icons.group_work_outlined,
+              size: buttonSize,
+              highlight: false,
+              highlightText: "",
+              onPressed: () => _navigateToMonthlyThresholdPage(context),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
-}
+
+  void _navigateToMonthlyThresholdPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MonthlyThresholdsPage()),
+    ).then((_) {
+      //_updateButtonFlags();
+    });
+  }
+} 

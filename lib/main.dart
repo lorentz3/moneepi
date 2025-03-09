@@ -90,6 +90,7 @@ class _HomePageState extends State<HomePage> {
       if (!monthCategoriesSummary.any((element) => element.categoryId == c.id)) {
         monthCategoriesSummary.add(MonthlyCategoryTransactionSummaryDto(
           categoryId: c.id!, 
+          categoryIcon: c.icon,
           categoryName: c.name, 
           month: selectedDate.month, 
           year: selectedDate.year,
