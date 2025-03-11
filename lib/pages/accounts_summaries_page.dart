@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:myfinance2/dto/account_dto.dart';
 import 'package:myfinance2/dto/monthly_account_summary_dto.dart';
-import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/color_identity.dart';
-import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
@@ -23,7 +22,7 @@ class AccountSummaryPage extends StatefulWidget {
 class AccountSummaryPageState extends State<AccountSummaryPage> {
   late DateTime _selectedDate;
   List<MonthlyAccountSummaryDto> _monthlySummaries = [];
-  List<Account> _accounts = [];
+  List<AccountDto> _accounts = [];
 
   @override
   void initState() {
@@ -33,7 +32,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
   }
 
   _loadAllData() async {
-    _accounts = await AccountEntityService.getAllAccounts();
+    _accounts = await MonthlyAccountEntityService.getAllAccountsWithBalance();
     _monthlySummaries = await MonthlyAccountEntityService.getAllMonthAccountsSummaries(_selectedDate.month, _selectedDate.year);
     setState(() {});
   }

@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:myfinance2/database/database_helper.dart';
+import 'package:myfinance2/dto/account_dto.dart';
 import 'package:myfinance2/dto/monthly_account_summary_dto.dart';
+import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/monthly_account_summary.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 
 class MonthlyAccountEntityService {
@@ -83,6 +86,34 @@ class MonthlyAccountEntityService {
     """;
     final List<Map<String, dynamic>> maps = await db.rawQuery(query);
     return List.generate(maps.length, (index) => MonthlyAccountSummaryDto.fromJson(maps[index]));
+  }
+
+  static Future<List<AccountDto>> getAllAccountsWithBalance() async {
+    final db = await DatabaseHelper.getDb();
+    final List<Account> accountMaps = await AccountEntityService.getAllAccounts();
+    // Ottieni i saldi di tutti gli account
+    final List<Map<String, dynamic>> balances = await db.rawQuery('''
+      SELECT 
+        accountId,
+        (COALESCE(SUM(incomeAmount), 0) - COALESCE(SUM(expenseAmount), 0)) as balance
+      FROM $_tableName
+      GROUP BY accountId
+    ''');
+    
+    // Crea una mappa per accesso rapido ai saldi
+    Map<int, double> balanceMap = {};
+    for (var item in balances) {
+      balanceMap[item['accountId']] = item['balance'];
+    }
+    
+    // Crea gli AccountDto con i saldi calcolati
+    List<AccountDto> accounts = accountMaps.map((account) {
+      // Usa il saldo calcolato o 0.0 se non trovato
+      double balance = balanceMap[account.id] ?? 0.0;
+      return AccountDto.fromAccount(account, balance);
+    }).toList();
+    
+    return accounts;
   }
 
   // only for debug
