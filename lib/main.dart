@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> {
     if (_isCurrentMonth) {
       transactions = await TransactionEntityService.getLastDaysTransactions(7);
     } else {
-      transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month);
+      transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month, selectedDate.year);
     }
     setState(() {});
   }

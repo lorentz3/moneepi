@@ -62,6 +62,12 @@ class GroupEntityService {
       'categoryId': categoryId,
       'groupId': groupId,
     });
-  } 
+  }
+
+  // only for debug
+  static Future<void> deleteAll() async {
+    final db = await DatabaseHelper.getDb();
+    await db.delete(_tableName);
+  }
 
 }

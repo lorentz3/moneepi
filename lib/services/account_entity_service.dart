@@ -48,4 +48,10 @@ class AccountEntityService {
     final result = await db.rawQuery('SELECT 1 FROM $_tableName LIMIT 1');
     return result.isNotEmpty;
   }
+
+  // only for debug
+  static Future<void> deleteAll() async {
+    final db = await DatabaseHelper.getDb();
+    await db.delete(_tableName);
+  }
 }

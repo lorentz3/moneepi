@@ -75,5 +75,11 @@ class MonthlyCategoryTransactionEntityService {
     );
     return List.generate(maps.length, (index) => MonthlyCategoryTransactionSummaryDto.fromJson(maps[index]));
   }
+
+  // only for debug
+  static Future<void> deleteAll() async {
+    final db = await DatabaseHelper.getDb();
+    await db.delete(_tableName);
+  }
   
 }

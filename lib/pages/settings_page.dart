@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:myfinance2/model/account.dart';
+import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/services/group_entity_service.dart';
+import 'package:myfinance2/services/monthly_account_entity_service.dart';
+import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
+import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/widgets/square_button.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -83,6 +89,30 @@ class SettingsPageState extends State<SettingsPage> {
               highlightText: "",
               onPressed: () => _navigateToMonthlyThresholdPage(context),
             ),
+            SquareButton(
+              label: "Reset Transactions",
+              icon: Icons.warning,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "DEBUG",
+              onPressed: () => _resetTransactions(),
+            ),
+            SquareButton(
+              label: "Random transactions",
+              icon: Icons.warning,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "DEBUG",
+              onPressed: () => _randomTransactions(),
+            ),
+            SquareButton(
+              label: "Reset DB",
+              icon: Icons.warning,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "DEBUG",
+              onPressed: () => _resetDatabase(),
+            ),
           ],
         ),
       ),
@@ -112,5 +142,45 @@ class SettingsPageState extends State<SettingsPage> {
       context,
       MaterialPageRoute(builder: (context) => MonthlyThresholdsPage()),
     );
+  }
+
+  void _resetDatabase() async {
+    await TransactionEntityService.deleteAll();
+    await MonthlyCategoryTransactionEntityService.deleteAll();
+    await MonthlyAccountEntityService.deleteAll();
+    await GroupEntityService.deleteAll();
+    await CategoryEntityService.deleteAll();
+    await AccountEntityService.deleteAll();
+    if (mounted){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Database reset completed")),
+      );
+      Navigator.pop(context);
+    }
+  }
+
+  void _resetTransactions() async {
+    await TransactionEntityService.deleteAll();
+    await MonthlyCategoryTransactionEntityService.deleteAll();
+    await MonthlyAccountEntityService.deleteAll();
+    if (mounted){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Transactions reset completed")),
+      );
+      Navigator.pop(context);
+    }
+  }
+
+  void _randomTransactions() async {
+    List<Category> expenseCategories = await CategoryEntityService.getAllCategories(TransactionType.EXPENSE);
+    List<Category> incomeCategories = await CategoryEntityService.getAllCategories(TransactionType.INCOME);
+    List<Account> accounts = await AccountEntityService.getAllAccounts();
+    await TransactionEntityService.insertRandomTransactions(expenseCategories, incomeCategories, accounts);
+    if (mounted){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Insert random transactions completed")),
+      );
+      Navigator.pop(context);
+    }
   }
 } 

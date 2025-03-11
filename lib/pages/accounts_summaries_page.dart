@@ -252,9 +252,10 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
   }
 
   List<LineChartBarData> _generateLineChartData(TransactionType type) {
-    List<int> last12Months = List.generate(12, (index) => _selectedDate.month - 11 + index);
+    List<int> last12Months = List.generate(12, (index) => (_selectedDate.month - 11 + index) > 0 ? _selectedDate.month - 11 + index : index + _selectedDate.month + 1);
     List<int> last12Years = List.generate(12, (index) => _selectedDate.year - (_selectedDate.month - 11 + index < 1 ? 1 : 0));
-
+    debugPrint("last12 month $last12Months");
+    debugPrint("last12 years $last12Years");
     Map<int, List<FlSpot>> accountData = {};
     for (var summary in _monthlySummaries) {
       if (!accountData.containsKey(summary.accountId)) {

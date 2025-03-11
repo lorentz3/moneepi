@@ -1,4 +1,9 @@
+import 'dart:math';
+
+import 'package:flutter/widgets.dart';
 import 'package:myfinance2/database/database_helper.dart';
+import 'package:myfinance2/model/account.dart';
+import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
@@ -8,9 +13,9 @@ import 'package:myfinance2/services/monthly_category_transaction_entity_service.
 class TransactionEntityService {
   static const String _tableName = "Transactions";
   
-  static Future<List<TransactionDto>> getMonthTransactions(int month) async {
-    final int startTimestamp = DateTime(DateTime.now().year, month, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(DateTime.now().year, month + 1, 1).millisecondsSinceEpoch;
+  static Future<List<TransactionDto>> getMonthTransactions(int month, int year) async {
+    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
     return getTransactionsBetween(startTimestamp, endTimestamp);
   }
     
@@ -132,5 +137,48 @@ class TransactionEntityService {
       return null;
     }
     return List.generate(maps.length, (index) => Transaction.fromJson(maps[index]));
+  }
+
+  // only for debug
+  static Future<void> deleteAll() async {
+    final db = await DatabaseHelper.getDb();
+    await db.delete(_tableName);
+  }
+
+  static Future<void> insertRandomTransactions(List<Category> expenseCategories, List<Category> incomeCategories, List<Account> accounts) async {
+    // Verifica che le liste non siano vuote
+    if (expenseCategories.isEmpty || incomeCategories.isEmpty || accounts.isEmpty) {
+      debugPrint('Errore: Una o più liste sono vuote');
+      return;
+    }
+    Random random = Random();
+
+    // Scegliamo casualmente se sarà una spesa o un guadagno
+    for (int i = 0; i < 200; ++i) {
+      List<Category> chosenCategoryList = i > 20 ? expenseCategories : incomeCategories;
+
+      // Selezioniamo casualmente un account e una categoria
+      Account randomAccount = accounts[random.nextInt(accounts.length)];
+      Category randomCategory = chosenCategoryList[random.nextInt(chosenCategoryList.length)];
+
+      // Generiamo una data casuale nell'ultimo anno
+      DateTime now = DateTime.now();
+      DateTime randomTimestamp = now.subtract(Duration(days: random.nextInt(365)));
+
+      // Generiamo un importo casuale (tra 1 e 500 per esempio)
+      double randomAmount = (random.nextDouble() * 500).round() / 1;
+      if (i < 20) {
+        randomAmount = randomAmount * 10;
+      }
+
+      // Creiamo e salviamo la transazione
+      await insertTransaction(Transaction(
+        type: i > 20 ? TransactionType.EXPENSE : TransactionType.INCOME,
+        timestamp: randomTimestamp,
+        accountId: randomAccount.id,
+        categoryId: randomCategory.id,
+        amount: randomAmount,
+      ));
+    }
   }
 }

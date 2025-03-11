@@ -17,7 +17,7 @@ class MonthlyAccountEntityService {
       expenseSum = transactions.where((t) => t.type == TransactionType.EXPENSE).fold(0.0, (acc, obj) => acc + obj.amount!);
       incomeSum = transactions.where((t) => t.type == TransactionType.INCOME).fold(0.0, (acc, obj) => acc + obj.amount!);
     }
-    debugPrint("Updating monthly account summary: accountId=$accountId, sum=$expenseSum");
+    debugPrint("Updating monthly account summary: accountId=$accountId, sum=$expenseSum, month=$month, year=$year");
     MonthlyAccountSummary? summary = await getMonthlyAccountSummary(accountId, month, year);
     if (summary == null) {
       MonthlyAccountSummary summary = MonthlyAccountSummary(
@@ -74,15 +74,21 @@ class MonthlyAccountEntityService {
     final db = await DatabaseHelper.getDb();
     final String condition = month == 12 ? "t.month <= $month AND t.year = $year"
       : "(t.month <= $month AND t.year = $year) OR (t.month > $month AND t.year = ${year - 1})";
-    final List<Map<String, dynamic>> maps = await db.rawQuery("""
+    final String query = """
       SELECT a.id AS accountId, a.icon AS accountIcon, a.name AS accountName, t.expenseAmount, t.incomeAmount, t.month, t.year
       FROM $_tableName t 
       LEFT JOIN Accounts a ON t.accountId = a.id
       WHERE $condition
       ORDER BY a.sort DESC
-    """
-    );
+    """;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(query);
     return List.generate(maps.length, (index) => MonthlyAccountSummaryDto.fromJson(maps[index]));
+  }
+
+  // only for debug
+  static Future<void> deleteAll() async {
+    final db = await DatabaseHelper.getDb();
+    await db.delete(_tableName);
   }
   
 }

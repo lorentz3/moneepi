@@ -79,4 +79,10 @@ class CategoryEntityService {
       UPDATE $_tableName SET monthThreshold = $monthThreshold WHERE id = $categoryId
     """);
   }
+
+  // only for debug
+  static Future<void> deleteAll() async {
+    final db = await DatabaseHelper.getDb();
+    await db.delete(_tableName);
+  }
 }

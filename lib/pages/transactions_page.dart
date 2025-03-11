@@ -33,7 +33,7 @@ class TransactionsPageState extends State<TransactionsPage> {
   }
 
   Future<void> _loadTransactions() async {
-    transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month);
+    transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month, selectedDate.year);
     setState(() {});
   }
 
