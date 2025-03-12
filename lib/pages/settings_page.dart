@@ -4,6 +4,7 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
+import 'package:myfinance2/pages/import_xls_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
@@ -90,6 +91,14 @@ class SettingsPageState extends State<SettingsPage> {
               onPressed: () => _navigateToMonthlyThresholdPage(context),
             ),
             SquareButton(
+              label: "XLS Import",
+              icon: Icons.dataset_outlined,
+              size: buttonSize,
+              highlight: false,
+              highlightText: "",
+              onPressed: () => _navigateToXlsImportPage(),
+            ),
+            SquareButton(
               label: "Reset Transactions",
               icon: Icons.warning,
               size: buttonSize,
@@ -144,6 +153,15 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void _navigateToXlsImportPage() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ImportXlsPage()),
+    );
+  }
+
+//////////////////////////////////
+///
   void _resetDatabase() async {
     await TransactionEntityService.deleteAll();
     await MonthlyCategoryTransactionEntityService.deleteAll();
@@ -151,7 +169,7 @@ class SettingsPageState extends State<SettingsPage> {
     await GroupEntityService.deleteAll();
     await CategoryEntityService.deleteAll();
     await AccountEntityService.deleteAll();
-    if (mounted){
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Database reset completed")),
       );
@@ -163,7 +181,7 @@ class SettingsPageState extends State<SettingsPage> {
     await TransactionEntityService.deleteAll();
     await MonthlyCategoryTransactionEntityService.deleteAll();
     await MonthlyAccountEntityService.deleteAll();
-    if (mounted){
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Transactions reset completed")),
       );
@@ -176,11 +194,12 @@ class SettingsPageState extends State<SettingsPage> {
     List<Category> incomeCategories = await CategoryEntityService.getAllCategories(TransactionType.INCOME);
     List<Account> accounts = await AccountEntityService.getAllAccounts();
     await TransactionEntityService.insertRandomTransactions(expenseCategories, incomeCategories, accounts);
-    if (mounted){
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Insert random transactions completed")),
       );
       Navigator.pop(context);
     }
   }
-} 
+  
+}
