@@ -41,11 +41,11 @@ class ImportXlsPageState extends State<ImportXlsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Select a .xlsx file before"))
       );
+      setState(() {
+        _isExtractingAccountsAndCategories = false;
+      });
       return;
     }
-    setState(() {
-      _isExtractingAccountsAndCategories = true;
-    });
 
     var bytes = File(_filePath!).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
@@ -140,8 +140,13 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                     ),
                   )),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _parseFile,
+              if (!_isExtractingAccountsAndCategories) ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isExtractingAccountsAndCategories = true;
+                  });
+                 _parseFile();
+                },
                 child: Text("Extract Accounts and Categories"),
               ),
               if (_distinctAccounts.isNotEmpty)

@@ -59,11 +59,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     setState(() { });
   }
 
-  void _startImport() {
-    setState(() {
-      _isImporting = true;
-    });
-
+  void _startImport() async {
     var bytes = File(_filePath).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
     var sheet = excel.tables.keys.first;
@@ -78,11 +74,11 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     int? amountCol = _mapColumnIndexes['Amount'];
 
     for (var row in rows.skip(startRow)) {
-      DateTime importedDate = row[dateCol!];
-      String importedAccount = row[accountCol!];
-      String importedCategory = _hasSubCategories ? "${row[subCategoryCol!]}/${row[categoryCol!]}" : row[categoryCol!];
-      String importedNote = row[noteCol!];
-      String importedAmount = row[amountCol!];
+      String importedDate = row[dateCol!]?.toString() ?? "";
+      String importedAccount = row[accountCol!]?.toString() ?? "";
+      String importedCategory = _hasSubCategories ? "${row[categoryCol!]?.toString() ?? ""}/${row[subCategoryCol!]?.toString() ?? ""}" : row[categoryCol!]?.toString() ?? "";
+      String importedNote = row[noteCol!]?.toString() ?? "";
+      String importedAmount = row[amountCol!]?.toString() ?? "";
 
       int? categoryId = _categoryMapping[importedCategory];
       int? accountId = _accountMapping[importedAccount];
@@ -90,11 +86,10 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
         continue;
       }
       Category category = _existingCategories.where((category) => category.id == categoryId).first;
-      //DateFormat format = DateFormat("dd/MM/yyyy HH:mm:ss");
-      TransactionEntityService.insertTransaction(Transaction(
+      DateFormat format = DateFormat("dd/MM/yyyy HH:mm:ss");
+      await TransactionEntityService.insertTransaction(Transaction(
         accountId: accountId,
-        //timestamp: format.parse(importedDate),
-        timestamp: importedDate,
+        timestamp: format.parse(importedDate),
         type: category.type,
         categoryId: categoryId,
         amount: double.tryParse(importedAmount) ?? 0.0,
@@ -105,6 +100,13 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     setState(() {
       _isImporting = false;
     });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("XLSX import completed"))
+      );
+      Navigator.pop(context);
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -142,10 +144,15 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
           ),
           
           // Fixed footer
-          Padding(
+          _isImporting ? CircularProgressIndicator() : Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
-              onPressed: _startImport,
+              onPressed: () {
+                setState(() {
+                  _isImporting = true;
+                });
+                _startImport();
+              },
               child: Text("Start Import"),
             ),
           ),
