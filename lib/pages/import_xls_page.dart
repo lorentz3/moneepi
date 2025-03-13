@@ -3,6 +3,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 import 'dart:io';
 
+import 'package:myfinance2/pages/import_xls_map_page.dart';
+
 class ImportXlsPage extends StatefulWidget {
   const ImportXlsPage({super.key});
 
@@ -11,9 +13,9 @@ class ImportXlsPage extends StatefulWidget {
 }
 
 class ImportXlsPageState extends State<ImportXlsPage> {
-  String? filePath;
-  bool hasHeaderRow = true;
-  bool isImporting = false;
+  String? _filePath;
+  bool _hasHeaderRow = true;
+  bool _isExtractingAccountsAndCategories = false;
   final Map<String, TextEditingController> columnControllers = {
     'Date': TextEditingController(text: "0"),
     'Account': TextEditingController(text: "1"),
@@ -22,72 +24,74 @@ class ImportXlsPageState extends State<ImportXlsPage> {
     'Note': TextEditingController(text: "4"),
     'Amount': TextEditingController(text: "5"),
   };
-  Set<String> distinctAccounts = {};
-  Set<String> distinctCategories = {};
-  Set<String> distinctSubCategories = {};
+  final Set<String> _distinctAccounts = {};
+  final Set<String> _distinctCategories = {};
 
   Future<void> pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xls', 'xlsx']);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xlsx']);
     if (result != null) {
       setState(() {
-        filePath = result.files.single.path;
+        _filePath = result.files.single.path;
       });
     }
   }
 
   void _parseFile() async {
-    if (filePath == null) {
+    if (_filePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Seleziona un file prima di continuare"))
+        SnackBar(content: Text("Select a .xlsx file before"))
       );
       return;
     }
     setState(() {
-      isImporting = true;
+      _isExtractingAccountsAndCategories = true;
     });
 
-    var bytes = File(filePath!).readAsBytesSync();
+    var bytes = File(_filePath!).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
     var sheet = excel.tables.keys.first;
     List<List<dynamic>> rows = excel.tables[sheet]!.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
 
-    int startRow = hasHeaderRow ? 1 : 0;
+    int startRow = _hasHeaderRow ? 1 : 0;
     int? accountCol = int.tryParse(columnControllers['Account']!.text);
     int? categoryCol = int.tryParse(columnControllers['Category']!.text);
     int? subCategoryCol = int.tryParse(columnControllers['SubCategory']!.text);
 
     if (accountCol == null || categoryCol == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Configura correttamente le colonne prima di continuare"))
+        SnackBar(content: Text("Missing Account/Category column configuration"))
       );
       return;
     }
 
     for (var row in rows.skip(startRow)) {
       if (row.length > accountCol) {
-        distinctAccounts.add(row[accountCol]?.toString() ?? "");
+        _distinctAccounts.add(row[accountCol]?.toString() ?? "");
       }
-      if (row.length > categoryCol) {
-        distinctCategories.add(row[categoryCol]?.toString() ?? "");
-      }
-      if (subCategoryCol != null && row.length > subCategoryCol) {
-        distinctSubCategories.add(row[subCategoryCol]?.toString() ?? "");
+      if (subCategoryCol != null) {
+        if (row.length > categoryCol) {
+          _distinctCategories.add("${row[categoryCol]?.toString() ?? ""}/${row[subCategoryCol]?.toString() ?? ""}");
+        }
+      } else {
+        if (row.length > categoryCol) {
+          _distinctCategories.add(row[categoryCol]?.toString() ?? "");
+        }
       }
     }
 
     setState(() {
-      isImporting = false;
+      _isExtractingAccountsAndCategories = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Importa XLS")),
+      appBar: AppBar(title: Text("XLSX Import settings")),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: isImporting
+          child: _isExtractingAccountsAndCategories
             ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -101,12 +105,27 @@ class ImportXlsPageState extends State<ImportXlsPage> {
             : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (filePath == null) ElevatedButton(
+              if (_filePath == null) ElevatedButton(
                 onPressed: pickFile,
                 child: Text("Select XLSX file"),
               ),
-              if (filePath != null) Text("Selected file: ${filePath!.split('/').last}", style: TextStyle(fontWeight: FontWeight.bold),),
-              SizedBox(height: 10),
+              if (_filePath != null) Text("Selected file: ${_filePath!.split('/').last}", style: TextStyle(fontWeight: FontWeight.bold),),
+              SizedBox(height: 8),
+              Text("For the best import, the excel file should not have expense categories with the same name of income categories"),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _hasHeaderRow,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _hasHeaderRow = value ?? true;
+                      });
+                    },
+                  ),
+                  Text("The file contains a header row")
+                ],
+              ),
               Text("Configure column index (0 = 'A', 1 = 'B', ...):"),
               SizedBox(height: 10),
               ...columnControllers.entries.map((entry) => Padding(
@@ -125,31 +144,46 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                 onPressed: _parseFile,
                 child: Text("Extract Accounts and Categories"),
               ),
-              if (distinctAccounts.isNotEmpty)
+              if (_distinctAccounts.isNotEmpty)
                 ...[
                   Text("Accounts found:", style: TextStyle(fontWeight: FontWeight.bold),),
-                  ...distinctAccounts.map((e) => Text(e)),
+                  ..._distinctAccounts.map((e) => Text(e)),
                 ],
-              if (distinctCategories.isNotEmpty)
+              if (_distinctCategories.isNotEmpty)
                 ...[
                   Text("Categories found:", style: TextStyle(fontWeight: FontWeight.bold),),
-                  ...distinctCategories.map((e) => Text(e)),
-                ],
-              if (distinctSubCategories.isNotEmpty)
-                ...[
-                  Text("Sub-categories found:", style: TextStyle(fontWeight: FontWeight.bold),),
-                  ...distinctSubCategories.map((e) => Text(e)),
+                  ..._distinctCategories.map((e) => Text(e)),
                 ],
               SizedBox(height: 20),
-              if (distinctAccounts.isNotEmpty || distinctCategories.isNotEmpty)
+              if (_distinctAccounts.isNotEmpty || _distinctCategories.isNotEmpty)
                 ElevatedButton(
-                  onPressed: () {}, // Da implementare: passaggio alla schermata di mappatura
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ImportXlsMapPage(
+                          filePath: _filePath!,
+                          distinctAccounts: _distinctAccounts,
+                          distinctCategories: _distinctCategories,
+                          hasSubCategories: int.tryParse(columnControllers['SubCategory']!.text) != null,
+                          hasHeaderRow: _hasHeaderRow,
+                          mapColumnIndexes: _getMapColumnIndexes(),
+                        ),
+                      ),
+                    );
+                  },
                   child: Text("Map imported items"),
                 ),
               ],
           ),
         ),
       ),
+    );
+  }
+  
+  Map<String, int?> _getMapColumnIndexes() {
+    return columnControllers.map(
+      (key, controller) => MapEntry(key, int.tryParse(controller.text)),
     );
   }
 }

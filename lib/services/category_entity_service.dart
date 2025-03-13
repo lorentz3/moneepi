@@ -19,6 +19,15 @@ class CategoryEntityService {
     return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
   } 
 
+  static Future<List<Category>> getAllExpenseAndIncomeCategories() async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps =  await db.query(_tableName);
+    if(maps.isEmpty){
+      return [];
+    }
+    return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
+  } 
+
   static void updateCategory(Category category) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 

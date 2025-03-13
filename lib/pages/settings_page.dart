@@ -91,7 +91,7 @@ class SettingsPageState extends State<SettingsPage> {
               onPressed: () => _navigateToMonthlyThresholdPage(context),
             ),
             SquareButton(
-              label: "XLS Import",
+              label: "XLSX Import",
               icon: Icons.dataset_outlined,
               size: buttonSize,
               highlight: false,
