@@ -6,6 +6,7 @@ class MonthlyAccountSummaryDto {
   final int year;
   double? expenseAmount;
   double? incomeAmount;
+  double? cumulativeBalance;
 
   MonthlyAccountSummaryDto({
     required this.accountId, 
@@ -15,6 +16,7 @@ class MonthlyAccountSummaryDto {
     required this.year, 
     this.expenseAmount,
     this.incomeAmount,
+    this.cumulativeBalance,
   });
   
   factory MonthlyAccountSummaryDto.fromJson(Map<String, dynamic> json) => MonthlyAccountSummaryDto(
@@ -25,5 +27,6 @@ class MonthlyAccountSummaryDto {
     year: json['year'],
     expenseAmount: json['expenseAmount'],
     incomeAmount: json['incomeAmount'],
+    cumulativeBalance: json['cumulativeBalance'],
   );
 }

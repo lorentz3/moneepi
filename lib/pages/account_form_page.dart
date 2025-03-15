@@ -16,6 +16,7 @@ class AccountFormPage extends StatefulWidget {
 class AccountFormPageState extends State<AccountFormPage> {
   final _formKey = GlobalKey<FormState>();
   String? _accountName;
+  String? _initialBalance;
   String? _icon;
 
   @override
@@ -23,6 +24,7 @@ class AccountFormPageState extends State<AccountFormPage> {
     super.initState();
     _accountName = widget.account.name;
     _icon = widget.account.icon;
+    _initialBalance = "${widget.account.initialBalance}";
   }
 
   @override
@@ -47,13 +49,22 @@ class AccountFormPageState extends State<AccountFormPage> {
                   decoration: InputDecoration(labelText: 'Account symbol', hintText: 'Emoji strongly suggested'),
                   initialValue: _icon,
                   onChanged: (value) => _icon = value,
-                  validator: (value) => value != null && value.length > 2 ? 'Symbol must be 1 emoji or max 2 characters' : null,
+                  validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
                 ),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Account name'),
                   initialValue: _accountName,
                   onChanged: (value) => _accountName = value,
                   validator: (value) => value!.isEmpty ? 'Enter a name' : null,
+                ),
+                TextFormField(
+                  decoration: InputDecoration(labelText: 'Initial balance', hintText: 'Account value before every transaction'),
+                  initialValue: _initialBalance,
+                  keyboardType: TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true
+                  ),
+                  onChanged: (value) => _initialBalance = value,
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
@@ -76,6 +87,7 @@ class AccountFormPageState extends State<AccountFormPage> {
     Account account = widget.account;
     account.name = _accountName!;
     account.icon = _icon;
+    account.initialBalance = double.tryParse(_initialBalance ?? "0") ?? 0;
     if (widget.isNew!) {
       AccountEntityService.insertAccount(account);
     } else {

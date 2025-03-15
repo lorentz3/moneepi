@@ -68,10 +68,6 @@ class AccountsPageState extends State<AccountsPage> {
                           child: Text(elements[index].name),
                         ),
                         Expanded(
-                          flex: 3,
-                          child: Text(elements[index].balance.toString()),
-                        ),
-                        Expanded(
                           flex: 2,
                           child: IconButton(
                             icon: const Icon(Icons.edit),
@@ -111,12 +107,12 @@ class AccountsPageState extends State<AccountsPage> {
             Navigator.push(
               context, 
               MaterialPageRoute(builder: (context) => AccountFormPage(
-                account: Account(id: 0, name: "", balance: 0, sort: 0),
+                account: Account(id: 0, name: "", initialBalance: 0, sort: 0),
                 isNew: true,
               ))
             ).then((_) => setState(() {}));
           },
-          tooltip: 'Add category',
+          tooltip: 'Add account',
           child: const Icon(Icons.add),
         ),
       )

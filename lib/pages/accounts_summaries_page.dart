@@ -60,6 +60,8 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
             _buildBalanceChart(TransactionType.EXPENSE),
             SectionDivider(text: "Incomes"),
             _buildBalanceChart(TransactionType.INCOME),
+            SectionDivider(text: "Cumulative"),
+            _buildCumulativeBalanceChart(),
             MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center,),
             SectionDivider(text: "Current month totals"),
             _buildMonthlySummary(),
@@ -253,8 +255,6 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
   List<LineChartBarData> _generateLineChartData(TransactionType type) {
     List<int> last12Months = List.generate(12, (index) => (_selectedDate.month - 11 + index) > 0 ? _selectedDate.month - 11 + index : index + _selectedDate.month + 1);
     List<int> last12Years = List.generate(12, (index) => _selectedDate.year - (_selectedDate.month - 11 + index < 1 ? 1 : 0));
-    debugPrint("last12 month $last12Months");
-    debugPrint("last12 years $last12Years");
     Map<int, List<FlSpot>> accountData = {};
     for (var summary in _monthlySummaries) {
       if (!accountData.containsKey(summary.accountId)) {
@@ -276,5 +276,100 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
         belowBarData: BarAreaData(show: false),
       );
     }).toList();
+  }
+  
+  Widget _buildCumulativeBalanceChart() {
+    return Padding(
+      padding: EdgeInsets.only(left: 16, right: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 150,
+            child: LineChart(
+              LineChartData(
+                titlesData: FlTitlesData(
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        int index = value.toInt();
+                        if (index >= 0 && index < 12) {
+                          DateTime yearDate = DateTime(_selectedDate.year);
+                          return (_selectedDate.month - 11 + index) == 1 ? Text(DateFormat('yyyy').format(yearDate), style: TextStyle(fontSize: 9)) : const Text("");
+                        }
+                        return Text('');
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Text("€ ${value.toStringAsFixed(0)}", style: TextStyle(fontSize: 10)),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        int index = value.toInt();
+                        if (index >= 0 && index < 12) {
+                          DateTime monthDate = DateTime(_selectedDate.year, _selectedDate.month - 11 + index);
+                          return Text(DateFormat('MMM').format(monthDate), style: TextStyle(fontSize: 10));
+                        }
+                        return Text('');
+                      },
+                    ),
+                  ),
+                ),
+                lineBarsData: _generateLineChartDataCumulative(),
+                minY: 0,
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: Colors.black, width: 1),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<LineChartBarData> _generateLineChartDataCumulative() {
+    List<int> last12Months = List.generate(12, (index) => (_selectedDate.month - 11 + index) > 0 ? _selectedDate.month - 11 + index : index + _selectedDate.month + 1);
+    List<int> last12Years = List.generate(12, (index) => _selectedDate.year - (_selectedDate.month - 11 + index < 1 ? 1 : 0));
+    Map<int, List<FlSpot>> accountData = {};
+    for (var summary in _monthlySummaries) {
+      if (!accountData.containsKey(summary.accountId)) {
+        accountData[summary.accountId] = List.generate(12, (index) => FlSpot(index.toDouble(), _getInitialBalance(summary.accountId) ?? 0.0));
+      }
+      int idx = last12Months.indexOf(summary.month);
+      if (idx != -1 && last12Years[idx] == summary.year) {
+        accountData[summary.accountId]![idx] = FlSpot(idx.toDouble(), summary.cumulativeBalance ?? 0.0);
+      }
+    }
+
+    return accountData.entries.map((entry) {
+      return LineChartBarData(
+        spots: entry.value,
+        isCurved: false,
+        barWidth: 3,
+        isStrokeCapRound: true,
+        color: getLightColor(entry.key - 1),
+        belowBarData: BarAreaData(show: false),
+      );
+    }).toList();
+  }
+  
+  double? _getInitialBalance(int accountId) {
+    return _accounts.where((account) => account.id! == accountId).first.initialBalance;
   }
 }

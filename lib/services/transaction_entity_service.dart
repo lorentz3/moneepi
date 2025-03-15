@@ -9,6 +9,7 @@ import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
+import 'package:myfinance2/utils/date_utils.dart';
 
 class TransactionEntityService {
   static const String _tableName = "Transactions";
@@ -61,7 +62,7 @@ class TransactionEntityService {
     return result.isNotEmpty;
   }
 
-  static Future<void> updateTransaction(Transaction transaction, int? oldAccount, int? oldCategory) async {
+  static Future<void> updateTransaction(Transaction transaction, int? oldAccount, int? oldCategory, DateTime? oldTimestamp) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
       transaction.toMap(),
@@ -69,12 +70,16 @@ class TransactionEntityService {
       whereArgs: [transaction.id]
     );
     await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
-    MonthlyAccountEntityService.updateMonthlyAccountSummary(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
+    await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
     if (oldCategory != null) {
       await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategory, transaction.timestamp.month, transaction.timestamp.year);
     }
     if (oldAccount != null) {
-      await MonthlyAccountEntityService.updateMonthlyAccountSummary(oldAccount, transaction.timestamp.month, transaction.timestamp.year);
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldAccount, transaction.timestamp.month, transaction.timestamp.year);
+    }
+    if (oldCategory != null && oldAccount != null && oldTimestamp != null && DateUtils.areMonthYearEquals(oldTimestamp, transaction.timestamp)) {
+      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategory, oldTimestamp.month, oldTimestamp.year);
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldAccount, oldTimestamp.month, oldTimestamp.year);
     }
   }
 
@@ -84,7 +89,7 @@ class TransactionEntityService {
       transaction.toMapCreate()
     );
     await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
-    await MonthlyAccountEntityService.updateMonthlyAccountSummary(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
+    await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
   }
 
   static Future<void> deleteTransaction(Transaction transaction) async {
@@ -94,7 +99,7 @@ class TransactionEntityService {
       whereArgs: [transaction.id]
     );
     await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
-    await MonthlyAccountEntityService.updateMonthlyAccountSummary(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
+    await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
   }
   
   static Future<List<Transaction>?> getAllByCategoryIdAndMonthAndYear(int categoryId, int month, int year) async {

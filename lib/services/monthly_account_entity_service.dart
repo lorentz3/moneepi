@@ -4,38 +4,131 @@ import 'package:myfinance2/dto/account_dto.dart';
 import 'package:myfinance2/dto/monthly_account_summary_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/monthly_account_summary.dart';
-import 'package:myfinance2/model/transaction.dart';
-import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
-import 'package:myfinance2/services/transaction_entity_service.dart';
+import 'package:myfinance2/utils/date_utils.dart';
 
 class MonthlyAccountEntityService {
   static const String _tableName = "MonthlyAccountSummaries";
 
-  static Future<void> updateMonthlyAccountSummary(int accountId, int month, int year) async {
-    List<Transaction>? transactions = await TransactionEntityService.getAllByAccountIdAndMonthAndYear(accountId, month, year);
-    double expenseSum = 0;
-    double incomeSum = 0;
-    if (transactions != null && transactions.isNotEmpty) {
-      expenseSum = transactions.where((t) => t.type == TransactionType.EXPENSE).fold(0.0, (acc, obj) => acc + obj.amount!);
-      incomeSum = transactions.where((t) => t.type == TransactionType.INCOME).fold(0.0, (acc, obj) => acc + obj.amount!);
+  static Future<void> updateMonthlyAccountSummaries(int accountId, int month, int year) async {
+    debugPrint("updating summaries of account $accountId since month=$month, year=$year");
+    final db = await DatabaseHelper.getDb();
+    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+
+    // Calcoliamo direttamente i totali dal database
+    final result = await db.rawQuery('''
+      SELECT 
+        COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END), 0.0) AS totalExpenses,
+        COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END), 0.0) AS totalIncome
+      FROM Transactions
+      WHERE accountId = ? AND timestamp >= ? AND timestamp < ?
+    ''', [accountId, startTimestamp, endTimestamp]);
+
+    double expenseAmount = (result.first['totalExpenses'] as double?) ?? 0;
+    double incomeAmount = (result.first['totalIncome'] as double?) ?? 0;
+
+    // Recuperiamo il saldo cumulativo del mese precedente
+    final previousBalanceResult = await db.rawQuery('''
+      SELECT cumulativeBalance FROM MonthlyAccountSummaries
+      WHERE accountId = ? AND month = ? AND year = ?
+    ''', [accountId, (month == 1 ? 12 : month - 1), (month == 1 ? year - 1 : year)]);
+
+    double previousBalance = 0;
+    if (previousBalanceResult.isNotEmpty) {
+      previousBalance = (previousBalanceResult.first['cumulativeBalance'] as double?) ?? 0;
+    } else {
+      previousBalance = await AccountEntityService.getAccountInitialBalanceById(accountId) ?? 0;
+      debugPrint("previousBalance is empty, replaced with account initial balance $previousBalance");
     }
-    debugPrint("Updating monthly account summary: accountId=$accountId, sum=$expenseSum, month=$month, year=$year");
+
+    double cumulativeBalance = previousBalance + incomeAmount - expenseAmount;
+    await insertOrUpdateMonthlyAccountSummary(accountId, month, year, previousBalance, cumulativeBalance, expenseAmount, incomeAmount);
+
+    if (DateUtils.isPastMonth(month, year)) {
+      // update in cascata dei cumulative balance dei mesi successivi
+      await updateCumulativeBalances(accountId, DateUtils.getNextMonth(month), DateUtils.getNextYear(month, year));
+    }
+  }
+
+  static Future<void> updateCumulativeBalances(int accountId, int startMonth, int startYear) async {
+    final db = await DatabaseHelper.getDb();
+
+    // Otteniamo il saldo finale del mese precedente
+    final previousBalanceResult = await db.rawQuery('''
+      SELECT cumulativeBalance FROM MonthlyAccountSummaries
+      WHERE accountId = ? AND month = ? AND year = ?
+    ''', [accountId, (startMonth == 1 ? 12 : startMonth - 1), (startMonth == 1 ? startYear - 1 : startYear)]);
+
+    double previousBalance = 0;
+    if (previousBalanceResult.isNotEmpty) {
+      previousBalance = (previousBalanceResult.first['cumulativeBalance'] as double?) ?? 0;
+    } else {
+      previousBalance = await AccountEntityService.getAccountInitialBalanceById(accountId) ?? 0;
+      debugPrint("previousBalance is empty, replaced with account initial balance $previousBalance");
+    }
+
+    // Cicliamo dal mese successivo fino ad oggi
+    DateTime now = DateTime.now();
+    int currentYear = now.year;
+    int currentMonth = now.month;
+
+    int month = startMonth;
+    int year = startYear;
+
+    while (year < currentYear || (year == currentYear && month <= currentMonth)) {
+      final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
+      final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+      // Calcoliamo le transazioni del mese corrente
+      final result = await db.rawQuery('''
+        SELECT 
+          COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END), 0.0) AS totalExpenses,
+          COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END), 0.0) AS totalIncome
+        FROM Transactions
+        WHERE accountId = ? AND timestamp >= ? AND timestamp < ?
+      ''', [accountId, startTimestamp, endTimestamp]);
+
+      double expenseAmount = (result.first['totalExpenses'] as double?) ?? 0;
+      double incomeAmount = (result.first['totalIncome'] as double?) ?? 0;
+      double cumulativeBalance = previousBalance + incomeAmount - expenseAmount;
+
+      // Aggiorniamo il mese corrente
+      await insertOrUpdateMonthlyAccountSummary(accountId, month, year, previousBalance, cumulativeBalance, expenseAmount, incomeAmount);
+
+      // Il saldo di questo mese diventa il saldo precedente per il prossimo ciclo
+      previousBalance = cumulativeBalance;
+
+      // Avanziamo al mese successivo
+      if (month == 12) {
+        month = 1;
+        year++;
+      } else {
+        month++;
+      }
+    }
+  }
+
+  static Future<void> insertOrUpdateMonthlyAccountSummary(int accountId, int month, int year, double previousBalance, double cumulativeBalance,
+      double expenseAmount, double incomeAmount) async {
+    final db = await DatabaseHelper.getDb();
     MonthlyAccountSummary? summary = await getMonthlyAccountSummary(accountId, month, year);
     if (summary == null) {
       MonthlyAccountSummary summary = MonthlyAccountSummary(
         accountId: accountId,
         month: month,
         year: year,
-        expenseAmount: expenseSum,
-        incomeAmount: incomeSum,
+        expenseAmount: expenseAmount,
+        incomeAmount: incomeAmount,
+        cumulativeBalance: cumulativeBalance,
       );
+      debugPrint("insert MonthlyAccountSummary $accountId: month=$month, year=$year, +$incomeAmount -$expenseAmount, cumulative:$cumulativeBalance");
       insertMonthlyAccountSummary(summary);
       return;
     }
-    summary.expenseAmount = expenseSum;
-    summary.incomeAmount = incomeSum;
-    final db = await DatabaseHelper.getDb();
+    summary.expenseAmount = expenseAmount;
+    summary.incomeAmount = incomeAmount;
+    summary.cumulativeBalance = cumulativeBalance;
+    debugPrint("update MonthlyAccountSummary $accountId: month=$month, year=$year, +$incomeAmount -$expenseAmount, cumulative:$cumulativeBalance");
     await db.update(_tableName,
       summary.toMap(),
       where: 'accountId = ? AND month = ? AND year = ?',
@@ -64,21 +157,20 @@ class MonthlyAccountEntityService {
   }
 
   // TODO probabilmente mai usato
-  static Future<void> deleteMonthlyAccountSummary(int transactionId) async {
+  /*static Future<void> deleteMonthlyAccountSummary(int transactionId) async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName, 
       where: "id = ?",
       whereArgs: [transactionId]
     );
-  }
+  }*/
 
   static Future<List<MonthlyAccountSummaryDto>> getAllMonthAccountsSummaries(int month, int year) async {
-    debugPrint("month $month year $year");
     final db = await DatabaseHelper.getDb();
     final String condition = month == 12 ? "t.month <= $month AND t.year = $year"
       : "(t.month <= $month AND t.year = $year) OR (t.month > $month AND t.year = ${year - 1})";
     final String query = """
-      SELECT a.id AS accountId, a.icon AS accountIcon, a.name AS accountName, t.expenseAmount, t.incomeAmount, t.month, t.year
+      SELECT a.id AS accountId, a.icon AS accountIcon, a.name AS accountName, t.expenseAmount, t.incomeAmount, t.cumulativeBalance, t.month, t.year
       FROM $_tableName t 
       LEFT JOIN Accounts a ON t.accountId = a.id
       WHERE $condition
@@ -100,7 +192,7 @@ class MonthlyAccountEntityService {
       GROUP BY accountId
     ''');
     
-    // Crea una mappa per accesso rapido ai saldi
+    // Crea una mappa per accesso rapido ai balance
     Map<int, double> balanceMap = {};
     for (var item in balances) {
       balanceMap[item['accountId']] = item['balance'];
@@ -110,6 +202,7 @@ class MonthlyAccountEntityService {
     List<AccountDto> accounts = accountMaps.map((account) {
       // Usa il saldo calcolato o 0.0 se non trovato
       double balance = balanceMap[account.id] ?? 0.0;
+      balance += account.initialBalance;
       return AccountDto.fromAccount(account, balance);
     }).toList();
     

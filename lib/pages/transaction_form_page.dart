@@ -35,6 +35,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   bool _isNew = false;
   int? _oldCategoryId;
   int? _oldAccountId;
+  DateTime? _oldTimestamp;
 
   @override
   void initState() {
@@ -59,7 +60,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     _notes = _transaction.notes;
     _oldCategoryId = _transaction.categoryId;
     _oldAccountId = _transaction.accountId;
-    debugPrint("oldCategoryId = $_oldCategoryId");
+    _oldTimestamp = _transaction.timestamp;
   }
 
   Future<void> _loadData() async {
@@ -313,7 +314,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     if(_isNew){
       await TransactionEntityService.insertTransaction(_transaction);
     } else {
-      await TransactionEntityService.updateTransaction(_transaction, _oldAccountId, _oldCategoryId);
+      await TransactionEntityService.updateTransaction(_transaction, _oldAccountId, _oldCategoryId, _oldTimestamp);
     }
     if (mounted) {
       Navigator.pop(context);

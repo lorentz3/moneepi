@@ -50,7 +50,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
                   decoration: InputDecoration(labelText: 'Category symbol', hintText: 'Emoji strongly suggested'),
                   initialValue: _icon,
                   onChanged: (value) => _icon = value,
-                  validator: (value) => value != null && value.length > 2 ? 'Symbol must be 1 emoji or max 2 characters' : null,
+                  validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
                 ),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Category name'),

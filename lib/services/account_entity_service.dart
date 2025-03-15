@@ -49,9 +49,21 @@ class AccountEntityService {
     return result.isNotEmpty;
   }
 
+  static Future<double?> getAccountInitialBalanceById(int accountId) async {
+    final db = await DatabaseHelper.getDb();
+
+    final result = await db.rawQuery(
+      "SELECT initialBalance FROM $_tableName WHERE id = ? LIMIT 1",
+      [accountId]
+    );
+
+    return result.isNotEmpty ? (result.first['initialBalance'] as double?) : null;
+  }
+
   // only for debug
   static Future<void> deleteAll() async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName);
   }
+
 }

@@ -4,8 +4,8 @@ class SquareButton extends StatelessWidget {
     final String label;
     final IconData icon;
     final double size;
-    final bool highlight; // TODO not required
-    final String highlightText; // TODO not required
+    final bool? highlight;
+    final String? highlightText;
     final VoidCallback onPressed;
 
   const SquareButton({
@@ -13,8 +13,8 @@ class SquareButton extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.size,
-    required this.highlight,
-    required this.highlightText,
+    this.highlight,
+    this.highlightText,
     required this.onPressed,
   });
 
@@ -31,7 +31,7 @@ class SquareButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: highlight ? BorderSide(color: Colors.deepPurple, width: 2) : BorderSide.none,
+                side: highlight ?? false ? BorderSide(color: Colors.deepPurple, width: 2) : BorderSide.none,
               ),
               backgroundColor: Colors.deepPurple[100],
               padding: EdgeInsets.symmetric(vertical: 4),
@@ -39,18 +39,22 @@ class SquareButton extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 30, color: Colors.black54),
+                Icon(icon, size: 35, color: Colors.black54),
                 SizedBox(height: 3),
                 Text(
                   label,
-                  style: TextStyle(fontSize: 11, color: Colors.black87),
+                  style: TextStyle(
+                    fontSize: 11.5, 
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
         ),
-        if (highlight)
+        if (highlight ?? false)
         Positioned(
           bottom: -5,
           left: 0,
@@ -87,7 +91,7 @@ class SquareButton extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  highlightText,
+                  highlightText ?? "",
                   style: TextStyle(fontSize: fontSize, color: Colors.white, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
