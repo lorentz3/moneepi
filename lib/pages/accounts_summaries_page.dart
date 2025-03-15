@@ -285,7 +285,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: 150,
+            height: 200,
             child: LineChart(
               LineChartData(
                 titlesData: FlTitlesData(
@@ -330,7 +330,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                   ),
                 ),
                 lineBarsData: _generateLineChartDataCumulative(),
-                minY: 0,
+                //minY: 0,
                 borderData: FlBorderData(
                   show: true,
                   border: Border.all(color: Colors.black, width: 1),

@@ -1,6 +1,7 @@
 import 'package:myfinance2/database/database_defaults.dart';
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/model/account.dart';
+import 'package:myfinance2/services/monthly_account_entity_service.dart';
 
 class AccountEntityService {
   static const String _tableName = "Accounts";
@@ -21,6 +22,7 @@ class AccountEntityService {
       where: "id = ?",
       whereArgs: [account.id]
     );
+    await MonthlyAccountEntityService.updateAllCumulativeBalances(account.id!);
   }
 
   static void insertAccount(Account account) async {

@@ -209,6 +209,28 @@ class MonthlyAccountEntityService {
     return accounts;
   }
 
+  static Future<void> updateAllCumulativeBalances(int accountId) async {
+    MonthlyAccountSummary? oldest = await getOldestMonthlySummary(accountId);
+    if (oldest != null) {
+      updateMonthlyAccountSummaries(accountId, oldest.month, oldest.year);
+    }
+  }
+
+  static Future<MonthlyAccountSummary?> getOldestMonthlySummary(int accountId) async {
+    final db = await DatabaseHelper.getDb();
+
+    final result = await db.rawQuery(
+      """
+      SELECT * FROM MonthlyAccountSummaries
+      WHERE accountId = $accountId
+      ORDER BY year ASC, month ASC
+      LIMIT 1
+      """
+    );
+
+    return result.isNotEmpty ? MonthlyAccountSummary.fromJson(result.first) : null;
+  }
+
   // only for debug
   static Future<void> deleteAll() async {
     final db = await DatabaseHelper.getDb();

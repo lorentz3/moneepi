@@ -75,6 +75,14 @@ class SettingsPageState extends State<SettingsPage> {
               highlightText: "Set your categories!", 
               onPressed: () => _navigateToCategory(context, TransactionType.INCOME)),
             SquareButton(
+              label: "Currency",
+              icon: Icons.attach_money,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "Coming soon",
+              onPressed: () => {},
+            ),
+            SquareButton(
               label: "Monthly Thresholds",
               icon: Icons.data_thresholding_outlined,
               size: buttonSize,
@@ -86,9 +94,9 @@ class SettingsPageState extends State<SettingsPage> {
               label: "Categories Groups",
               icon: Icons.group_work_outlined,
               size: buttonSize,
-              highlight: false,
-              highlightText: "",
-              onPressed: () => _navigateToMonthlyThresholdPage(context),
+              highlight: true,
+              highlightText: "Coming soon",
+              onPressed: () => {},
             ),
             SquareButton(
               label: "XLSX Import",
@@ -97,6 +105,14 @@ class SettingsPageState extends State<SettingsPage> {
               highlight: false,
               highlightText: "",
               onPressed: () => _navigateToXlsImportPage(),
+            ),
+            SquareButton(
+              label: "XLSX Export",
+              icon: Icons.dataset_rounded,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "Coming soon!",
+              onPressed: () => {},
             ),
             SquareButton(
               label: "Reset Transactions",
