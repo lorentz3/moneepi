@@ -1,10 +1,10 @@
-import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/model/category_type.dart';
 
 class Category {
   final int? id;
   String? icon;
   String name;
-  final TransactionType type;
+  final CategoryType type;
   int sort;
   final int? parentId;
   double? monthThreshold;
@@ -41,7 +41,7 @@ class Category {
     id: json['id'],
     icon: json['icon'], 
     name: json['name'], 
-    type: TransactionType.values.byName(json['type']),
+    type: CategoryType.values.byName(json['type']),
     sort: json['sort'], 
     parentId: json['parentId'], 
     monthThreshold: json['monthThreshold'],

@@ -7,11 +7,13 @@ class TransactionDto {
   String? accountIcon;
   String accountName;
   String? categoryIcon;
-  String categoryName;
+  String? categoryName;
   double amount;
+  String? sourceAccountIcon;
+  String? sourceAccountName;
 
   TransactionDto({this.id, required this.type, required this.timestamp, this.accountIcon, required this.accountName, this.categoryIcon,
-    required this.categoryName, required this.amount});
+    this.categoryName, required this.amount, this.sourceAccountIcon, this.sourceAccountName});
   
   factory TransactionDto.fromJson(Map<String, dynamic> json) => TransactionDto(
     id: json['id'],
@@ -21,6 +23,8 @@ class TransactionDto {
     accountName: json['accountName'], 
     categoryIcon: json['categoryIcon'], 
     categoryName: json['categoryName'], 
+    sourceAccountIcon: json['sourceAccountIcon'], 
+    sourceAccountName: json['sourceAccountName'], 
     amount: json['amount'],
   );
 

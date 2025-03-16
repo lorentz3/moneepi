@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myfinance2/dto/transaction_dto.dart';
+import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
@@ -7,15 +7,15 @@ import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
 
-class TransactionsPage extends StatefulWidget {
+class MovementsPage extends StatefulWidget {
   final DateTime dateTime;
-  const TransactionsPage({super.key, required this.dateTime});
+  const MovementsPage({super.key, required this.dateTime});
 
   @override
-  State createState() => TransactionsPageState();
+  State createState() => MovementsPageState();
 }
 
-class TransactionsPageState extends State<TransactionsPage> {
+class MovementsPageState extends State<MovementsPage> {
   late DateTime selectedDate = widget.dateTime;
   List<TransactionDto> transactions = [];
 

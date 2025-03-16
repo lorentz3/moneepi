@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/transaction.dart';
-import 'package:myfinance2/dto/transaction_dto.dart';
+import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_summaries_page.dart';
 import 'package:myfinance2/pages/budgeting_page.dart';
 import 'package:myfinance2/pages/settings_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
-import 'package:myfinance2/pages/transactions_page.dart';
+import 'package:myfinance2/pages/movements_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
@@ -58,7 +59,7 @@ class _HomePageState extends State<HomePage> {
   List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
   bool _isSummaryLoading = true;
   bool _isCurrentMonth = true;
-  bool _firstDaysOfMonth = DateTime.now().day < 7;
+  final bool _firstDaysOfMonth = DateTime.now().day < 7;
 
   @override
   void initState() {
@@ -86,7 +87,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isSummaryLoading = true;
     });
-    List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(TransactionType.EXPENSE);
+    List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(CategoryType.EXPENSE);
     monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(selectedDate.month, selectedDate.year);
     for (Category c in categoriesWithThreshold) {
       if (!monthCategoriesSummary.any((element) => element.categoryId == c.id)) {
@@ -188,16 +189,16 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SquareButton(
-                  label: "Transactions",
+                  label: "Movements",
                   size: 75,
                   icon: Icons.compare_arrows,
                   onPressed: () => _navigateToTransactionsPage(context)),
                 SizedBox(height: 10),
                 SquareButton(
-                  label: "Accounts",
-                  size: 75, 
-                  icon: Icons.account_balance_wallet_outlined, 
-                  onPressed: () => _navigateToAccountsSummariesPage()),
+                  label: "Budgeting",
+                  size: 75,
+                  icon: Icons.monetization_on_outlined,
+                  onPressed: () => _navigateToBudgetingPage()),
               ],
             ),
           ),
@@ -223,10 +224,10 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {/*TODO*/}),
                 SizedBox(height: 10),
                 SquareButton(
-                  label: "Budgeting",
-                  size: 75,
-                  icon: Icons.monetization_on_outlined,
-                  onPressed: () => _navigateToBudgetingPage()),
+                  label: "Accounts",
+                  size: 75, 
+                  icon: Icons.account_balance_wallet_outlined, 
+                  onPressed: () => _navigateToAccountsSummariesPage()),
               ],
             ),
           ),
@@ -252,7 +253,7 @@ class _HomePageState extends State<HomePage> {
   void _navigateToTransactionsPage(BuildContext context) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TransactionsPage(dateTime: selectedDate,)),
+      MaterialPageRoute(builder: (context) => MovementsPage(dateTime: selectedDate,)),
     ).then((_) {
       _loadAllData(); // TODO only if something changed
     });

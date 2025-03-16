@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
@@ -23,6 +24,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   TransactionType _selectedType = TransactionType.EXPENSE;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
+  int? _selectedSourceAccount;
   int? _selectedAccount;
   int? _selectedCategory;
   double? _amount;
@@ -52,6 +54,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
 
   _loadTransaction() async {  
     _transaction = await TransactionEntityService.getById(_transactionId);
+    _selectedType = _transaction.type;
     _selectedDate = _transaction.timestamp;
     _selectedTime = TimeOfDay.fromDateTime(_transaction.timestamp);
     _selectedAccount = _transaction.accountId;
@@ -65,7 +68,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
 
   Future<void> _loadData() async {
     _accounts = await AccountEntityService.getAllAccounts();
-    _categories = await CategoryEntityService.getAllCategories(_selectedType);
+    if (_selectedType != TransactionType.TRANSFER) {
+      _categories = await CategoryEntityService.getAllCategories(_selectedType == TransactionType.EXPENSE ? CategoryType.EXPENSE : CategoryType.INCOME);
+    }
     setState(() { });
   }
   
@@ -107,17 +112,20 @@ class TransactionFormPageState extends State<TransactionFormPage> {
           child: Column(
             children: [
               ToggleButtons(
-                isSelected: [_selectedType == TransactionType.EXPENSE, _selectedType == TransactionType.INCOME],
+                isSelected: [_selectedType == TransactionType.EXPENSE, _selectedType == TransactionType.INCOME, _selectedType == TransactionType.TRANSFER],
                 onPressed: (int index) {
                   setState(() {
-                    _selectedType = index == 0 ? TransactionType.EXPENSE : TransactionType.INCOME;    
+                    _selectedType = index == 0 ? TransactionType.EXPENSE : 
+                      index == 1 ? TransactionType.INCOME : TransactionType.TRANSFER;
                     _selectedCategory = null;
+                    _selectedAccount = null;
                     _loadData();
                   });
                 },
                 children: [
                   Padding(padding: EdgeInsets.all(8.0), child: Text('Expense')),
                   Padding(padding: EdgeInsets.all(8.0), child: Text('Income')),
+                  Padding(padding: EdgeInsets.all(8.0), child: Text('Transfer')),
                 ],
               ),
               SizedBox(height: 20),
@@ -147,10 +155,11 @@ class TransactionFormPageState extends State<TransactionFormPage> {
             child: Column(
               children: [
                 ToggleButtons(
-                  isSelected: [_selectedType == TransactionType.EXPENSE, _selectedType == TransactionType.INCOME],
+                  isSelected: [_selectedType == TransactionType.EXPENSE, _selectedType == TransactionType.INCOME, _selectedType == TransactionType.TRANSFER],
                   onPressed: (int index) {
                     setState(() {
-                      _selectedType = index == 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
+                      _selectedType = index == 0 ? TransactionType.EXPENSE : 
+                        index == 1 ? TransactionType.INCOME : TransactionType.TRANSFER;
                       _selectedCategory = null;
                       _loadData();
                     });
@@ -158,6 +167,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   children: [
                     Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5), child: Text('Expense')),
                     Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5), child: Text('Income')),
+                  Padding(padding: EdgeInsets.all(8.0), child: Text('Transfer')),
                   ],
                 ),
                 SizedBox(height: 5,),
@@ -190,8 +200,53 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   trailing: Icon(Icons.access_time),
                   onTap: () => _selectTime(context),
                 ) : SizedBox(height: 0,),
+
+                // source account
+                _selectedType == TransactionType.TRANSFER ? 
+                  DropdownButtonFormField<int>(
+                    decoration: InputDecoration(labelText: 'Source account'),
+                    value: _selectedSourceAccount,
+                    items: _accounts.map((account) {
+                      return DropdownMenuItem<int>(
+                        value: account.id,
+                        child: Text(account.name),
+                      );
+                    }).toList(),
+                    onChanged: (value) => setState(() => _selectedSourceAccount = value),
+                    validator: (value) => value == null ? 'Choose an account' : null,
+                  ) : SizedBox(height: 1,),
+                  _isNew && _selectedType == TransactionType.TRANSFER ? Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 0,
+                      children: _accounts.take(5).map((account) {
+                        String accountTitle = account.icon != null ? "${account.icon!} ${account.name}" : account.name;
+                        return ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedSourceAccount = account.id;
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _selectedSourceAccount == account.id
+                                ? Colors.deepPurple[200] // Selected
+                                : Colors.grey[300], // Not selected
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          child: Text(accountTitle, overflow: TextOverflow.ellipsis),
+                        );
+                      }).toList(),
+                    ),
+                  ) : SizedBox(height: 1,),
+
+                // target account
                 DropdownButtonFormField<int>(
-                  decoration: InputDecoration(labelText: 'Account'),
+                  decoration: _selectedType != TransactionType.TRANSFER ? InputDecoration(labelText: 'Account') : InputDecoration(labelText: 'Target account') ,
                   value: _selectedAccount,
                   items: _accounts.map((account) {
                     return DropdownMenuItem<int>(
@@ -230,7 +285,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                     }).toList(),
                   ),
                 ) : SizedBox(height: 1,),
-                DropdownButtonFormField<int>(
+
+                // category
+                _selectedType != TransactionType.TRANSFER ? DropdownButtonFormField<int>(
                   decoration: InputDecoration(labelText: 'Category'),
                   value: _selectedCategory,
                   items: _categories.map((category) {
@@ -241,8 +298,8 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   }).toList(),
                   onChanged: (value) => setState(() => _selectedCategory = value),
                   validator: (value) => value == null ? 'Choose a category' : null,
-                ),
-                _isNew ? Align(
+                ) : SizedBox(height: 1,),
+                _isNew && _selectedType != TransactionType.TRANSFER ? Align(
                   alignment: Alignment.centerLeft,
                   child: Wrap(
                     spacing: 6,
@@ -308,7 +365,8 @@ class TransactionFormPageState extends State<TransactionFormPage> {
       _selectedTime.minute,
     );
     _transaction.accountId = _selectedAccount!;
-    _transaction.categoryId = _selectedCategory!;
+    _transaction.sourceAccountId = _selectedSourceAccount;
+    _transaction.categoryId = _selectedCategory;
     _transaction.amount = _amount;
     _transaction.notes = _notes;
     if(_isNew){

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/model/category.dart';
-import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 
 class MonthlyThresholdsPage extends StatefulWidget {
@@ -22,7 +22,7 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
   }
   
   Future<void> _loadCategories() async {
-    _categories = await CategoryEntityService.getAllCategories(TransactionType.EXPENSE);
+    _categories = await CategoryEntityService.getAllCategories(CategoryType.EXPENSE);
     for (var category in _categories) {
       _controllers[category.id!] = TextEditingController(
         text: category.monthThreshold?.toStringAsFixed(2) ?? "",
@@ -62,7 +62,7 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Text("Monthly Threshold (€)", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.right),
+                            child: Text("Monthly Budget (€)", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.right),
                           ),
                         ],
                       ),

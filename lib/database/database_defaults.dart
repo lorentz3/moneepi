@@ -3,15 +3,14 @@ String insertDefaultAccountsQuery = """
         ('🏦', 'Bank account', 1),
         ('💵', 'Cash', 2),
         ('®️', 'Revolut', 3),
-        ('☑️', 'Paypal', 4),
-        ('🉐', 'Edenred', 5),
-        ('💳', 'Conad card', 6);
+        ('💎', 'Paypal', 4),
+        ('🉐', 'Edenred', 5);
       """;
 
 String insertDefaultExpenseCategoriesQuery = """  
         INSERT INTO Categories (icon, name, type, sort) VALUES
         ('🛍️', 'Groceries', 'EXPENSE', 1),
-        ('🍝', 'Dining out', 'EXPENSE', 2),
+        ('🍕', 'Eating out', 'EXPENSE', 2),
         ('🍟', 'Takeaway', 'EXPENSE', 3),
         ('⛽', 'Gasoline', 'EXPENSE', 4),
         ('🚙', 'CNG', 'EXPENSE', 5),
@@ -45,6 +44,7 @@ String insertDefaultExpenseCategoriesQuery = """
 
 String insertDefaultIncomeCategoriesQuery = """  
         INSERT INTO Categories (icon, name, type) VALUES
-        ('📈', 'Salary', 'INCOME'),
-        ('🪙', 'Refund', 'INCOME');
+        ('🪙', 'Salary', 'INCOME'),
+        ('💰', 'Refund', 'INCOME'),
+        ('⚜️', 'Bonus', 'INCOME');
       """;

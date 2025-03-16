@@ -1,12 +1,12 @@
 import 'package:myfinance2/database/database_defaults.dart';
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/model/category.dart';
-import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/model/category_type.dart';
 
 class CategoryEntityService {
   static const String _tableName = "Categories";
   
-  static Future<List<Category>> getAllCategories(TransactionType type) async {
+  static Future<List<Category>> getAllCategories(CategoryType type) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps =  await db.query(
       _tableName,
@@ -62,7 +62,7 @@ class CategoryEntityService {
     await db.execute(insertDefaultIncomeCategoriesQuery);
   }
 
-  static Future<List<Category>> getAllCategoriesWithMonthlyThreshold(TransactionType type) async {
+  static Future<List<Category>> getAllCategoriesWithMonthlyThreshold(CategoryType type) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps =  await db.query(
       _tableName,
@@ -75,7 +75,7 @@ class CategoryEntityService {
     return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
   }
 
-  static Future<bool> existsAtLeastOneCategoryByType(TransactionType type) async {
+  static Future<bool> existsAtLeastOneCategoryByType(CategoryType type) async {
     final db = await DatabaseHelper.getDb();
     final typeName = type.toString().split('.').last;
     final result = await db.rawQuery('SELECT 1 FROM $_tableName WHERE type = "$typeName" LIMIT 1');

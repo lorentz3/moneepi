@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/category_form_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 
 class CategoriesPage extends StatefulWidget {
-  final TransactionType type;
+  final CategoryType type;
 
   const CategoriesPage({super.key, required this.type});
 
@@ -284,11 +285,11 @@ class CategoriesPageState extends State<CategoriesPage> {
     );
   }
   
-  String _getTitle(TransactionType type) {
+  String _getTitle(CategoryType type) {
     switch(type) {
-      case TransactionType.EXPENSE:
+      case CategoryType.EXPENSE:
         return "Expense categories";
-      case TransactionType.INCOME:
+      case CategoryType.INCOME:
         return "Income categories";
     }
 

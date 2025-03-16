@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:myfinance2/dto/transaction_dto.dart';
+import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
 
@@ -56,73 +56,136 @@ class TransactionsListGroupedByDate extends StatelessWidget {
               physics: NeverScrollableScrollPhysics(),
               itemCount: entry.value.length,
               itemBuilder: (context, index) {
-                TransactionDto transaction = entry.value[index];
+                TransactionDto movement = entry.value[index];
+                TransactionType movementType = movement.type;
                 Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                String categoryTitle = transaction.categoryIcon != null ? "${transaction.categoryIcon!} ${transaction.categoryName}" : transaction.categoryName;
-                String accountTitle = transaction.accountIcon != null ? transaction.accountIcon! : transaction.accountName[0];
-
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TransactionFormPage(
-                          transactionId: transaction.id,
-                          isNew: false,
-                        ),
-                      ),
-                    ).then((_) {
-                      onTransactionUpdated?.call();
-                    });
-                  },
-                  child: Container(
-                    color: rowColor,
-                    padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          flex: 15,
-                          child: Text(
-                            categoryTitle,
-                            textAlign: TextAlign.left,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 10,
-                          child: Text(
-                            transaction.type == TransactionType.EXPENSE
-                                ? ' - € ${transaction.amount.toStringAsFixed(2)} '
-                                : ' + € ${transaction.amount.toStringAsFixed(2)} ',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                              color: transaction.type == TransactionType.EXPENSE
-                                  ? Color.fromARGB(255, 206, 35, 23)
-                                  : Color.fromARGB(255, 33, 122, 34),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            accountTitle,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+                return movementType == TransactionType.TRANSFER ? _getTransferWidget(context, movement, rowColor) : _getTransactionWidget(context, movement, rowColor);
               },
             ),
           ],
         );
       }).toList(),
+    );
+  }
+
+  Widget _getTransactionWidget(BuildContext context, TransactionDto movement, Color rowColor) {
+    String categoryTitle = movement.categoryIcon != null ? "${movement.categoryIcon!} ${movement.categoryName}" : movement.categoryName!;
+    String accountTitle = movement.accountIcon != null ? movement.accountIcon! : movement.accountName[0];
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TransactionFormPage(
+              transactionId: movement.id,
+              isNew: false,
+            ),
+          ),
+        ).then((_) {
+          onTransactionUpdated?.call();
+        });
+      },
+      child: Container(
+        color: rowColor,
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              flex: 15,
+              child: Text(
+                categoryTitle,
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+            Expanded(
+              flex: 10,
+              child: Text(
+                movement.type == TransactionType.EXPENSE
+                    ? ' - € ${movement.amount.toStringAsFixed(2)} '
+                    : ' + € ${movement.amount.toStringAsFixed(2)} ',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: movement.type == TransactionType.EXPENSE
+                      ? Color.fromARGB(255, 206, 35, 23)
+                      : Color.fromARGB(255, 33, 122, 34),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(
+                accountTitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _getTransferWidget(BuildContext context, TransactionDto movement, Color rowColor) {
+    String sourceAccountTitle = movement.sourceAccountIcon != null ? movement.sourceAccountIcon! : movement.sourceAccountName!;
+    String accountTitle = movement.accountIcon != null ? movement.accountIcon! : movement.accountName;
+    String accountTransferText = "$sourceAccountTitle → $accountTitle";
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TransactionFormPage(
+              transactionId: movement.id,
+              isNew: false,
+            ),
+          ),
+        ).then((_) {
+          onTransactionUpdated?.call();
+        });
+      },
+      child: Container(
+        color: rowColor,
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              flex: 15,
+              child: Text(
+                accountTransferText,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+            Expanded(
+              flex: 10,
+              child: Text(
+                ' € ${movement.amount.toStringAsFixed(2)} ',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: Color.fromARGB(255, 18, 28, 121),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(
+                "",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
-import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
 import 'package:myfinance2/pages/import_xls_page.dart';
@@ -34,8 +34,8 @@ class SettingsPageState extends State<SettingsPage> {
 
   _updateButtonFlags() async {
     _hasAccounts = await AccountEntityService.existsAtLeastOneAccount();
-    _hasExpenseCategories = await CategoryEntityService.existsAtLeastOneCategoryByType(TransactionType.EXPENSE);
-    _hasIncomeCategories = await CategoryEntityService.existsAtLeastOneCategoryByType(TransactionType.INCOME);
+    _hasExpenseCategories = await CategoryEntityService.existsAtLeastOneCategoryByType(CategoryType.EXPENSE);
+    _hasIncomeCategories = await CategoryEntityService.existsAtLeastOneCategoryByType(CategoryType.INCOME);
     setState(() {});
   }
 
@@ -66,14 +66,14 @@ class SettingsPageState extends State<SettingsPage> {
               size: buttonSize,
               highlight: !_hasExpenseCategories,
               highlightText: "Set your categories!",
-              onPressed: () => _navigateToCategory(context, TransactionType.EXPENSE)),
+              onPressed: () => _navigateToCategory(context, CategoryType.EXPENSE)),
             SquareButton(
               label: "Income Categories",
               icon: Icons.category,
               size: buttonSize,
               highlight: !_hasIncomeCategories,
               highlightText: "Set your categories!", 
-              onPressed: () => _navigateToCategory(context, TransactionType.INCOME)),
+              onPressed: () => _navigateToCategory(context, CategoryType.INCOME)),
             SquareButton(
               label: "Currency",
               icon: Icons.attach_money,
@@ -83,7 +83,7 @@ class SettingsPageState extends State<SettingsPage> {
               onPressed: () => {},
             ),
             SquareButton(
-              label: "Monthly Thresholds",
+              label: "Monthly Budgets",
               icon: Icons.data_thresholding_outlined,
               size: buttonSize,
               highlight: false,
@@ -153,10 +153,10 @@ class SettingsPageState extends State<SettingsPage> {
     });
   }
     
-  void _navigateToCategory(BuildContext context, TransactionType transactionType) async {
+  void _navigateToCategory(BuildContext context, CategoryType categoryType) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CategoriesPage(type: transactionType,)),
+      MaterialPageRoute(builder: (context) => CategoriesPage(type: categoryType,)),
     ).then((_) {
       _updateButtonFlags();
     });
@@ -206,8 +206,8 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   void _randomTransactions() async {
-    List<Category> expenseCategories = await CategoryEntityService.getAllCategories(TransactionType.EXPENSE);
-    List<Category> incomeCategories = await CategoryEntityService.getAllCategories(TransactionType.INCOME);
+    List<Category> expenseCategories = await CategoryEntityService.getAllCategories(CategoryType.EXPENSE);
+    List<Category> incomeCategories = await CategoryEntityService.getAllCategories(CategoryType.INCOME);
     List<Account> accounts = await AccountEntityService.getAllAccounts();
     await TransactionEntityService.insertRandomTransactions(expenseCategories, incomeCategories, accounts);
     if (mounted) {

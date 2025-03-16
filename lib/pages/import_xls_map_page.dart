@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/model/account.dart';
+import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction_type.dart';
@@ -32,6 +33,7 @@ class ImportXlsMapPage extends StatefulWidget {
   ImportXlsMapPageState createState() => ImportXlsMapPageState();
 }
 
+// TODO import transfers
 class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   String _filePath = "";
   bool _hasSubCategories = false;
@@ -90,7 +92,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       await TransactionEntityService.insertTransaction(Transaction(
         accountId: accountId,
         timestamp: format.parse(importedDate),
-        type: category.type,
+        type: category.type == CategoryType.EXPENSE ? TransactionType.EXPENSE : TransactionType.INCOME,
         categoryId: categoryId,
         amount: double.tryParse(importedAmount) ?? 0.0,
         notes: importedNote,

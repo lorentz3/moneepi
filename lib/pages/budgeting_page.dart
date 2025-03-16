@@ -38,7 +38,7 @@ class BudgetingPageState extends State<BudgetingPage> {
           mainAxisSpacing: 8,
           children: [
             SquareButton(
-              label: "Monthly Thresholds",
+              label: "Monthly Budgets",
               icon: Icons.data_thresholding_outlined,
               size: buttonSize,
               highlight: false,

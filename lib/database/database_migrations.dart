@@ -23,13 +23,15 @@ Map<int, List<String>> migrationScripts = {
       """  
         CREATE TABLE Transactions (
           id INTEGER PRIMARY KEY,
-          type TEXT CHECK(type IN ('EXPENSE','INCOME') ) NOT NULL DEFAULT 'EXPENSE',
+          type TEXT CHECK(type IN ('EXPENSE', 'INCOME', 'TRANSFER')) NOT NULL DEFAULT 'EXPENSE',
           timestamp INTEGER NOT NULL,
+          categoryId INTEGER NULL,
+          sourceAccountId INTEGER NULL,
           accountId INTEGER NOT NULL,
-          categoryId INTEGER NOT NULL,
           amount REAL NOT NULL,
           notes TEXT,
           FOREIGN KEY(accountId) REFERENCES Accounts(id),
+          FOREIGN KEY(sourceAccountId) REFERENCES Accounts(id),
           FOREIGN KEY(categoryId) REFERENCES Categories(id));
       """
     ],
@@ -76,5 +78,5 @@ Map<int, List<String>> migrationScripts = {
           FOREIGN KEY(groupId) REFERENCES Groups(id),
           FOREIGN KEY(categoryId) REFERENCES Categories(id));
       """,
-    ]
+    ],
   };

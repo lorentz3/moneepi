@@ -5,11 +5,12 @@ class Transaction {
   TransactionType type;
   DateTime timestamp;
   int? accountId;
+  int? sourceAccountId;
   int? categoryId;
   double? amount;
   String? notes;
 
-  Transaction({this.id, required this.type, required this.timestamp, this.accountId, 
+  Transaction({this.id, required this.type, required this.timestamp, this.accountId,  this.sourceAccountId,
     this.categoryId, this.amount, this.notes});
 
   Map<String, dynamic> toMap() {
@@ -17,6 +18,7 @@ class Transaction {
       'id': id,
       'type': type.name,
       'timestamp': timestamp.millisecondsSinceEpoch,
+      'sourceAccountId': sourceAccountId,
       'accountId': accountId,
       'categoryId': categoryId,
       'amount': amount,
@@ -28,6 +30,7 @@ class Transaction {
     return {
       'type': type.name,
       'timestamp': timestamp.millisecondsSinceEpoch,
+      'sourceAccountId': sourceAccountId,
       'accountId': accountId,
       'categoryId': categoryId,
       'amount': amount,
@@ -39,6 +42,7 @@ class Transaction {
     id: json['id'],
     type: TransactionType.values.byName(json['type']),
     timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp']), 
+    sourceAccountId: json['sourceAccountId'], 
     accountId: json['accountId'], 
     categoryId: json['categoryId'], 
     amount: json['amount'],
