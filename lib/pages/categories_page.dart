@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
-import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/category_form_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
@@ -149,7 +148,7 @@ class CategoriesPageState extends State<CategoriesPage> {
   }
 
   _handleClick(String value, BuildContext context) {
-    if (widget.type == TransactionType.EXPENSE){
+    if (widget.type == CategoryType.EXPENSE){
       switch(value) {
         case "AddDefaultCategories":
           showDialog(
@@ -190,7 +189,7 @@ class CategoriesPageState extends State<CategoriesPage> {
           break;
       }
     }
-    else if (widget.type == TransactionType.INCOME){
+    else if (widget.type == CategoryType.INCOME){
       switch(value) {
         case "AddDefaultCategories":
           showDialog(

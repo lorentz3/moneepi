@@ -221,6 +221,8 @@ class _HomePageState extends State<HomePage> {
                   label: "Stats",
                   size: 75,
                   icon: Icons.query_stats,
+                  highlight: true,
+                  highlightText: "Coming soon",
                   onPressed: () {/*TODO*/}),
                 SizedBox(height: 10),
                 SquareButton(

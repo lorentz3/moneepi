@@ -6,11 +6,10 @@ class Category {
   String name;
   final CategoryType type;
   int sort;
-  final int? parentId;
   double? monthThreshold;
   double? yearThreshold;
 
-  Category({this.id, this.icon, required this.name, required this.type, required this.sort, this.parentId, this.monthThreshold, this.yearThreshold});
+  Category({this.id, this.icon, required this.name, required this.type, required this.sort, this.monthThreshold, this.yearThreshold});
 
   Map<String, dynamic> toMap() {
     return {
@@ -19,7 +18,6 @@ class Category {
       'name': name, 
       'type': type.name,
       'sort': sort, 
-      'parentId': parentId, 
       'monthThreshold': monthThreshold,
       'yearThreshold': yearThreshold,
     };
@@ -31,7 +29,6 @@ class Category {
       'name': name,
       'type': type.name,
       'sort': sort, 
-      'parentId': parentId, 
       'monthThreshold': monthThreshold,
       'yearThreshold': yearThreshold,
     };
@@ -43,7 +40,6 @@ class Category {
     name: json['name'], 
     type: CategoryType.values.byName(json['type']),
     sort: json['sort'], 
-    parentId: json['parentId'], 
     monthThreshold: json['monthThreshold'],
     yearThreshold: json['yearThreshold'],
   );

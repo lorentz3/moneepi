@@ -14,7 +14,7 @@ class MonthlyCategoryTransactionEntityService {
     if (transactions != null && transactions.isNotEmpty) {
       sum = transactions.fold(0.0, (acc, obj) => acc + obj.amount!);
     }
-    debugPrint("Updating monthly category summary: categoryId=$categoryId, sum=$sum");
+    debugPrint("Updating monthly category summary: categoryId=$categoryId, $month/$year, sum=$sum");
     MonthlyCategoryTransactionSummary? summary = await getMonthlyCategoryTransactionSummary(categoryId, month, year);
     if (summary == null) {
       MonthlyCategoryTransactionSummary summary = MonthlyCategoryTransactionSummary(

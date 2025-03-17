@@ -15,10 +15,8 @@ Map<int, List<String>> migrationScripts = {
           name TEXT NOT NULL,
           type TEXT CHECK(type IN ('EXPENSE','INCOME') ) NOT NULL DEFAULT 'EXPENSE',
           sort INTEGER NOT NULL DEFAULT 0,
-          parentId INTEGER,
           monthThreshold REAL,
-          yearThreshold REAL,
-          FOREIGN KEY(parentId) REFERENCES Categories(id));
+          yearThreshold REAL);
       """,
       """  
         CREATE TABLE Transactions (

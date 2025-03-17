@@ -38,6 +38,8 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   int? _oldCategoryId;
   int? _oldAccountId;
   DateTime? _oldTimestamp;
+  int? _oldSourceAccountId;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -58,19 +60,20 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     _selectedDate = _transaction.timestamp;
     _selectedTime = TimeOfDay.fromDateTime(_transaction.timestamp);
     _selectedAccount = _transaction.accountId;
+    _selectedSourceAccount = _transaction.sourceAccountId;
     _selectedCategory = _transaction.categoryId;
     _amount = _transaction.amount;
     _notes = _transaction.notes;
     _oldCategoryId = _transaction.categoryId;
     _oldAccountId = _transaction.accountId;
     _oldTimestamp = _transaction.timestamp;
+    _oldSourceAccountId = _transaction.sourceAccountId;
   }
 
   Future<void> _loadData() async {
     _accounts = await AccountEntityService.getAllAccounts();
-    if (_selectedType != TransactionType.TRANSFER) {
-      _categories = await CategoryEntityService.getAllCategories(_selectedType == TransactionType.EXPENSE ? CategoryType.EXPENSE : CategoryType.INCOME);
-    }
+    _categories = await CategoryEntityService.getAllCategories(_selectedType == TransactionType.EXPENSE ? CategoryType.EXPENSE : CategoryType.INCOME);
+    _isLoading = false;
     setState(() { });
   }
   
@@ -103,7 +106,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO if isLoading
+    if (_isLoading) {
+      return SizedBox(height: 50, child: CircularProgressIndicator());
+    }
     if (_accounts.isEmpty || _categories.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: _isNew ? Text('New transaction') : Text('Edit transaction')),
@@ -372,7 +377,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     if(_isNew){
       await TransactionEntityService.insertTransaction(_transaction);
     } else {
-      await TransactionEntityService.updateTransaction(_transaction, _oldAccountId, _oldCategoryId, _oldTimestamp);
+      await TransactionEntityService.updateTransaction(_transaction, _oldAccountId!, _oldCategoryId, _oldTimestamp!, _oldSourceAccountId);
     }
     if (mounted) {
       Navigator.pop(context);

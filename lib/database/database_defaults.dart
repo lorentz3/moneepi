@@ -43,8 +43,8 @@ String insertDefaultExpenseCategoriesQuery = """
       """;
 
 String insertDefaultIncomeCategoriesQuery = """  
-        INSERT INTO Categories (icon, name, type) VALUES
-        ('🪙', 'Salary', 'INCOME'),
-        ('💰', 'Refund', 'INCOME'),
-        ('⚜️', 'Bonus', 'INCOME');
+        INSERT INTO Categories (icon, name, type, sort) VALUES
+        ('🪙', 'Salary', 'INCOME', 1),
+        ('💰', 'Refund', 'INCOME', 2),
+        ('⚜️', 'Bonus', 'INCOME', 3);
       """;

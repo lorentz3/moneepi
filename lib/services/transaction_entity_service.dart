@@ -9,7 +9,6 @@ import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
-import 'package:myfinance2/utils/date_utils.dart';
 
 class TransactionEntityService {
   static const String _tableName = "Transactions";
@@ -42,18 +41,6 @@ class TransactionEntityService {
       ORDER BY timestamp DESC
     """
     );
-    /*final List<Map<String, dynamic>> maps = await db.rawQuery("""
-      SELECT t.id, t.type, t.timestamp, 
-        a.icon AS accountIcon, a.name AS accountName, 
-        c.icon AS categoryIcon, c.name AS categoryName, 
-        t.amount
-      FROM $_tableName t 
-      LEFT JOIN Accounts a ON t.accountId = a.id
-      LEFT JOIN Categories c ON t.categoryId = c.id
-      WHERE timestamp >= $startTimestamp AND timestamp < $endTimestamp
-      ORDER BY timestamp DESC
-    """
-    );*/
     return List.generate(maps.length, (index) => TransactionDto.fromJson(maps[index]));
   }
 
@@ -79,7 +66,7 @@ class TransactionEntityService {
     return result.isNotEmpty;
   }
 
-  static Future<void> updateTransaction(Transaction transaction, int? oldAccount, int? oldCategory, DateTime? oldTimestamp) async {
+  static Future<void> updateTransaction(Transaction transaction, int oldAccountId, int? oldCategoryId, DateTime oldTimestamp, int? oldSourceAccountId) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
       transaction.toMap(),
@@ -87,15 +74,18 @@ class TransactionEntityService {
       whereArgs: [transaction.id]
     );
     await onTransactionChange(transaction);
-    if (oldCategory != null) {
-      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategory, transaction.timestamp.month, transaction.timestamp.year);
+
+    //update old referenced summaries
+    int monthToUpdate = oldTimestamp.month;
+    int yearToUpdate = oldTimestamp.year;
+    if (oldCategoryId != null && transaction.categoryId != oldCategoryId) {
+      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategoryId, monthToUpdate, yearToUpdate);
     }
-    if (oldAccount != null) {
-      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldAccount, transaction.timestamp.month, transaction.timestamp.year);
+    if (transaction.accountId != oldAccountId) {
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldAccountId, monthToUpdate, yearToUpdate);
     }
-    if (oldCategory != null && oldAccount != null && oldTimestamp != null && DateUtils.areMonthYearEquals(oldTimestamp, transaction.timestamp)) {
-      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategory, oldTimestamp.month, oldTimestamp.year);
-      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldAccount, oldTimestamp.month, oldTimestamp.year);
+    if (oldSourceAccountId != null && transaction.sourceAccountId != oldSourceAccountId) {
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldSourceAccountId, monthToUpdate, yearToUpdate);
     }
   }
 
@@ -120,6 +110,9 @@ class TransactionEntityService {
     if (transaction.type != TransactionType.TRANSFER) {
       await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
       await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
+    } else {
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.sourceAccountId!, transaction.timestamp.month, transaction.timestamp.year);
     }
   }
   

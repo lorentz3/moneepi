@@ -33,12 +33,12 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
 
   _loadAllData() async {
     _accounts = await MonthlyAccountEntityService.getAllAccountsWithBalance();
-    _monthlySummaries = await MonthlyAccountEntityService.getAllMonthAccountsSummaries(_selectedDate.month, _selectedDate.year);
+    _monthlySummaries = await MonthlyAccountEntityService.getLast12MonthsAccountsSummaries(_selectedDate.month, _selectedDate.year);
     setState(() {});
   }
 
   _loadMonthlySummaries() async {
-    _monthlySummaries = await MonthlyAccountEntityService.getAllMonthAccountsSummaries(_selectedDate.month, _selectedDate.year);
+    _monthlySummaries = await MonthlyAccountEntityService.getLast12MonthsAccountsSummaries(_selectedDate.month, _selectedDate.year);
   }
 
   void _updateDate(DateTime newDate) async {
@@ -105,7 +105,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                     flex: 10,
                     child: Text(
                       account.balance < 0
-                          ? ' - € ${account.balance.toStringAsFixed(2)} '
+                          ? ' - € ${(- account.balance).toStringAsFixed(2)} '
                           : ' + € ${account.balance.toStringAsFixed(2)} ',
                       textAlign: TextAlign.right,
                       style: TextStyle(
@@ -344,6 +344,9 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
   }
 
   List<LineChartBarData> _generateLineChartDataCumulative() {
+    // es: 3/2025
+    // last12Months: 4 5 6 7 8 9 10 11 12 1 2 3
+    // last12Years: 2024 2024 ... 2024 2025 2025 2025
     List<int> last12Months = List.generate(12, (index) => (_selectedDate.month - 11 + index) > 0 ? _selectedDate.month - 11 + index : index + _selectedDate.month + 1);
     List<int> last12Years = List.generate(12, (index) => _selectedDate.year - (_selectedDate.month - 11 + index < 1 ? 1 : 0));
     Map<int, List<FlSpot>> accountData = {};

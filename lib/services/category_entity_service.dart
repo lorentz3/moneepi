@@ -13,7 +13,7 @@ class CategoryEntityService {
       where: 'type = ?',
       whereArgs: [type.toString().split('.').last],
     );
-    if(maps.isEmpty){
+    if (maps.isEmpty) {
       return [];
     }
     return List.generate(maps.length, (index) => Category.fromJson(maps[index]));

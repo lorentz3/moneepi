@@ -11,7 +11,7 @@ class MonthlyAccountEntityService {
   static const String _tableName = "MonthlyAccountSummaries";
 
   static Future<void> updateMonthlyAccountSummaries(int accountId, int month, int year) async {
-    debugPrint("updating summaries of account $accountId since month=$month, year=$year");
+    debugPrint("Updating account summary: accountId=$accountId, $month/$year");
     final db = await DatabaseHelper.getDb();
     final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
     final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
@@ -19,11 +19,26 @@ class MonthlyAccountEntityService {
     // Calcoliamo direttamente i totali dal database
     final result = await db.rawQuery('''
       SELECT 
-        COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END), 0.0) AS totalExpenses,
-        COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END), 0.0) AS totalIncome
+        COALESCE(SUM(
+          CASE 
+            WHEN type = 'EXPENSE' OR (type = 'TRANSFER' AND sourceAccountId = ?) 
+            THEN amount 
+            ELSE 0.0 
+          END
+        ), 0.0) AS totalExpenses,
+        
+        COALESCE(SUM(
+          CASE 
+            WHEN type = 'INCOME' OR (type = 'TRANSFER' AND accountId = ?) 
+            THEN amount 
+            ELSE 0.0 
+          END
+        ), 0.0) AS totalIncome
       FROM Transactions
-      WHERE accountId = ? AND timestamp >= ? AND timestamp < ?
-    ''', [accountId, startTimestamp, endTimestamp]);
+      WHERE (accountId = ? OR sourceAccountId = ?) 
+        AND timestamp >= ? 
+        AND timestamp < ?
+    ''', [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
 
     double expenseAmount = (result.first['totalExpenses'] as double?) ?? 0;
     double incomeAmount = (result.first['totalIncome'] as double?) ?? 0;
@@ -39,7 +54,6 @@ class MonthlyAccountEntityService {
       previousBalance = (previousBalanceResult.first['cumulativeBalance'] as double?) ?? 0;
     } else {
       previousBalance = await AccountEntityService.getAccountInitialBalanceById(accountId) ?? 0;
-      debugPrint("previousBalance is empty, replaced with account initial balance $previousBalance");
     }
 
     double cumulativeBalance = previousBalance + incomeAmount - expenseAmount;
@@ -128,7 +142,7 @@ class MonthlyAccountEntityService {
     summary.expenseAmount = expenseAmount;
     summary.incomeAmount = incomeAmount;
     summary.cumulativeBalance = cumulativeBalance;
-    debugPrint("update MonthlyAccountSummary $accountId: month=$month, year=$year, +$incomeAmount -$expenseAmount, cumulative:$cumulativeBalance");
+    debugPrint("update MonthlyAccountSummary $accountId: $month/$year, +$incomeAmount -$expenseAmount, cumulative:$cumulativeBalance");
     await db.update(_tableName,
       summary.toMap(),
       where: 'accountId = ? AND month = ? AND year = ?',
@@ -165,7 +179,7 @@ class MonthlyAccountEntityService {
     );
   }*/
 
-  static Future<List<MonthlyAccountSummaryDto>> getAllMonthAccountsSummaries(int month, int year) async {
+  static Future<List<MonthlyAccountSummaryDto>> getLast12MonthsAccountsSummaries(int month, int year) async {
     final db = await DatabaseHelper.getDb();
     final String condition = month == 12 ? "t.month <= $month AND t.year = $year"
       : "(t.month <= $month AND t.year = $year) OR (t.month > $month AND t.year = ${year - 1})";
