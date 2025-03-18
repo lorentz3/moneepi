@@ -61,11 +61,20 @@ class AccountsPageState extends State<AccountsPage> {
                       children: [
                         Expanded(
                           flex: 1,
-                          child: elements[index].icon != null ? Text(elements[index].icon!) : const Text(" - "),
+                          child: elements[index].icon != null ? Text(
+                            elements[index].icon!,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ) : const Text(" - "),
                         ),
                         Expanded(
                           flex: 10,
-                          child: Text(elements[index].name),
+                          child: Text(
+                            elements[index].name,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ),
                         Expanded(
                           flex: 2,

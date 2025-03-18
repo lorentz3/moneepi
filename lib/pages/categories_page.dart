@@ -18,33 +18,6 @@ class CategoriesPage extends StatefulWidget {
 class CategoriesPageState extends State<CategoriesPage> {
   int? _listSize = 0;
   final GlobalKey<CategoriesPageState> categoriesPageKey = GlobalKey();
-  bool _isFabVisible = true;
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_handleScroll);
-  }
-
-  void _handleScroll() {
-    if (_scrollController.position.userScrollDirection == ScrollDirection.reverse) {
-      if (_isFabVisible) {
-        setState(() => _isFabVisible = false);
-      }
-    } else if (_scrollController.position.userScrollDirection == ScrollDirection.forward) {
-      if (!_isFabVisible) {
-        setState(() => _isFabVisible = true);
-      }
-    }
-    debugPrint("_isFabVisible = $_isFabVisible");
-  }
-   
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,11 +59,20 @@ class CategoriesPageState extends State<CategoriesPage> {
                     children: [
                       Expanded(
                         flex: 1,
-                        child: elements[index].icon != null ? Text(elements[index].icon!) : const Text(" - "),
+                        child: elements[index].icon != null ? Text(
+                          elements[index].icon!,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ) : const Text(" - "),
                       ),
                       Expanded(
                         flex: 10,
-                        child: Text(elements[index].name),
+                        child: Text(
+                          elements[index].name,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       ),
                       Expanded(
                         flex: 2,
@@ -127,22 +109,19 @@ class CategoriesPageState extends State<CategoriesPage> {
           return const Text("No categories");
         }
       ),
-      floatingActionButton: AnimatedOpacity(
-        opacity: _isFabVisible ? 1.0 : 0.0,
-        duration: Duration(milliseconds: 300),
-        child: _isFabVisible ? FloatingActionButton (
-            onPressed: () {
-              Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (context) => CategoryFormPage(
-                  category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
-                  isNew: true,
-                ))
-              ).then((_) => setState(() {}));
-            },
-            tooltip: 'Add category',
-            child: const Icon(Icons.add),
-        ) : null,
+      floatingActionButton: 
+        FloatingActionButton (
+          onPressed: () {
+            Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (context) => CategoryFormPage(
+                category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
+                isNew: true,
+              ))
+            ).then((_) => setState(() {}));
+          },
+          tooltip: 'Add category',
+          child: const Icon(Icons.add),
       ),
     );
   }

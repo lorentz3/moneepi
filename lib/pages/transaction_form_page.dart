@@ -7,6 +7,8 @@ import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
+import 'package:myfinance2/widgets/emoji_button.dart';
+import 'package:myfinance2/widgets/section_divider.dart';
 
 class TransactionFormPage extends StatefulWidget {
   final int? transactionId;
@@ -31,7 +33,6 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   String? _notes = '';
   List<Account> _accounts = [];
   List<Category> _categories = [];
-  bool _showTime = false;
   Transaction _transaction = Transaction(type: TransactionType.EXPENSE, timestamp: DateTime.now());
   int? _transactionId;
   bool _isNew = false;
@@ -40,6 +41,11 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   DateTime? _oldTimestamp;
   int? _oldSourceAccountId;
   bool _isLoading = true;
+  final Color? _selectedButtonColor = Colors.deepPurple[200]; // Selected
+  final Color? _notSelectedButtonColor = Colors.grey[50];
+  bool _showTime = false; // TODO config
+  bool _showDropdownMenus = false; // TODO config
+  bool _showTiles = true; // TODO config
 
   @override
   void initState() {
@@ -107,7 +113,10 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return SizedBox(height: 50, child: CircularProgressIndicator());
+      return Scaffold(
+        appBar: AppBar(title: _isNew ? Text('New transaction') : Text('Edit transaction')),
+        body: Center(child: CircularProgressIndicator())
+      );
     }
     if (_accounts.isEmpty || _categories.isEmpty) {
       return Scaffold(
@@ -140,6 +149,11 @@ class TransactionFormPageState extends State<TransactionFormPage> {
         )
       );
     }
+    final double padding = 16.0;
+    int buttonsPerRow = 6;
+    double spaceBetweenButtons = 6;
+    double screenWidth = MediaQuery.of(context).size.width;
+    double buttonSize = (screenWidth - (buttonsPerRow * spaceBetweenButtons) - padding - 10) / buttonsPerRow;
     return Scaffold(
       appBar: AppBar(
         title: _isNew ? Text('New transaction') : Text('Edit transaction'),
@@ -153,7 +167,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(padding),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -208,130 +222,126 @@ class TransactionFormPageState extends State<TransactionFormPage> {
 
                 // source account
                 _selectedType == TransactionType.TRANSFER ? 
+                  _showDropdownMenus ?
                   DropdownButtonFormField<int>(
                     decoration: InputDecoration(labelText: 'Source account'),
                     value: _selectedSourceAccount,
                     items: _accounts.map((account) {
+                      String accountTitle = account.icon != null ? "${account.icon!} ${account.name}" : account.name;
                       return DropdownMenuItem<int>(
                         value: account.id,
-                        child: Text(account.name),
+                        child: Text(accountTitle),
                       );
                     }).toList(),
                     onChanged: (value) => setState(() => _selectedSourceAccount = value),
                     validator: (value) => value == null ? 'Choose an account' : null,
-                  ) : SizedBox(height: 1,),
-                  _isNew && _selectedType == TransactionType.TRANSFER ? Align(
-                    alignment: Alignment.centerLeft,
+                  ) : SectionDivider(text: 'Source account') : SizedBox(height: 1,),
+                  //source account tiles
+                  _showTiles && _selectedType == TransactionType.TRANSFER ? Align(
+                    alignment: Alignment.center,
                     child: Wrap(
                       spacing: 6,
-                      runSpacing: 0,
+                      runSpacing: 6,
                       children: _accounts.take(5).map((account) {
-                        String accountTitle = account.icon != null ? "${account.icon!} ${account.name}" : account.name;
-                        return ElevatedButton(
+                        return EmojiButton(
+                          icon: account.icon != null ? account.icon! : account.name.substring(0, 2),
+                          label: account.name,
+                          width: buttonSize,
+                          height: buttonSize,
                           onPressed: () {
                             setState(() {
                               _selectedSourceAccount = account.id;
                             });
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _selectedSourceAccount == account.id
-                                ? Colors.deepPurple[200] // Selected
-                                : Colors.grey[300], // Not selected
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          child: Text(accountTitle, overflow: TextOverflow.ellipsis),
+                          backgroundColor: _selectedSourceAccount == account.id
+                                ? _selectedButtonColor // Selected
+                                : _notSelectedButtonColor,
                         );
                       }).toList(),
                     ),
                   ) : SizedBox(height: 1,),
 
                 // target account
-                DropdownButtonFormField<int>(
+                _showDropdownMenus ? DropdownButtonFormField<int>(
                   decoration: _selectedType != TransactionType.TRANSFER ? InputDecoration(labelText: 'Account') : InputDecoration(labelText: 'Target account') ,
                   value: _selectedAccount,
                   items: _accounts.map((account) {
+                    String accountTitle = account.icon != null ? "${account.icon!} ${account.name}" : account.name;
                     return DropdownMenuItem<int>(
                       value: account.id,
-                      child: Text(account.name),
+                      child: Text(accountTitle),
                     );
                   }).toList(),
                   onChanged: (value) => setState(() => _selectedAccount = value),
                   validator: (value) => value == null ? 'Choose an account' : null,
-                ),
-                _isNew ? Align(
-                  alignment: Alignment.centerLeft,
+                ) : SectionDivider(text: _selectedType != TransactionType.TRANSFER ? 'Account' : 'Target account'),
+                //target account tiles
+                _showTiles ? Align(
+                  alignment: Alignment.center,
                   child: Wrap(
                     spacing: 6,
-                    runSpacing: 0,
-                    children: _accounts.take(5).map((account) {
-                      String accountTitle = account.icon != null ? "${account.icon!} ${account.name}" : account.name;
-                      return ElevatedButton(
+                    runSpacing: 6,
+                    children: _accounts.map((account) {
+                      return EmojiButton(
+                        icon: account.icon != null ? account.icon! : account.name.substring(0, 2),
+                        label: account.name,
+                        width: buttonSize,
+                        height: buttonSize,
                         onPressed: () {
                           setState(() {
                             _selectedAccount = account.id;
                           });
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _selectedAccount == account.id
-                              ? Colors.deepPurple[200] // Selected
-                              : Colors.grey[300], // Not selected
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        child: Text(accountTitle, overflow: TextOverflow.ellipsis),
+                        backgroundColor: _selectedAccount == account.id
+                              ? _selectedButtonColor// Selected
+                              : _notSelectedButtonColor,
                       );
                     }).toList(),
                   ),
                 ) : SizedBox(height: 1,),
 
                 // category
-                _selectedType != TransactionType.TRANSFER ? DropdownButtonFormField<int>(
+                _selectedType != TransactionType.TRANSFER ?
+                  _showDropdownMenus ? DropdownButtonFormField<int>(
                   decoration: InputDecoration(labelText: 'Category'),
                   value: _selectedCategory,
                   items: _categories.map((category) {
+                    String categoryTitle = category.icon != null ? "${category.icon!} ${category.name}" : category.name;
                     return DropdownMenuItem<int>(
                       value: category.id,
-                      child: Text(category.name),
+                      child: Text(categoryTitle),
                     );
                   }).toList(),
                   onChanged: (value) => setState(() => _selectedCategory = value),
                   validator: (value) => value == null ? 'Choose a category' : null,
-                ) : SizedBox(height: 1,),
-                _isNew && _selectedType != TransactionType.TRANSFER ? Align(
-                  alignment: Alignment.centerLeft,
+                ) : SectionDivider(text: 'Category') : SizedBox(height: 1,),
+                // category buttons
+                SizedBox(height: spaceBetweenButtons,),
+                _showTiles && _selectedType != TransactionType.TRANSFER ? Align(
+                  alignment: Alignment.center,
                   child: Wrap(
-                    spacing: 6,
-                    runSpacing: 0,
-                    children: _categories.take(15).map((category) {
-                      String categoryTitle = category.icon != null ? "${category.icon!} ${category.name}" : category.name;
-                      return ElevatedButton(
+                    spacing: spaceBetweenButtons,
+                    runSpacing: spaceBetweenButtons,
+                    children: _categories.map((category) {
+                      return EmojiButton(
+                        icon: category.icon != null ? category.icon! : category.name.substring(0, 2),
+                        label: category.name,
+                        width: buttonSize,
+                        height: buttonSize,
                         onPressed: () {
                           setState(() {
                             _selectedCategory = category.id;
                           });
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _selectedCategory == category.id
-                              ? Colors.deepPurple[200]
-                              : Colors.grey[300],
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        child: Text(categoryTitle, overflow: TextOverflow.ellipsis),
+                        backgroundColor: _selectedCategory == category.id
+                              ? _selectedButtonColor // Selected
+                              : _notSelectedButtonColor,
                       );
                     }).toList(),
                   ),
                 ) : SizedBox(height: 1,),
+                
+                //amount
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Amount'),
                   keyboardType: TextInputType.number,

@@ -58,11 +58,11 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(left: 12, top: 8),
-                            child: Text("Category", style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text("Category", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Text("Monthly Budget (€)", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.right),
+                            child: Text("Monthly Budget (€)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.right),
                           ),
                         ],
                       ),
@@ -71,7 +71,13 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
                             children: [
                               Padding(
                                 padding: const EdgeInsets.only(left: 12, top: 4),
-                                child: Text("${category.icon} ${category.name}"),
+                                child: Text(
+                                  "${category.icon} ${category.name}",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(4.0),
