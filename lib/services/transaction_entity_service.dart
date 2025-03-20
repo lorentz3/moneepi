@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:myfinance2/database/database_helper.dart';
+import 'package:myfinance2/dto/month_total_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction.dart';
@@ -42,6 +43,24 @@ class TransactionEntityService {
     """
     );
     return List.generate(maps.length, (index) => TransactionDto.fromJson(maps[index]));
+  }
+
+  static Future<MonthTotalDto> getMonthTotalDto(int month, int year) async {
+    final db = await DatabaseHelper.getDb();
+    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+    final List<Map<String, dynamic>> totals = await db.rawQuery('''
+      SELECT 
+          SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END) AS total_expense,
+          SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END) AS total_income
+      FROM $_tableName
+      WHERE timestamp >= $startTimestamp AND timestamp < $endTimestamp
+    ''');
+    if (totals.isNotEmpty) {
+      return MonthTotalDto(totalExpense: (totals.first['total_expense'] as double?) ?? 0.0, totalIncome: (totals.first['total_income'] as double?) ?? 0.0);
+    } else {
+      return MonthTotalDto(totalExpense: 0, totalIncome: 0);
+    }
   }
 
   static Future<bool> transactionExistsByCategoryId(int categoryId) async {
@@ -200,4 +219,5 @@ class TransactionEntityService {
       ));
     }
   }
+
 }

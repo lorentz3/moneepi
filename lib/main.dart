@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:myfinance2/dto/month_total_dto.dart';
 import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
@@ -60,6 +61,7 @@ class _HomePageState extends State<HomePage> {
   bool _isSummaryLoading = true;
   bool _isCurrentMonth = true;
   final bool _firstDaysOfMonth = DateTime.now().day < 7;
+  MonthTotalDto _monthTotalDto = MonthTotalDto(totalExpense: 0, totalIncome: 0);
 
   @override
   void initState() {
@@ -80,6 +82,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month, selectedDate.year);
     }
+    _monthTotalDto = await TransactionEntityService.getMonthTotalDto(selectedDate.month, selectedDate.year);
     setState(() {});
   }
 
@@ -155,7 +158,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   _getMainBody() {
     final monthString = DateFormat('MMMM').format(selectedDate);
     return SingleChildScrollView(
@@ -163,6 +165,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           _getPieChartAndButtons(),
           _getMonthThresholdBars(),
+          _getMonthTotalWidget(),
           SectionDivider(text: _isCurrentMonth && _firstDaysOfMonth ? "Last 7 days transactions" : "$monthString transactions"),
           TransactionsListGroupedByDate(
             transactions: transactions,
@@ -172,6 +175,58 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+  Widget _getMonthTotalWidget() {
+    final monthString = DateFormat('MMMM').format(selectedDate);
+    return Container(
+        //color: Colors.grey[200],
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              flex: 18,
+              child: Text(
+                "$monthString totals: ",
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  fontSize: 14, 
+                  //fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+            Expanded(
+              flex: 12,
+              child: Text(
+                " + € ${_monthTotalDto.totalIncome.toStringAsFixed(2)}",
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  fontSize: 16, 
+                  //fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 72, 104, 73)),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+            Expanded(
+              flex: 12,
+              child: Text(
+                " - € ${_monthTotalDto.totalExpense.toStringAsFixed(2)}",
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  fontSize: 16, 
+                  //fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 150, 85, 80)
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
     );
   }
 

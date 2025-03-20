@@ -140,7 +140,7 @@ class CategoriesPageState extends State<CategoriesPage> {
                   child: ListBody(
                     children: <Widget>[
                       const Text("This will add app default categories to your expense categories list, like:"),
-                      const Text(" - House"),
+                      const Text(" - Groceries"),
                       const Text(" - Car"),
                       const Text(" - ..."),
                       const Text("Continue?"),
@@ -182,7 +182,6 @@ class CategoriesPageState extends State<CategoriesPage> {
                     children: <Widget>[
                       const Text("This will add app default categories to your income categories list, like:"),
                       const Text(" - Salary"),
-                      const Text(" - Refunds"),
                       const Text("Continue?"),
                     ],
                   ),

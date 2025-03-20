@@ -8,7 +8,7 @@ class TransactionsListGroupedByDate extends StatelessWidget {
   final List<TransactionDto> transactions;
   final VoidCallback? onTransactionUpdated;
 
-  const TransactionsListGroupedByDate({super.key, required this.transactions, this.onTransactionUpdated});
+  TransactionsListGroupedByDate({super.key, required this.transactions, this.onTransactionUpdated});
 
   Map<DaySummaryDto, List<TransactionDto>> _groupTransactionsByDate() {
     Map<DaySummaryDto, List<TransactionDto>> groupedTransactions = {};

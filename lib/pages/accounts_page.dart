@@ -143,7 +143,6 @@ class AccountsPageState extends State<AccountsPage> {
                     const Text("This will add app default accounts to your accounts list, like:"),
                     const Text(" - Bank account"),
                     const Text(" - Cash"),
-                    const Text(" - Credit card"),
                     const Text("Continue?"),
                   ],
                 ),

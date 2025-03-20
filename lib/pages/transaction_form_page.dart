@@ -79,6 +79,13 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   Future<void> _loadData() async {
     _accounts = await AccountEntityService.getAllAccounts();
     _categories = await CategoryEntityService.getAllCategories(_selectedType == TransactionType.EXPENSE ? CategoryType.EXPENSE : CategoryType.INCOME);
+    if (_accounts.isNotEmpty) {
+      _selectedAccount ??= _accounts[0].id;
+      _selectedSourceAccount ??= _accounts[0].id;
+    }
+    if (_categories.isNotEmpty) {
+      _selectedCategory ??= _categories[0].id;
+    }
     _isLoading = false;
     setState(() { });
   }
@@ -346,8 +353,8 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   decoration: InputDecoration(labelText: 'Amount'),
                   keyboardType: TextInputType.number,
                   initialValue: _amount != null ? "$_amount" : "",
-                  onChanged: (value) => _amount = double.tryParse(value) ?? 0.0,
-                  validator: (value) => value == null || value == '' ? 'Insert a valid amount' : null,
+                  onChanged: (value) => _amount = double.tryParse(_replaceCommaWithPoint(value)) ?? 0.0,
+                  validator: (value) => value == null || double.tryParse(_replaceCommaWithPoint(value)) == null || value == '' ? 'Insert a valid amount' : null,
                 ),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Notes'),
@@ -368,6 +375,10 @@ class TransactionFormPageState extends State<TransactionFormPage> {
         ),
       ),
     );
+  }
+
+  String _replaceCommaWithPoint(String value) {
+    return value.replaceAll(",", ".");
   }
 
   _saveTransaction() async {

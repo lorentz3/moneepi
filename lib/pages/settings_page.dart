@@ -25,6 +25,7 @@ class SettingsPageState extends State<SettingsPage> {
   bool _hasAccounts = true;
   bool _hasExpenseCategories = true;
   bool _hasIncomeCategories = true;
+  bool _debugFeaturesEnabled = false;
 
   @override
   void initState() {
@@ -114,7 +115,7 @@ class SettingsPageState extends State<SettingsPage> {
               highlightText: "Coming soon!",
               onPressed: () => {},
             ),
-            SquareButton(
+            if (_debugFeaturesEnabled) SquareButton(
               label: "Reset Transactions",
               icon: Icons.warning,
               size: buttonSize,
@@ -122,7 +123,7 @@ class SettingsPageState extends State<SettingsPage> {
               highlightText: "DEBUG",
               onPressed: () => _resetTransactions(),
             ),
-            SquareButton(
+            if (_debugFeaturesEnabled) SquareButton(
               label: "Random transactions",
               icon: Icons.warning,
               size: buttonSize,
@@ -130,7 +131,7 @@ class SettingsPageState extends State<SettingsPage> {
               highlightText: "DEBUG",
               onPressed: () => _randomTransactions(),
             ),
-            SquareButton(
+            if (_debugFeaturesEnabled) SquareButton(
               label: "Reset DB",
               icon: Icons.warning,
               size: buttonSize,

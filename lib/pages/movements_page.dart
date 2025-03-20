@@ -43,7 +43,8 @@ class MovementsPageState extends State<MovementsPage> {
         appBar: AppBar(
           title: MonthSelector(selectedDate: selectedDate, onDateChanged: _updateDate),
         ),
-        body: SingleChildScrollView(
+        body: transactions.isEmpty ? Center(child: const Text("Still no movements"),)
+          : SingleChildScrollView(
           child: TransactionsListGroupedByDate(transactions: transactions)
         ),
         floatingActionButton: FloatingActionButton(

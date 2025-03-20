@@ -8,7 +8,6 @@ class CategoryFormPage extends StatefulWidget {
 
   const CategoryFormPage({super.key, required this.category, required this.isNew});
 
-
   @override
   State createState() => CategoryFormPageState();
 }
