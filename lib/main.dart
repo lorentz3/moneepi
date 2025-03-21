@@ -164,8 +164,8 @@ class _HomePageState extends State<HomePage> {
       child: Column (
         children: [
           _getPieChartAndButtons(),
-          _getMonthThresholdBars(),
           _getMonthTotalWidget(),
+          _getMonthThresholdBars(),
           SectionDivider(text: _isCurrentMonth && _firstDaysOfMonth ? "Last 7 days transactions" : "$monthString transactions"),
           TransactionsListGroupedByDate(
             transactions: transactions,
@@ -178,9 +178,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
   Widget _getMonthTotalWidget() {
-    final monthString = DateFormat('MMMM').format(selectedDate);
+    final monthString = DateFormat('MMMM yyyy').format(selectedDate);
     return Container(
-        //color: Colors.grey[200],
+        color: Colors.grey[300],
         padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -192,8 +192,8 @@ class _HomePageState extends State<HomePage> {
                 textAlign: TextAlign.left,
                 style: TextStyle(
                   fontSize: 14, 
-                  //fontWeight: FontWeight.bold,
-                  color: Colors.blueGrey),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple[900]),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -202,11 +202,11 @@ class _HomePageState extends State<HomePage> {
               flex: 12,
               child: Text(
                 " + € ${_monthTotalDto.totalIncome.toStringAsFixed(2)}",
-                textAlign: TextAlign.left,
+                textAlign: TextAlign.right,
                 style: TextStyle(
                   fontSize: 16, 
-                  //fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 72, 104, 73)),
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 66, 114, 68)),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -215,16 +215,17 @@ class _HomePageState extends State<HomePage> {
               flex: 12,
               child: Text(
                 " - € ${_monthTotalDto.totalExpense.toStringAsFixed(2)}",
-                textAlign: TextAlign.left,
+                textAlign: TextAlign.right,
                 style: TextStyle(
                   fontSize: 16, 
-                  //fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                   color: Color.fromARGB(255, 150, 85, 80)
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
             ),
+            SizedBox(width: 15,)
           ],
         ),
     );

@@ -17,17 +17,27 @@ class TransactionEntityService {
   static Future<List<TransactionDto>> getMonthTransactions(int month, int year) async {
     final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
     final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
-    return getTransactionsBetween(startTimestamp, endTimestamp);
+    return getTransactionsBetween(startTimestamp, endTimestamp, null, null, null, null);
+  }
+
+  static Future<List<TransactionDto>> getMonthTransactionsWithFilters(int month, int year, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
+    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+    return getTransactionsBetween(startTimestamp, endTimestamp, accountId, sourceAccountId, categoryId, type);
   }
     
   static Future<List<TransactionDto>> getLastDaysTransactions(int daysNumber) async {
     final int startTimestamp = DateTime.now().subtract(Duration(days: daysNumber)).millisecondsSinceEpoch;
     final int endTimestamp = DateTime.now().millisecondsSinceEpoch;
-    return getTransactionsBetween(startTimestamp, endTimestamp);
+    return getTransactionsBetween(startTimestamp, endTimestamp, null, null, null, null);
   }
 
-  static Future<List<TransactionDto>> getTransactionsBetween(int startTimestamp, int endTimestamp) async {
+  static Future<List<TransactionDto>> getTransactionsBetween(int startTimestamp, int endTimestamp, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
     final db = await DatabaseHelper.getDb();
+    String andAccountId = accountId != null ? "AND t.accountId = $accountId" : "";
+    String andSourceAccountId = sourceAccountId != null ? "AND t.sourceAccountId = $sourceAccountId" : "";
+    String andCategoryId = categoryId != null ? "AND t.categoryId = $categoryId" : "";
+    String andType = type != null ? "AND t.type = '${type.toString().split('.').last}'" : "";
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
       SELECT t.id, t.type, t.timestamp, 
         a.icon AS accountIcon, a.name AS accountName, 
@@ -39,6 +49,10 @@ class TransactionEntityService {
       LEFT JOIN Accounts sourceAccounts ON t.sourceAccountId = sourceAccounts.id
       LEFT JOIN Categories c ON t.categoryId = c.id
       WHERE timestamp >= $startTimestamp AND timestamp < $endTimestamp
+      $andAccountId
+      $andSourceAccountId
+      $andCategoryId
+      $andType
       ORDER BY timestamp DESC
     """
     );
