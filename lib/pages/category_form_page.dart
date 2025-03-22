@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 
 class CategoryFormPage extends StatefulWidget {
@@ -18,6 +19,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
   double? _monthThreshold;
   double? _yearThreshold;
   String? _icon;
+  late CategoryType _categoryType;
 
   @override
   void initState() {
@@ -26,6 +28,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
     _monthThreshold = widget.category.monthThreshold;
     _yearThreshold = widget.category.yearThreshold;
     _icon = widget.category.icon;
+    _categoryType = widget.category.type;
   }
 
   @override
@@ -52,12 +55,12 @@ class CategoryFormPageState extends State<CategoryFormPage> {
                   validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
                 ),
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Category name'),
+                  decoration: InputDecoration(labelText: 'Category name *'),
                   initialValue: _categoryName,
                   onChanged: (value) => _categoryName = value,
                   validator: (value) => value!.isEmpty ? 'Enter a name' : null,
                 ),
-                TextFormField(
+                if (_categoryType == CategoryType.EXPENSE) TextFormField(
                   decoration: InputDecoration(labelText: 'Monthly Threshold'),
                   initialValue: _monthThreshold != null ? "$_monthThreshold" : "",
                   keyboardType: TextInputType.numberWithOptions(
@@ -66,7 +69,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
                   ),
                   onChanged: (value) => _monthThreshold = double.tryParse(value),
                 ),
-                TextFormField(
+                if (_categoryType == CategoryType.EXPENSE) TextFormField(
                   decoration: InputDecoration(labelText: 'Annual Threshold'),
                   initialValue: _yearThreshold != null ? "$_yearThreshold" : "",
                   keyboardType: TextInputType.numberWithOptions(

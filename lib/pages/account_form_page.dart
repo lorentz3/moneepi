@@ -52,7 +52,7 @@ class AccountFormPageState extends State<AccountFormPage> {
                   validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
                 ),
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Account name'),
+                  decoration: InputDecoration(labelText: 'Account name *'),
                   initialValue: _accountName,
                   onChanged: (value) => _accountName = value,
                   validator: (value) => value!.isEmpty ? 'Enter a name' : null,

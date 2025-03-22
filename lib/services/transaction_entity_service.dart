@@ -10,6 +10,7 @@ import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
+import 'package:myfinance2/utils/date_utils.dart';
 
 class TransactionEntityService {
   static const String _tableName = "Transactions";
@@ -111,7 +112,8 @@ class TransactionEntityService {
     //update old referenced summaries
     int monthToUpdate = oldTimestamp.month;
     int yearToUpdate = oldTimestamp.year;
-    if (oldCategoryId != null && transaction.categoryId != oldCategoryId) {
+    if (oldCategoryId != null && (transaction.categoryId != oldCategoryId || !DateUtils.areMonthYearEquals(transaction.timestamp, oldTimestamp))) {
+      debugPrint("updateMonthlyCategoryTransactionSummary $oldCategoryId");
       await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategoryId, monthToUpdate, yearToUpdate);
     }
     if (transaction.accountId != oldAccountId) {
