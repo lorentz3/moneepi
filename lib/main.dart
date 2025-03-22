@@ -164,6 +164,7 @@ class _HomePageState extends State<HomePage> {
       child: Column (
         children: [
           _getPieChartAndButtons(),
+          SizedBox(height: 5,),
           _getMonthTotalWidget(),
           _getMonthThresholdBars(),
           SectionDivider(text: _isCurrentMonth && _firstDaysOfMonth ? "Last 7 days transactions" : "$monthString transactions"),
@@ -180,7 +181,7 @@ class _HomePageState extends State<HomePage> {
   Widget _getMonthTotalWidget() {
     final monthString = DateFormat('MMMM yyyy').format(selectedDate);
     return Container(
-        color: Colors.grey[300],
+        color: Colors.deepPurple[100],
         padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -193,7 +194,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(
                   fontSize: 14, 
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple[900]),
+                  color: Colors.black),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),

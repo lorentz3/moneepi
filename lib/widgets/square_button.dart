@@ -39,9 +39,9 @@ class SquareButton extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 35, color: Colors.black54),
+                Icon(icon, size: size/2, color: Colors.black54),
                 SizedBox(height: 3),
-                Text(
+                if (label != "") Text(
                   label,
                   style: TextStyle(
                     fontSize: 11.5, 

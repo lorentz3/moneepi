@@ -58,7 +58,7 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.left,
                   ),
-                  Text(
+                  if (entry.key.totalExpense != 0) Text(
                     entry.key.totalExpense > 0 
                       ? "  (tot: - € ${entry.key.totalExpense.toStringAsFixed(2)})" 
                       : "  (tot: € ${entry.key.totalExpense.toStringAsFixed(2)})",
@@ -172,17 +172,17 @@ class TransactionsListGroupedByDate extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              flex: 15,
+              flex: 20,
               child: Text(
                 accountTransferText,
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
             ),
             Expanded(
-              flex: 10,
+              flex: 5,
               child: Text(
                 ' € ${movement.amount.toStringAsFixed(2)} ',
                 textAlign: TextAlign.right,

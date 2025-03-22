@@ -7,6 +7,7 @@ import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
+import 'package:myfinance2/widgets/square_button.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
 
 class MovementsPage extends StatefulWidget {
@@ -101,8 +102,7 @@ class MovementsPageState extends State<MovementsPage> {
             });
           }),
           _buildTransactionTypeSelector(),
-          ElevatedButton(
-            onPressed: () {
+          SquareButton(label: "", icon: Icons.restart_alt_rounded, size: 40, onPressed: () {
               setState(() {
                 _startDate = null;
                 _endDate = null;
@@ -113,7 +113,6 @@ class MovementsPageState extends State<MovementsPage> {
                 _loadTransactions();
               });
             },
-            child: Text("Reset"),
           ),
         ],
       ),
