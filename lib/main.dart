@@ -16,12 +16,14 @@ import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:month_year_picker/month_year_picker.dart';
+import 'package:myfinance2/utils/size_utils.dart';
 import 'package:myfinance2/widgets/categories_pie_chart.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/monthly_thresholds_bar.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 import 'package:myfinance2/widgets/square_button.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,16 +35,21 @@ class FinanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MyFinance',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      localizationsDelegates: [
-        MonthYearPickerLocalizations.delegate,
-      ],
-      home: const HomePage(),
+    return ScreenUtilInit(
+      designSize: Size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height), 
+      builder: (_, child) {
+        return MaterialApp(
+          title: 'MyFinance',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+          ),
+          localizationsDelegates: [
+            MonthYearPickerLocalizations.delegate,
+          ],
+          home: const HomePage(),
+        );
+      }
     );
   }
 }
@@ -192,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                 "$monthString totals: ",
                 textAlign: TextAlign.left,
                 style: TextStyle(
-                  fontSize: 14, 
+                  fontSize: 14.sp, 
                   fontWeight: FontWeight.bold,
                   color: Colors.black),
                 overflow: TextOverflow.ellipsis,
@@ -205,7 +212,7 @@ class _HomePageState extends State<HomePage> {
                 " + € ${_monthTotalDto.totalIncome.toStringAsFixed(2)}",
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  fontSize: 16, 
+                  fontSize: 15.sp, 
                   fontWeight: FontWeight.bold,
                   color: Color.fromARGB(255, 66, 114, 68)),
                 overflow: TextOverflow.ellipsis,
@@ -218,7 +225,7 @@ class _HomePageState extends State<HomePage> {
                 " - € ${_monthTotalDto.totalExpense.toStringAsFixed(2)}",
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  fontSize: 16, 
+                  fontSize: 15.sp, 
                   fontWeight: FontWeight.bold,
                   color: Color.fromARGB(255, 150, 85, 80)
                 ),

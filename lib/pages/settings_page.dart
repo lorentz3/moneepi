@@ -4,6 +4,7 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
+import 'package:myfinance2/pages/groups_page.dart';
 import 'package:myfinance2/pages/import_xls_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
@@ -95,9 +96,7 @@ class SettingsPageState extends State<SettingsPage> {
               label: "Categories Groups",
               icon: Icons.group_work_outlined,
               size: buttonSize,
-              highlight: true,
-              highlightText: "Coming soon",
-              onPressed: () => {},
+              onPressed: () => _navigateToGroupListPage(),
             ),
             SquareButton(
               label: "XLSX Import",
@@ -174,6 +173,13 @@ class SettingsPageState extends State<SettingsPage> {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ImportXlsPage()),
+    );
+  }
+  
+  void _navigateToGroupListPage() async{
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => GroupListPage()),
     );
   }
 

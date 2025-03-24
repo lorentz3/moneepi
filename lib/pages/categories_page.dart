@@ -54,7 +54,7 @@ class CategoriesPageState extends State<CategoriesPage> {
                 itemBuilder: (context, index) => Container(
                   width: width,
                   margin: const EdgeInsets.all(10),
-                  height: 20,
+                  height: 25,
                   child: Row(
                     children: [
                       Expanded(
@@ -226,7 +226,7 @@ class CategoriesPageState extends State<CategoriesPage> {
       builder: (BuildContext context) {
         if (transactionExists) {
           return AlertDialog(
-            content: const Text("The category cannot be deleted, there are Categories referencing this account.")
+            content: const Text("The category cannot be deleted, there are Transactions referencing this category.")
           );
         } else {
           return AlertDialog(

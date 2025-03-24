@@ -186,7 +186,7 @@ class AccountsPageState extends State<AccountsPage> {
       builder: (BuildContext context) {
         if (transactionExists) {
           return AlertDialog(
-            content: const Text("The account cannot be deleted, there are Categories referencing this account.")
+            content: const Text("The account cannot be deleted, there are Transactions referencing this account.")
           );
         } else {
           return AlertDialog(
