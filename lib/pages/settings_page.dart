@@ -93,7 +93,7 @@ class SettingsPageState extends State<SettingsPage> {
               onPressed: () => _navigateToMonthlyThresholdPage(context),
             ),
             SquareButton(
-              label: "Categories Groups",
+              label: "Category Groups",
               icon: Icons.group_work_outlined,
               size: buttonSize,
               onPressed: () => _navigateToGroupListPage(),

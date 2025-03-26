@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myfinance2/pages/groups_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/widgets/square_button.dart';
 
@@ -14,15 +15,7 @@ class BudgetingPageState extends State<BudgetingPage> {
   @override
   void initState() {
     super.initState();
-    //_updateButtonFlags();
   }
-
-  /*_updateButtonFlags() async {
-    _hasAccounts = await AccountEntityService.existsAtLeastOneAccount();
-    _hasExpenseCategories = await CategoryEntityService.existsAtLeastOneCategoryByType(TransactionType.EXPENSE);
-    _hasIncomeCategories = await CategoryEntityService.existsAtLeastOneCategoryByType(TransactionType.INCOME);
-    setState(() {});
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +39,10 @@ class BudgetingPageState extends State<BudgetingPage> {
               onPressed: () => _navigateToMonthlyThresholdPage(context),
             ),
             SquareButton(
-              label: "Categories Groups",
+              label: "Category Groups",
               icon: Icons.group_work_outlined,
               size: buttonSize,
-              highlight: true,
-              highlightText: "Coming soon!",
-              onPressed: () {},
+              onPressed: () => _navigateToGroupListPage(),
             ),
           ],
         ),
@@ -66,5 +57,12 @@ class BudgetingPageState extends State<BudgetingPage> {
     ).then((_) {
       //_updateButtonFlags();
     });
+  }
+  
+  void _navigateToGroupListPage() async{
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => GroupListPage()),
+    );
   }
 } 

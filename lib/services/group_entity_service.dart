@@ -31,7 +31,6 @@ class GroupEntityService {
       LEFT JOIN Categories c ON cg.categoryId = c.id
       ORDER BY g.sort, c.sort
     ''');
-
     Map<int, GroupDto> groupMap = {};
 
     for (var row in results) {
@@ -49,7 +48,7 @@ class GroupEntityService {
       }
       
       if (row['categoryId'] != null) {
-        groupMap[groupId]!.categories!.add(Category(
+        groupMap[groupId]!.categories.add(Category(
           id: row['categoryId'],
           icon: row['categoryIcon'],
           name: row['categoryName'],
@@ -64,7 +63,7 @@ class GroupEntityService {
     return groupMap.values.toList();
   }
 
-  static void updateGroup(Group group) async {
+  static Future<void> updateGroup(Group group) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
       group.toMap(),
@@ -73,11 +72,12 @@ class GroupEntityService {
     );
   }
 
-  static void insertGroup(Group group) async {
+  static Future<int> insertGroup(Group group) async {
     final db = await DatabaseHelper.getDb();
-    await db.insert(_tableName, 
+    int groupId = await db.insert(_tableName, 
       group.toMapCreate()
     );
+    return groupId;
   }
 
   static void deleteGroup(int groupId) async {
@@ -100,13 +100,41 @@ class GroupEntityService {
     }
     return List.generate(maps.length, (index) => Group.fromJson(maps[index]));
   }
-  
-  static Future<void> linkExpenseToTag(int categoryId, int groupId) async {
+
+  static Future<void> updateGroupCategoriesLinks(int groupId, List<int> selectedCategoryIds) async {
     final db = await DatabaseHelper.getDb();
-    await db.insert(_linksTableName, {
-      'categoryId': categoryId,
-      'groupId': groupId,
-    });
+
+    // 1. Recuperiamo le categorie attualmente collegate al gruppo
+    final List<Map<String, dynamic>> existingLinks = await db.query(
+      _linksTableName,
+      columns: ['categoryId'],
+      where: 'groupId = ?',
+      whereArgs: [groupId],
+    );
+
+    // Convertiamo i risultati in una lista di interi (gli ID delle categorie attualmente associate)
+    List<int> existingCategoryIds = existingLinks.map((e) => e['categoryId'] as int).toList();
+
+    // 2. Calcoliamo le differenze
+    final toAdd = selectedCategoryIds.where((id) => !existingCategoryIds.contains(id)).toList();
+    final toRemove = existingCategoryIds.where((id) => !selectedCategoryIds.contains(id)).toList();
+
+    // 3. Aggiungiamo le nuove associazioni
+    for (var categoryId in toAdd) {
+      await db.insert(_linksTableName, {
+        'categoryId': categoryId,
+        'groupId': groupId,
+      });
+    }
+
+    // 4. Rimuoviamo le associazioni non più presenti
+    for (var categoryId in toRemove) {
+      await db.delete(
+        _linksTableName,
+        where: 'categoryId = ? AND groupId = ?',
+        whereArgs: [categoryId, groupId],
+      );
+    }
   }
 
   // only for debug

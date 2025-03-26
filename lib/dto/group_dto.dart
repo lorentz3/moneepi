@@ -7,9 +7,9 @@ class GroupDto {
   int sort;
   double? monthThreshold;
   double? yearThreshold;
-  List<Category>? categories;
+  List<Category> categories;
 
-  GroupDto({this.id, this.icon, required this.name, required this.sort, this.monthThreshold, this.yearThreshold, this.categories});
+  GroupDto({this.id, this.icon, required this.name, required this.sort, this.monthThreshold, this.yearThreshold, required this.categories});
   
   factory GroupDto.fromJson(Map<String, dynamic> json) => GroupDto(
     id: json['id'],
@@ -18,6 +18,7 @@ class GroupDto {
     sort: json['sort'], 
     monthThreshold: json['monthThreshold'],
     yearThreshold: json['yearThreshold'],
+    categories: [],
   );
   
 }

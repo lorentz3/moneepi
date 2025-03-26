@@ -4,7 +4,7 @@ import 'package:myfinance2/pages/group_form_page.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 
 class GroupListPage extends StatefulWidget {
-  const GroupListPage({Key? key}) : super(key: key);
+  const GroupListPage({super.key});
 
   @override
   State<GroupListPage> createState() => _GroupListPageState();
@@ -24,35 +24,19 @@ class _GroupListPageState extends State<GroupListPage> {
     setState(() {});
   }
 
-  void _navigateToEditGroup([GroupDto? group]) async {
-    final result = await Navigator.push(
+  void _navigateToEditGroup(GroupDto group) {
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => GroupFormPage(group: group)),
-    );
-
-    if (result != null) {
-      setState(() {
-        if (result is GroupDto) {
-          if (group != null) {
-            // Modifica gruppo esistente
-            int index = groups.indexWhere((g) => g.id == group.id);
-            if (index != -1) groups[index] = result;
-          } else {
-            // Nuovo gruppo
-            groups.add(result);
-          }
-        } else if (result is int) {
-          // Eliminazione gruppo
-          groups.removeWhere((g) => g.id == result);
-        }
-      });
-    }
+    ).then((_) => setState(() {
+      _loadGroups();
+    }));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Gruppi e Categorie")),
+      appBar: AppBar(title: const Text("Groups")),
       body: ListView.builder(
         itemCount: groups.length,
         itemBuilder: (context, index) {
@@ -68,7 +52,7 @@ class _GroupListPageState extends State<GroupListPage> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateToEditGroup(),
+        onPressed: () => _navigateToEditGroup(GroupDto(name: "", sort: 1, categories: [])),
         child: const Icon(Icons.add),
       ),
     );
