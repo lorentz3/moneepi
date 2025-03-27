@@ -144,15 +144,16 @@ class GroupEntityService {
     await db.delete(_tableName);
   }
 
-  static Future<List<GroupSummaryDto>> getGroupWithThresholdSummaries() async {
+  static Future<List<GroupSummaryDto>> getGroupWithThresholdSummaries(int month, int year) async {
     final db = await DatabaseHelper.getDb();
     final result = await db.rawQuery('''
       SELECT 
         g.id, g.icon, g.name, g.sort, g.monthThreshold, g.yearThreshold, 
         COALESCE(SUM(mcts.amount), 0) as totalExpense
-      FROM Groups g
-      LEFT JOIN Categories_Groups cg ON g.id = cg.groupId
-      LEFT JOIN MonthlyCategoryTransactionSummaries mcts ON cg.categoryId = mcts.categoryId
+      FROM $_tableName g
+      LEFT JOIN $_linksTableName cg ON g.id = cg.groupId
+      LEFT JOIN MonthlyCategoryTransactionSummaries mcts
+        ON cg.categoryId = mcts.categoryId AND mcts.month = $month AND mcts.year = $year
       WHERE g.monthThreshold IS NOT NULL
       GROUP BY g.id, g.icon, g.name, g.sort, g.monthThreshold, g.yearThreshold
       ORDER BY g.sort ASC;

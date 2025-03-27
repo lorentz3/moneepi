@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isSummaryLoading = true;
     });
-    _groupSummaries = await GroupEntityService.getGroupWithThresholdSummaries();
+    _groupSummaries = await GroupEntityService.getGroupWithThresholdSummaries(selectedDate.month, selectedDate.year);
     List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(CategoryType.EXPENSE);
     monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(selectedDate.month, selectedDate.year);
     for (Category c in categoriesWithThreshold) {

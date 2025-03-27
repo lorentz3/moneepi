@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../dto/monthly_category_transaction_summary_dto.dart';
 
 class ThresholdBar extends StatelessWidget {
   final double spent;
