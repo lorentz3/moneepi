@@ -34,10 +34,10 @@ class TransactionsListGroupedByDate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  final Color groupBgColor = Colors.blueGrey.shade100;
-  final groupedTransactions = _groupTransactionsByDate();
-  
-  return Column(
+    final Color groupBgColor = Colors.blueGrey.shade100;
+    final groupedTransactions = _groupTransactionsByDate();
+    
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: groupedTransactions.entries.map((entry) {
         return Column(
@@ -205,7 +205,6 @@ class TransactionsListGroupedByDate extends StatelessWidget {
       ),
     );
   }
-  
 }
 
 class DaySummaryDto {

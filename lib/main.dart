@@ -16,7 +16,6 @@ import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:month_year_picker/month_year_picker.dart';
-import 'package:myfinance2/utils/size_utils.dart';
 import 'package:myfinance2/widgets/categories_pie_chart.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/monthly_thresholds_bar.dart';
