@@ -1,5 +1,6 @@
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/dto/group_dto.dart';
+import 'package:myfinance2/dto/group_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/group.dart';
@@ -141,6 +142,44 @@ class GroupEntityService {
   static Future<void> deleteAll() async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName);
+  }
+
+  static Future<List<GroupSummaryDto>> getGroupWithThresholdSummaries() async {
+    final db = await DatabaseHelper.getDb();
+    final result = await db.rawQuery('''
+      SELECT 
+        g.id, g.icon, g.name, g.sort, g.monthThreshold, g.yearThreshold, 
+        COALESCE(SUM(mcts.amount), 0) as totalExpense
+      FROM Groups g
+      LEFT JOIN Categories_Groups cg ON g.id = cg.groupId
+      LEFT JOIN MonthlyCategoryTransactionSummaries mcts ON cg.categoryId = mcts.categoryId
+      WHERE g.monthThreshold IS NOT NULL
+      GROUP BY g.id, g.icon, g.name, g.sort, g.monthThreshold, g.yearThreshold
+      ORDER BY g.sort ASC;
+    ''');
+
+    List<GroupSummaryDto> groups = [];
+
+    for (var row in result) {
+      final categoryIdsResult = await db.rawQuery('''
+        SELECT categoryId FROM Categories_Groups WHERE groupId = ?
+      ''', [row['id']]);
+
+      List<int> categoryIds = categoryIdsResult.map((e) => e['categoryId'] as int).toList();
+
+      groups.add(GroupSummaryDto(
+        id: row['id'] as int?,
+        icon: row['icon'] as String?,
+        name: row['name'] as String,
+        sort: row['sort'] as int,
+        monthThreshold: row['monthThreshold'] as double?,
+        yearThreshold: row['yearThreshold'] as double?,
+        totalExpense: (row['totalExpense'] as num).toDouble(),
+        categoryIds: categoryIds,
+      ));
+    }
+
+    return groups;
   }
 
 }

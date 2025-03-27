@@ -6,6 +6,7 @@ import 'package:myfinance2/model/group.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/widgets/emoji_button.dart';
+import 'package:myfinance2/widgets/section_divider.dart';
 
 class GroupFormPage extends StatefulWidget {
   final GroupDto group;
@@ -20,6 +21,8 @@ class _GroupFormPageState extends State<GroupFormPage> {
   final _formKey = GlobalKey<FormState>();
   String? _groupName;
   String? _icon;
+  double? _monthThreshold;
+
   bool _isNew = false;
   List<Category> _categories = [];
   bool _isLoading = true;
@@ -33,6 +36,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
     _groupName = widget.group.name;
     _icon = widget.group.icon;
     _selectedCategories = widget.group.categories.map((c) => c.id!).toList();
+    _monthThreshold = widget.group.monthThreshold;
     _isNew = widget.group.id == null;
     _loadCategories();
   }
@@ -80,8 +84,17 @@ class _GroupFormPageState extends State<GroupFormPage> {
                 onChanged: (value) => _groupName = value,
                 validator: (value) => value!.isEmpty ? 'Enter a name' : null,
               ),
-              const SizedBox(height: 20),
-              
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Monthly Budget'),
+                initialValue: _monthThreshold != null ? "$_monthThreshold" : "",
+                keyboardType: TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: false
+                ),
+                onChanged: (value) => _monthThreshold = double.tryParse(value),
+              ),
+              const SizedBox(height: 40),
+              SectionDivider(text: "Select group categories"), 
               SizedBox(height: spaceBetweenButtons,),
               !_isLoading ? Align(
                 alignment: Alignment.center,
@@ -131,6 +144,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
     Group group = Group.fromDto(widget.group);
     group.name = _groupName!;
     group.icon = _icon;
+    group.monthThreshold = _monthThreshold;
     int? groupId = group.id;
     if (_isNew) {
       groupId = await GroupEntityService.insertGroup(group);
@@ -170,6 +184,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text("Group deleted."),
                   ));
+                  Navigator.pop(context);
                   Navigator.pop(context);
                 });
               },

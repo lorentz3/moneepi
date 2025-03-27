@@ -20,6 +20,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
   double? _yearThreshold;
   String? _icon;
   late CategoryType _categoryType;
+  bool _showAnnualBudget = false;
 
   @override
   void initState() {
@@ -61,7 +62,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
                   validator: (value) => value!.isEmpty ? 'Enter a name' : null,
                 ),
                 if (_categoryType == CategoryType.EXPENSE) TextFormField(
-                  decoration: InputDecoration(labelText: 'Monthly Threshold'),
+                  decoration: InputDecoration(labelText: 'Monthly Budget'),
                   initialValue: _monthThreshold != null ? "$_monthThreshold" : "",
                   keyboardType: TextInputType.numberWithOptions(
                     decimal: true,
@@ -69,8 +70,8 @@ class CategoryFormPageState extends State<CategoryFormPage> {
                   ),
                   onChanged: (value) => _monthThreshold = double.tryParse(value),
                 ),
-                if (_categoryType == CategoryType.EXPENSE) TextFormField(
-                  decoration: InputDecoration(labelText: 'Annual Threshold'),
+                if (_showAnnualBudget && _categoryType == CategoryType.EXPENSE) TextFormField(
+                  decoration: InputDecoration(labelText: 'Annual Budget'),
                   initialValue: _yearThreshold != null ? "$_yearThreshold" : "",
                   keyboardType: TextInputType.numberWithOptions(
                     decimal: true,

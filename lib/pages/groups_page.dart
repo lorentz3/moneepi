@@ -58,6 +58,11 @@ class _GroupListPageState extends State<GroupListPage> {
                         "${group.icon ?? ""} ${group.name}",
                         style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
                       ),
+                      SizedBox(width: 10,),
+                      if (group.monthThreshold != null) Text(
+                        "(Monthly budget: € ${group.monthThreshold!.toStringAsFixed(2)})",
+                        style: TextStyle(fontSize: 16.sp,),
+                      ),
                     ],
                   ),
                 ),

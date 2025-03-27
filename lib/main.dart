@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:myfinance2/dto/group_summary_dto.dart';
 import 'package:myfinance2/dto/month_total_dto.dart';
 import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
@@ -13,6 +14,7 @@ import 'package:myfinance2/pages/settings_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
 import 'package:myfinance2/pages/movements_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:month_year_picker/month_year_picker.dart';
@@ -21,6 +23,7 @@ import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/monthly_thresholds_bar.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 import 'package:myfinance2/widgets/square_button.dart';
+import 'package:myfinance2/widgets/thresholds_bar.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -64,6 +67,7 @@ class _HomePageState extends State<HomePage> {
   late DateTime selectedDate;
   List<TransactionDto> transactions = [];
   List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
+  List<GroupSummaryDto> _groupSummaries = [];
   bool _isSummaryLoading = true;
   bool _isCurrentMonth = true;
   final bool _firstDaysOfMonth = DateTime.now().day < 7;
@@ -96,6 +100,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isSummaryLoading = true;
     });
+    _groupSummaries = await GroupEntityService.getGroupWithThresholdSummaries();
     List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(CategoryType.EXPENSE);
     monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(selectedDate.month, selectedDate.year);
     for (Category c in categoriesWithThreshold) {
@@ -172,6 +177,8 @@ class _HomePageState extends State<HomePage> {
           _getPieChartAndButtons(),
           SizedBox(height: 5,),
           _getMonthTotalWidget(),
+          SizedBox(height: 5,),
+          _getGroupThresholdBars(),
           _getMonthThresholdBars(),
           SectionDivider(text: _isCurrentMonth && _firstDaysOfMonth ? "Last 7 days transactions" : "$monthString transactions"),
           TransactionsListGroupedByDate(
@@ -301,15 +308,36 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  _getGroupThresholdBars() {
+    return _isSummaryLoading
+      ? SizedBox()
+      : Padding(
+      padding: EdgeInsets.symmetric(horizontal: 5),
+      child: Column(
+        children: _groupSummaries
+            .where((groupSummary) => groupSummary.monthThreshold != null) 
+            .map((groupSummary) => ThresholdBar(
+              name: groupSummary.name,
+              spent: groupSummary.totalExpense ?? 0.0,
+              threshold: groupSummary.monthThreshold ?? 0.0,
+              icon: groupSummary.icon,
+              nameColor: Color.fromARGB(255, 0, 3, 136),
+              )
+            )
+            .toList(),
+        ),
+    );
+  }
+
   _getMonthThresholdBars() {
     return _isSummaryLoading
       ? Center(child: CircularProgressIndicator())
       : Padding(
-      padding: EdgeInsets.all(5),
+      padding: EdgeInsets.symmetric(horizontal: 5),
       child: Column(
         children: monthCategoriesSummary
             .where((t) => t.monthThreshold != null) 
-            .map((t) => MonthlyThresholdsBar(summary: t))
+            .map((t) => MonthlyThresholdsBar(summary: t)) //TODO refactor use ThresholdsBar
             .toList(),
         ),
     );
