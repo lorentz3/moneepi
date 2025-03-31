@@ -37,6 +37,22 @@ class CategoryEntityService {
     );
   }
 
+  /*static Future<List<Category>> getCategoriesWithoutGroup(int month, int year) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> categoryResults = await db.rawQuery(
+      '''
+      SELECT c.id AS categoryId, c.name AS categoryName, c.icon AS categoryIcon, m.amount, m.monthThreshold
+      FROM Categories c
+      JOIN MonthlyCategoryTransactionSummaryDto m ON c.id = m.categoryId
+      WHERE m.month = ? AND m.year = ?
+      AND c.id NOT IN (SELECT categoryId FROM Categories_Groups)
+      ORDER BY m.amount DESC;
+      ''',
+      [month, year],
+    );
+    return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
+  } */
+
   static void insertCategory(Category category) async {
     final db = await DatabaseHelper.getDb();
     await db.insert(_tableName, 

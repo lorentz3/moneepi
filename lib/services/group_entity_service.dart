@@ -1,5 +1,7 @@
 import 'package:myfinance2/database/database_helper.dart';
+import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/dto/group_dto.dart';
+import 'package:myfinance2/dto/group_stats_dto.dart';
 import 'package:myfinance2/dto/group_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
@@ -183,4 +185,36 @@ class GroupEntityService {
     return groups;
   }
 
+  static Future<List<GroupStatsDto>> getGroupStats(int month, int year) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      '''
+      SELECT g.id AS groupId, g.name AS groupName, g.icon AS groupIcon, g.monthThreshold AS groupMonthThreshold,
+             SUM(m.amount) AS totalExpense, c.id AS categoryId, c.name AS categoryName, c.icon AS categoryIcon,
+             c.sort AS categorySort, c.monthThreshold AS categoryMonthThreshold, c.yearThreshold AS categoryYearThreshold,
+             SUM(m.amount) AS categoryTotalExpense
+      FROM Groups g
+      JOIN Categories_Groups cg ON g.id = cg.groupId
+      JOIN Categories c ON cg.categoryId = c.id
+      LEFT JOIN MonthlyCategoryTransactionSummaries m ON c.id = m.categoryId AND m.month = ? AND m.year = ?
+      GROUP BY g.id, g.name, g.icon, g.monthThreshold, c.id, c.name, c.icon, c.sort, c.monthThreshold, c.yearThreshold
+      ORDER BY totalExpense DESC, c.sort ASC;
+      ''',
+      [month, year],
+    );
+
+    Map<int, List<CategorySummaryDto>> categoriesByGroup = {};
+    Map<int, Map<String, dynamic>> groupData = {};
+    for (var row in results) {
+      int groupId = row['groupId'];
+      if (!groupData.containsKey(groupId)) {
+        groupData[groupId] = row;
+        categoriesByGroup[groupId] = [];
+      }
+      categoriesByGroup[groupId]!.add(CategorySummaryDto.fromJson(row));
+    }
+    return groupData.entries
+          .map((entry) => GroupStatsDto.fromJson(entry.value, categoriesByGroup[entry.key]!))
+          .toList();
+  }
 }

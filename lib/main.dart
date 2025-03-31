@@ -11,6 +11,7 @@ import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_summaries_page.dart';
 import 'package:myfinance2/pages/budgeting_page.dart';
 import 'package:myfinance2/pages/settings_page.dart';
+import 'package:myfinance2/pages/stats_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
 import 'package:myfinance2/pages/movements_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
@@ -291,9 +292,7 @@ class _HomePageState extends State<HomePage> {
                   label: "Stats",
                   size: 75,
                   icon: Icons.query_stats,
-                  highlight: true,
-                  highlightText: "Coming soon",
-                  onPressed: () {/*TODO*/}),
+                  onPressed: () => _navigateToStatsPage()),
                 SizedBox(height: 10),
                 SquareButton(
                   label: "Accounts",
@@ -366,5 +365,12 @@ class _HomePageState extends State<HomePage> {
     ).then((_) {
       _loadAllData(); // TODO only if something changed
     });
+  }
+  
+  _navigateToStatsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => StatsPage()),
+    );
   }
 }

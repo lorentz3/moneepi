@@ -1,5 +1,3 @@
-import 'package:myfinance2/model/category.dart';
-
 class GroupSummaryDto {
   final int? id;
   String? icon;
