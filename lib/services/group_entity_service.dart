@@ -89,6 +89,10 @@ class GroupEntityService {
       where: "id = ?",
       whereArgs: [groupId]
     );
+    await db.delete(_linksTableName, 
+      where: "groupId = ?",
+      whereArgs: [groupId]
+    );
   }
 
   static Future<List<Group>> getAllGroupsWithMonthlyThreshold(TransactionType type) async {
@@ -144,6 +148,7 @@ class GroupEntityService {
   static Future<void> deleteAll() async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName);
+    await db.delete(_linksTableName);
   }
 
   static Future<List<GroupSummaryDto>> getGroupWithThresholdSummaries(int month, int year) async {
@@ -189,18 +194,32 @@ class GroupEntityService {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> results = await db.rawQuery(
       '''
-      SELECT g.id AS groupId, g.name AS groupName, g.icon AS groupIcon, g.monthThreshold AS groupMonthThreshold,
-             SUM(m.amount) AS totalExpense, c.id AS categoryId, c.name AS categoryName, c.icon AS categoryIcon,
-             c.sort AS categorySort, c.monthThreshold AS categoryMonthThreshold, c.yearThreshold AS categoryYearThreshold,
-             SUM(m.amount) AS categoryTotalExpense
+      SELECT 
+          g.id AS groupId, 
+          g.name AS groupName, 
+          g.icon AS groupIcon, 
+          g.monthThreshold AS groupMonthThreshold,
+          (SELECT SUM(m.amount)
+          FROM Categories_Groups cg2
+          JOIN Categories c2 ON cg2.categoryId = c2.id
+          LEFT JOIN MonthlyCategoryTransactionSummaries m 
+              ON c2.id = m.categoryId AND m.month = ? AND m.year = ?
+          WHERE cg2.groupId = g.id) AS totalExpense,
+          c.id AS categoryId, 
+          c.name AS categoryName, 
+          c.icon AS categoryIcon,
+          c.sort AS categorySort, 
+          c.monthThreshold AS categoryMonthThreshold, 
+          c.yearThreshold AS categoryYearThreshold,
+          SUM(m.amount) AS categoryTotalExpense
       FROM Groups g
       JOIN Categories_Groups cg ON g.id = cg.groupId
       JOIN Categories c ON cg.categoryId = c.id
       LEFT JOIN MonthlyCategoryTransactionSummaries m ON c.id = m.categoryId AND m.month = ? AND m.year = ?
-      GROUP BY g.id, g.name, g.icon, g.monthThreshold, c.id, c.name, c.icon, c.sort, c.monthThreshold, c.yearThreshold
-      ORDER BY totalExpense DESC, c.sort ASC;
+      GROUP BY g.id, c.id
+      ORDER BY totalExpense DESC, categoryTotalExpense DESC;
       ''',
-      [month, year],
+      [month, year, month, year],
     );
 
     Map<int, List<CategorySummaryDto>> categoriesByGroup = {};

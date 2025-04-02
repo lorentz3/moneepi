@@ -138,6 +138,14 @@ class SettingsPageState extends State<SettingsPage> {
               highlightText: "DEBUG",
               onPressed: () => _resetDatabase(),
             ),
+            SquareButton(
+              label: "Delete Groups",
+              icon: Icons.warning,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "DEBUG",
+              onPressed: () => _resetGroups(),
+            ),
           ],
         ),
       ),
@@ -197,6 +205,15 @@ class SettingsPageState extends State<SettingsPage> {
         SnackBar(content: Text("Database reset completed")),
       );
       Navigator.pop(context);
+    }
+  }
+
+  void _resetGroups() async {
+    await GroupEntityService.deleteAll();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Group deleted")),
+      );
     }
   }
 

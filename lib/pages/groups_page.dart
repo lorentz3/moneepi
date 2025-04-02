@@ -42,45 +42,48 @@ class _GroupListPageState extends State<GroupListPage> {
       appBar: AppBar(title: const Text("Groups")),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _groups.map((group) {
-          return InkWell(
-            onTap: () => _navigateToEditGroup(group),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header con data raggruppata
-                Container(
-                  color: groupBgColor,
-                  padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        "${group.icon ?? ""} ${group.name}",
-                        style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(width: 10,),
-                      if (group.monthThreshold != null) Text(
-                        "(Monthly budget: € ${group.monthThreshold!.toStringAsFixed(2)})",
-                        style: TextStyle(fontSize: 16.sp,),
-                      ),
-                    ],
+        children: [
+          _groups.isEmpty ? Center(child: Text("No group configured")) : SizedBox(),
+          ..._groups.map((group) {
+            return InkWell(
+              onTap: () => _navigateToEditGroup(group),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header con data raggruppata
+                  Container(
+                    color: groupBgColor,
+                    padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          "${group.icon ?? ""} ${group.name}",
+                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(width: 10,),
+                        if (group.monthThreshold != null) Text(
+                          "(Monthly budget: € ${group.monthThreshold!.toStringAsFixed(2)})",
+                          style: TextStyle(fontSize: 16.sp,),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: group.categories.length,
-                  itemBuilder: (context, index) {
-                    Category category = group.categories[index];
-                    Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                    return _getCategoryWidget(context, category, rowColor);
-                  },
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: group.categories.length,
+                    itemBuilder: (context, index) {
+                      Category category = group.categories[index];
+                      Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                      return _getCategoryWidget(context, category, rowColor);
+                    },
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ]
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

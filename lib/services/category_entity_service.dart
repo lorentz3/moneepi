@@ -1,5 +1,6 @@
 import 'package:myfinance2/database/database_defaults.dart';
 import 'package:myfinance2/database/database_helper.dart';
+import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 
@@ -37,21 +38,26 @@ class CategoryEntityService {
     );
   }
 
-  /*static Future<List<Category>> getCategoriesWithoutGroup(int month, int year) async {
+  static Future<List<CategorySummaryDto>> getCategoriesWithoutGroup(int month, int year) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> categoryResults = await db.rawQuery(
       '''
-      SELECT c.id AS categoryId, c.name AS categoryName, c.icon AS categoryIcon, m.amount, m.monthThreshold
+      SELECT 
+        c.id AS categoryId, 
+        c.icon AS categoryIcon, 
+        c.name AS categoryName, 
+        c.sort AS categorySort,
+        m.amount AS categoryTotalExpense,
+        c.monthThreshold AS categoryMonthThreshold
       FROM Categories c
-      JOIN MonthlyCategoryTransactionSummaryDto m ON c.id = m.categoryId
-      WHERE m.month = ? AND m.year = ?
-      AND c.id NOT IN (SELECT categoryId FROM Categories_Groups)
-      ORDER BY m.amount DESC;
+      LEFT JOIN MonthlyCategoryTransactionSummaries m ON c.id = m.categoryId AND m.month = ? AND m.year = ?
+      WHERE c.id NOT IN (SELECT categoryId FROM Categories_Groups)
+      ORDER BY categoryTotalExpense DESC, categorySort ASC;
       ''',
       [month, year],
     );
-    return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
-  } */
+    return List.generate(categoryResults.length, (index) => CategorySummaryDto.fromJson(categoryResults[index]));
+  }
 
   static void insertCategory(Category category) async {
     final db = await DatabaseHelper.getDb();

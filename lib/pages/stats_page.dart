@@ -4,6 +4,7 @@ import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/dto/group_dto.dart';
 import 'package:myfinance2/dto/group_stats_dto.dart';
 import 'package:myfinance2/pages/group_form_page.dart';
+import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 
@@ -16,7 +17,10 @@ class StatsPage extends StatefulWidget {
 
 class _StatsPageState extends State<StatsPage> {
   List<GroupStatsDto> _groupStats = [];
+  List<CategorySummaryDto> _categoryStats = [];
   late DateTime _selectedDate;
+  bool _groupExists = false;
+  double _otherCategoriesTotal = 0.0;
 
   @override
   void initState() {
@@ -27,6 +31,9 @@ class _StatsPageState extends State<StatsPage> {
 
   Future<void> _loadStats() async {
     _groupStats = await GroupEntityService.getGroupStats(_selectedDate.month, _selectedDate.year);
+    _groupExists = _groupStats.isNotEmpty;
+    _categoryStats = await CategoryEntityService.getCategoriesWithoutGroup(_selectedDate.month, _selectedDate.year);
+    _otherCategoriesTotal = _categoryStats.fold(0.0, (acc, cat) => acc + (cat.totalExpense ?? 0.0));
     setState(() {});
   }
 
@@ -50,49 +57,89 @@ class _StatsPageState extends State<StatsPage> {
   Widget build(BuildContext context) {
     final Color groupBgColor = Colors.blueGrey.shade100;
     return Scaffold(
-      appBar: AppBar(title: MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _groupStats.map((group) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header con data raggruppata
-              Container(
-                color: groupBgColor,
-                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                child: Row(
-                  children: [
-                    Text(
-                      "${group.icon ?? ""} ${group.name}",
-                      style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+      appBar: AppBar(
+        title: MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ..._groupStats.map((group) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header con gruppo
+                  Container(
+                    color: groupBgColor,
+                    padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          "${group.icon ?? ""} ${group.name}",
+                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(width: 10,),
+                        Text(
+                          "Total: € ${(group.totalExpense ?? 0.0).toStringAsFixed(2)}",
+                          style: TextStyle(fontSize: 16.sp,),
+                        ),
+                        if (group.monthThreshold != null) Text(
+                          " / € ${group.monthThreshold!.toStringAsFixed(2)}",
+                          style: TextStyle(fontSize: 16.sp,),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 10,),
-                    Text(
-                      "Total: € ${(group.totalExpense ?? 0.0).toStringAsFixed(2)}",
-                      style: TextStyle(fontSize: 16.sp,),
-                    ),
-                    if (group.monthThreshold != null) Text(
-                      " / € ${group.monthThreshold!.toStringAsFixed(2)}",
-                      style: TextStyle(fontSize: 16.sp,),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
 
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: group.categories.length,
-                itemBuilder: (context, index) {
-                  CategorySummaryDto category = group.categories[index];
-                  Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                  return _getCategoryWidget(context, category, rowColor);
-                },
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: group.categories.length,
+                    itemBuilder: (context, index) {
+                      CategorySummaryDto category = group.categories[index];
+                      Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                      return _getCategoryWidget(context, category, rowColor);
+                    },
+                  ),
+                ],
+              );
+            }).toList(),
+            // Lista senza raggruppamenti
+            if (_categoryStats.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_groupExists) Container(
+                    color: groupBgColor,
+                    padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                    child: Row(
+                      children: [ 
+                        Text(
+                          "Other categories",
+                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(width: 10,),
+                        Text(
+                          "Total: € ${_otherCategoriesTotal.toStringAsFixed(2)}",
+                          style: TextStyle(fontSize: 16.sp,),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: _categoryStats.length,
+                    itemBuilder: (context, index) {
+                      CategorySummaryDto category = _categoryStats[index];
+                      Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                      return _getCategoryWidget(context, category, rowColor);
+                    },
+                  ),
+                ],
               ),
-            ],
-          );
-        }).toList(),
+          ]
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -111,12 +158,15 @@ class _StatsPageState extends State<StatsPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            "      $categoryTitle",
-            textAlign: TextAlign.left,
-            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+          Expanded(
+            flex: 10,
+            child: Text(
+              "      $categoryTitle",
+              textAlign: TextAlign.left,
+              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
           Expanded(
             flex: 10,
@@ -128,15 +178,15 @@ class _StatsPageState extends State<StatsPage> {
               maxLines: 1,
             ),
           ),
-          if (category.monthThreshold != null) Expanded(
-            flex: 5,
-            child: Text(
+          Expanded(
+            flex: 4,
+            child: category.monthThreshold != null ? Text(
               "  / € ${(category.monthThreshold ?? 0.0).toStringAsFixed(2)}",
               textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 16.sp),
+              style: TextStyle(fontSize: 11.sp),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
-            ),
+            ) : SizedBox(),
           ),
           SizedBox(width: 30,)
         ],
