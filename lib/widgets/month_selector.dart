@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
+import 'package:myfinance2/utils/date_utils.dart';
 
 class MonthSelector extends StatefulWidget {
   final DateTime selectedDate;
   final Function(DateTime) onDateChanged; // Callback per aggiornare la variabile
   final MainAxisAlignment? alignment;
+  final bool? enableFutureArrow;
 
   const MonthSelector({
     super.key,
     required this.selectedDate,
     required this.onDateChanged,
     this.alignment,
+    this.enableFutureArrow
   });
 
   @override
@@ -21,6 +24,7 @@ class MonthSelector extends StatefulWidget {
 class MonthSelectorState extends State<MonthSelector> {
   late DateTime _currentDate;
   MainAxisAlignment _alignment = MainAxisAlignment.start;
+  bool _enableFutureArrow = false;
 
   @override
   void initState() {
@@ -29,6 +33,7 @@ class MonthSelectorState extends State<MonthSelector> {
     if (widget.alignment != null) {
       _alignment = widget.alignment!;
     }
+    _enableFutureArrow = widget.enableFutureArrow ?? true;
   }
 
   void _changeMonth(int offset) {
@@ -73,8 +78,8 @@ class MonthSelectorState extends State<MonthSelector> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: () => _changeMonth(1),
+            icon: (_enableFutureArrow || MonthYearUtils.isPastMonth(_currentDate.month, _currentDate.year)) ? const Icon(Icons.chevron_right) : const Icon(Icons.block_rounded),
+            onPressed: () => _enableFutureArrow || MonthYearUtils.isPastMonth(_currentDate.month, _currentDate.year) ? _changeMonth(1) : (),
           ),
         ],
       ),

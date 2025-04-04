@@ -1,4 +1,4 @@
-class DateUtils {
+class MonthYearUtils {
   static bool isPastMonth(int month, int year) {
     DateTime now = DateTime.now();
     int currentMonth = now.month;
@@ -29,5 +29,9 @@ class DateUtils {
     if (dt1.month != dt2.month) return false;
     if (dt1.year != dt2.year) return false;
     return true;
+  }
+
+  static bool areMonthYearEqualsToday(DateTime dt) {
+    return areMonthYearEquals(dt, DateTime.now());
   }
 }

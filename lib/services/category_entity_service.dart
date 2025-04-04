@@ -52,6 +52,7 @@ class CategoryEntityService {
       FROM Categories c
       LEFT JOIN MonthlyCategoryTransactionSummaries m ON c.id = m.categoryId AND m.month = ? AND m.year = ?
       WHERE c.id NOT IN (SELECT categoryId FROM Categories_Groups)
+      AND c.type != 'INCOME'
       ORDER BY categoryTotalExpense DESC, categorySort ASC;
       ''',
       [month, year],

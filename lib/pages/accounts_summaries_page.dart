@@ -62,7 +62,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
             _buildBalanceChart(TransactionType.INCOME),
             SectionDivider(text: "Cumulative"),
             _buildCumulativeBalanceChart(),
-            MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center,),
+            MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center, enableFutureArrow: false,),
             SectionDivider(text: "Current month totals"),
             _buildMonthlySummary(),
             SizedBox(height: 100),
