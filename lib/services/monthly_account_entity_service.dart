@@ -10,14 +10,7 @@ import 'package:myfinance2/utils/date_utils.dart';
 class MonthlyAccountEntityService {
   static const String _tableName = "MonthlyAccountSummaries";
 
-  static Future<void> updateMonthlyAccountSummaries(int accountId, int month, int year) async {
-    debugPrint("Updating account summary: accountId=$accountId, $month/$year");
-    final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
-
-    // Calcoliamo direttamente i totali dal database
-    final result = await db.rawQuery('''
+  static const String _totalsQuery = '''
       SELECT 
         COALESCE(SUM(
           CASE 
@@ -38,10 +31,20 @@ class MonthlyAccountEntityService {
       WHERE (accountId = ? OR sourceAccountId = ?) 
         AND timestamp >= ? 
         AND timestamp < ?
-    ''', [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
+    ''';
+
+  static Future<void> updateMonthlyAccountSummaries(int accountId, int month, int year) async {
+    debugPrint("Updating account summary: accountId=$accountId, $month/$year");
+    final db = await DatabaseHelper.getDb();
+    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+
+    // Calcoliamo direttamente i totali dal database
+    final result = await db.rawQuery(_totalsQuery, [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
 
     double expenseAmount = (result.first['totalExpenses'] as double?) ?? 0;
     double incomeAmount = (result.first['totalIncome'] as double?) ?? 0;
+    debugPrint("total MonthlyAccountSummary $accountId: $month/$year, +$incomeAmount -$expenseAmount");
 
     // Recuperiamo il saldo cumulativo del mese precedente
     final previousBalanceResult = await db.rawQuery('''
@@ -94,13 +97,7 @@ class MonthlyAccountEntityService {
       final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
       final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
       // Calcoliamo le transazioni del mese corrente
-      final result = await db.rawQuery('''
-        SELECT 
-          COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END), 0.0) AS totalExpenses,
-          COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END), 0.0) AS totalIncome
-        FROM Transactions
-        WHERE accountId = ? AND timestamp >= ? AND timestamp < ?
-      ''', [accountId, startTimestamp, endTimestamp]);
+      final result = await db.rawQuery(_totalsQuery, [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
 
       double expenseAmount = (result.first['totalExpenses'] as double?) ?? 0;
       double incomeAmount = (result.first['totalIncome'] as double?) ?? 0;
@@ -135,7 +132,7 @@ class MonthlyAccountEntityService {
         incomeAmount: incomeAmount,
         cumulativeBalance: cumulativeBalance,
       );
-      debugPrint("insert MonthlyAccountSummary $accountId: month=$month, year=$year, +$incomeAmount -$expenseAmount, cumulative:$cumulativeBalance");
+      debugPrint("insert MonthlyAccountSummary $accountId: $month/$year, +$incomeAmount -$expenseAmount, cumulative:$cumulativeBalance");
       insertMonthlyAccountSummary(summary);
       return;
     }
