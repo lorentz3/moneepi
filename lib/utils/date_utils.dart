@@ -13,6 +13,15 @@ class MonthYearUtils {
     return false;
   }
 
+  static bool isFutureMonth(int month, int year) {
+    DateTime now = DateTime.now();
+    int currentMonth = now.month;
+    int currentYear = now.year;
+    if (year > currentYear) return true;
+    if (year == currentYear && month > currentMonth) return true;
+    return false;
+  }
+
   /// Restituisce il mese successivo a quello fornito.
   /// Se è Dicembre (12), ritorna Gennaio (1).
   static int getNextMonth(int month) {

@@ -7,6 +7,8 @@ import 'package:myfinance2/pages/group_form_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
+import 'package:myfinance2/widgets/period_dropdown_button.dart';
+import 'package:myfinance2/widgets/year_selector.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -21,16 +23,18 @@ class _StatsPageState extends State<StatsPage> {
   late DateTime _selectedDate;
   bool _groupExists = false;
   double _otherCategoriesTotal = 0.0;
+  late PeriodOption _periodOption;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime.now();
+    _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    _periodOption = PeriodOption.monthly;
     _loadStats();
   }
 
   Future<void> _loadStats() async {
-    _groupStats = await GroupEntityService.getGroupStats(_selectedDate.month, _selectedDate.year);
+    _groupStats = await GroupEntityService.getGroupStats(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _groupExists = _groupStats.isNotEmpty;
     _categoryStats = await CategoryEntityService.getCategoriesWithoutGroup(_selectedDate.month, _selectedDate.year);
     _otherCategoriesTotal = _categoryStats.fold(0.0, (acc, cat) => acc + (cat.totalExpense ?? 0.0));
@@ -58,7 +62,26 @@ class _StatsPageState extends State<StatsPage> {
     final Color groupBgColor = Colors.blueGrey.shade100;
     return Scaffold(
       appBar: AppBar(
-        title: MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
+        title: Row(
+          children: [
+            Expanded(
+              child: Container(
+                alignment: Alignment.center,
+                child: _getPeriodSelector(),
+              ),
+            ),
+            PeriodDropdownButton(
+              onChanged: (selectedOption) {
+                if (selectedOption != _periodOption) {
+                  setState(() {
+                    _periodOption = selectedOption;
+                    _loadStats();
+                  });
+                }
+              },
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -85,7 +108,7 @@ class _StatsPageState extends State<StatsPage> {
                         ),
                         if (group.monthThreshold != null) Text(
                           " / € ${group.monthThreshold!.toStringAsFixed(2)}",
-                          style: TextStyle(fontSize: 16.sp,),
+                          style: TextStyle(fontSize: 12.sp,),
                         ),
                       ],
                     ),
@@ -103,7 +126,7 @@ class _StatsPageState extends State<StatsPage> {
                   ),
                 ],
               );
-            }).toList(),
+            }),
             // Lista senza raggruppamenti
             if (_categoryStats.isNotEmpty)
               Column(
@@ -121,7 +144,7 @@ class _StatsPageState extends State<StatsPage> {
                         SizedBox(width: 10,),
                         Text(
                           "Total: € ${_otherCategoriesTotal.toStringAsFixed(2)}",
-                          style: TextStyle(fontSize: 16.sp,),
+                          style: TextStyle(fontSize: 14.sp,),
                         ),
                       ],
                     ),
@@ -179,18 +202,26 @@ class _StatsPageState extends State<StatsPage> {
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: 3,
             child: category.monthThreshold != null ? Text(
               "  / € ${(category.monthThreshold ?? 0.0).toStringAsFixed(2)}",
               textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 11.sp),
+              style: TextStyle(fontSize: 10.sp),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ) : SizedBox(),
           ),
-          SizedBox(width: 30,)
         ],
       ),
     );
+  }
+  
+  _getPeriodSelector() {
+    if (_periodOption == PeriodOption.monthly){
+      return MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate);
+    }
+    if (_periodOption == PeriodOption.annually){
+      return YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate);
+    }
   }
 }

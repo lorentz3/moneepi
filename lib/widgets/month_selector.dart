@@ -49,11 +49,16 @@ class MonthSelectorState extends State<MonthSelector> {
       initialDate: _currentDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2200),
+      
     );
 
     if (picked != null) {
       setState(() {
-        _currentDate = DateTime(picked.year, picked.month, 1);
+        if (!_enableFutureArrow && MonthYearUtils.isFutureMonth(picked.month, picked.year)) {
+          _currentDate = DateTime.now();
+        } else {
+          _currentDate = DateTime(picked.year, picked.month, 1);
+        }
       });
       widget.onDateChanged(_currentDate);
     }

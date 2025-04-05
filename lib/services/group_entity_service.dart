@@ -190,9 +190,9 @@ class GroupEntityService {
     return groups;
   }
 
-  static Future<List<GroupStatsDto>> getGroupStats(int month, int year) async {
+  static Future<List<GroupStatsDto>> getGroupStats(int? month, int year) async {
     final db = await DatabaseHelper.getDb();
-    final List<Map<String, dynamic>> results = await db.rawQuery(
+    final List<Map<String, dynamic>> results = month != null ? await db.rawQuery(
       '''
       SELECT 
           g.id AS groupId, 
@@ -220,7 +220,35 @@ class GroupEntityService {
       ORDER BY totalExpense DESC, categoryTotalExpense DESC;
       ''',
       [month, year, month, year],
-    );
+    ) : await db.rawQuery(
+      '''
+      SELECT 
+          g.id AS groupId, 
+          g.name AS groupName, 
+          g.icon AS groupIcon, 
+          g.monthThreshold AS groupMonthThreshold,
+          (SELECT SUM(m.amount)
+          FROM Categories_Groups cg2
+          JOIN Categories c2 ON cg2.categoryId = c2.id
+          LEFT JOIN MonthlyCategoryTransactionSummaries m 
+              ON c2.id = m.categoryId AND m.year = ?
+          WHERE cg2.groupId = g.id) AS totalExpense,
+          c.id AS categoryId, 
+          c.name AS categoryName, 
+          c.icon AS categoryIcon,
+          c.sort AS categorySort, 
+          c.monthThreshold AS categoryMonthThreshold, 
+          c.yearThreshold AS categoryYearThreshold,
+          SUM(m.amount) AS categoryTotalExpense
+      FROM Groups g
+      JOIN Categories_Groups cg ON g.id = cg.groupId
+      JOIN Categories c ON cg.categoryId = c.id
+      LEFT JOIN MonthlyCategoryTransactionSummaries m ON c.id = m.categoryId AND m.year = ?
+      GROUP BY g.id, c.id
+      ORDER BY totalExpense DESC, categoryTotalExpense DESC;
+      ''',
+      [year, year],
+    ) ;
 
     Map<int, List<CategorySummaryDto>> categoriesByGroup = {};
     Map<int, Map<String, dynamic>> groupData = {};
