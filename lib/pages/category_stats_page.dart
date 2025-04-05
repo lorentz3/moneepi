@@ -53,6 +53,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
   @override
   Widget build(BuildContext context) {
     final Color groupBgColor = Colors.blueGrey.shade100;
+    final Color groupBgColor2 = Colors.blueGrey.shade200;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -62,7 +63,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
               child: SizedBox(),
             ),
             Expanded(
-              flex: 3,
+              flex: 10,
               child: Align(
                 alignment: Alignment.topLeft,
                 child: YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
@@ -84,12 +85,6 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                     "${_category.icon ?? ""} ${_category.name} ",
                     style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    "  (Total: € ${_total.toStringAsFixed(2)})",
-                    style: TextStyle(fontSize: 14.sp),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
                 ],
               ),
             ),
@@ -104,10 +99,54 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                 return _getCategoryWidget(context, category, rowColor, index + 1);
               },
             ),
+            SizedBox(height: 10,),
+            Container(
+              color: groupBgColor,
+              padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+              child: Row(
+                children: [ 
+                  Text(
+                    "    Total: ",
+                    style: TextStyle(fontSize: 18.sp),
+                  ),
+                  Text(
+                    " € ${_total.toStringAsFixed(2)}",
+                    style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              color: groupBgColor2,
+              padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+              child: Row(
+                children: [ 
+                  Text(
+                    "    Average: ",
+                    style: TextStyle(fontSize: 18.sp),
+                  ),
+                  Text(
+                    " € ${_monthlyAverage().toStringAsFixed(2)}",
+                    style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  double _monthlyAverage() {
+    if (_selectedDate.year == DateTime.now().year) {
+      return _total / _selectedDate.month;
+    }
+    return _total / 12;
   }
 
   Widget _getCategoryWidget(BuildContext context, CategorySummaryDto category, Color rowColor, int month) {
@@ -126,7 +165,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
             child: SizedBox(width: 50,)
           ),
           Expanded(
-            flex: 2,
+            flex: 5,
             child: Text(
               monthTitle,
               textAlign: TextAlign.left,

@@ -59,9 +59,9 @@ class _StatsPageState extends State<StatsPage> {
               child: SizedBox(),
             ),
             Expanded(
-              flex: 3,
+              flex: 10,
               child: Container(
-                alignment: Alignment.center,
+                alignment: Alignment.centerLeft,
                 child: _getPeriodSelector(),
               ),
             ),
@@ -173,7 +173,7 @@ class _StatsPageState extends State<StatsPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              flex: 10,
+              flex: 12,
               child: Text(
                 "      $categoryTitle",
                 textAlign: TextAlign.left,
@@ -183,7 +183,7 @@ class _StatsPageState extends State<StatsPage> {
               ),
             ),
             Expanded(
-              flex: 10,
+              flex: 9,
               child: Text(
                 " € ${(category.totalExpense ?? 0.0).toStringAsFixed(2)}",
                 textAlign: TextAlign.right,
