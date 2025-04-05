@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myfinance2/dto/category_summary_dto.dart';
-import 'package:myfinance2/dto/group_dto.dart';
 import 'package:myfinance2/dto/group_stats_dto.dart';
-import 'package:myfinance2/pages/group_form_page.dart';
+import 'package:myfinance2/pages/category_stats_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
@@ -41,15 +40,6 @@ class _StatsPageState extends State<StatsPage> {
     setState(() {});
   }
 
-  void _navigateToEditGroup(GroupDto group) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => GroupFormPage(group: group)),
-    ).then((_) => setState(() {
-      _loadStats();
-    }));
-  }
-
   void _updateDate(DateTime newDate) {
     setState(() {
       _selectedDate = newDate;
@@ -65,6 +55,11 @@ class _StatsPageState extends State<StatsPage> {
         title: Row(
           children: [
             Expanded(
+              flex: 1,
+              child: SizedBox(),
+            ),
+            Expanded(
+              flex: 3,
               child: Container(
                 alignment: Alignment.center,
                 child: _getPeriodSelector(),
@@ -106,7 +101,7 @@ class _StatsPageState extends State<StatsPage> {
                           "Total: € ${(group.totalExpense ?? 0.0).toStringAsFixed(2)}",
                           style: TextStyle(fontSize: 16.sp,),
                         ),
-                        if (group.monthThreshold != null) Text(
+                        if (_periodOption == PeriodOption.monthly && group.monthThreshold != null) Text(
                           " / € ${group.monthThreshold!.toStringAsFixed(2)}",
                           style: TextStyle(fontSize: 12.sp,),
                         ),
@@ -164,54 +159,51 @@ class _StatsPageState extends State<StatsPage> {
           ]
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _navigateToEditGroup(GroupDto(name: "", sort: 1, categories: []));
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
   Widget _getCategoryWidget(BuildContext context, CategorySummaryDto category, Color rowColor) {
     String categoryTitle = "${category.icon ?? ""} ${category.name}";
-    return Container(
-      color: rowColor,
-      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            flex: 10,
-            child: Text(
-              "      $categoryTitle",
-              textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+    return GestureDetector(
+      onTap: () => _navigateToCategoryStatsPage(category.id!),
+      child: Container(
+        color: rowColor,
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              flex: 10,
+              child: Text(
+                "      $categoryTitle",
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
-          ),
-          Expanded(
-            flex: 10,
-            child: Text(
-              " € ${(category.totalExpense ?? 0.0).toStringAsFixed(2)}",
-              textAlign: TextAlign.right,
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+            Expanded(
+              flex: 10,
+              child: Text(
+                " € ${(category.totalExpense ?? 0.0).toStringAsFixed(2)}",
+                textAlign: TextAlign.right,
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
-          ),
-          Expanded(
-            flex: 3,
-            child: category.monthThreshold != null ? Text(
-              "  / € ${(category.monthThreshold ?? 0.0).toStringAsFixed(2)}",
-              textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 10.sp),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ) : SizedBox(),
-          ),
-        ],
+            Expanded(
+              flex: 3,
+              child: _periodOption == PeriodOption.monthly && category.monthThreshold != null ? Text(
+                "  / € ${(category.monthThreshold ?? 0.0).toStringAsFixed(2)}",
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 10.sp),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ) : SizedBox(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -223,5 +215,12 @@ class _StatsPageState extends State<StatsPage> {
     if (_periodOption == PeriodOption.annually){
       return YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate);
     }
+  }
+  
+  _navigateToCategoryStatsPage(int categoryId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CategoryStatsPage(categoryId: categoryId,)),
+    );
   }
 }

@@ -60,6 +60,51 @@ class CategoryEntityService {
     return List.generate(categoryResults.length, (index) => CategorySummaryDto.fromJson(categoryResults[index]));
   }
 
+  static Future<Map<int, CategorySummaryDto>> getCategoryStats(int categoryId, int year) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> categoryResults = await db.rawQuery(
+      '''
+      SELECT 
+        m.month AS month,
+        c.id AS categoryId, 
+        c.icon AS categoryIcon, 
+        c.name AS categoryName, 
+        c.sort AS categorySort,
+        m.amount AS categoryTotalExpense,
+        c.monthThreshold AS categoryMonthThreshold
+      FROM Categories c
+      LEFT JOIN MonthlyCategoryTransactionSummaries m ON c.id = m.categoryId AND m.year = ?
+      WHERE c.id = ?
+      ORDER BY categoryTotalExpense DESC, categorySort ASC;
+      ''',
+      [year, categoryId],
+    );
+    if (categoryResults.isEmpty) {
+      return {};
+    }
+    //init
+    Map<String, dynamic> cat = categoryResults[0];
+    final Map<int, CategorySummaryDto> monthlyMap = {
+      for (int month = 1; month <= 12; month++)
+        month: CategorySummaryDto(
+          id: cat['categoryId'],
+          name: cat['categoryName'],
+          sort: cat['categorySort'],
+          icon: cat['categoryIcon'],
+          monthThreshold: cat['categoryMonthThreshold'],
+          totalExpense: 0.0,
+        ),
+    };
+
+    for (final row in categoryResults) {
+      final month = row['month'] as int?;
+      if (month != null) {
+        monthlyMap[month] = CategorySummaryDto.fromJson(row);
+      }
+    }
+    return monthlyMap;
+  }
+
   static void insertCategory(Category category) async {
     final db = await DatabaseHelper.getDb();
     await db.insert(_tableName, 
@@ -75,6 +120,18 @@ class CategoryEntityService {
     );
   }
   
+  static Future<Category> getCategoryById(int categoryId) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName, 
+      where: "id = ?",
+      whereArgs: [categoryId]
+    );
+    if (maps.isEmpty) {
+      return Category(name: "Category not found", type: CategoryType.EXPENSE, sort: 1);
+    }
+    return Category.fromJson(maps[0]);
+  }
+  
   static void insertDefaultExpenseCategories() async {
     final db = await DatabaseHelper.getDb();
     await db.execute(insertDefaultExpenseCategoriesQuery);
@@ -87,7 +144,7 @@ class CategoryEntityService {
 
   static Future<List<Category>> getAllCategoriesWithMonthlyThreshold(CategoryType type) async {
     final db = await DatabaseHelper.getDb();
-    final List<Map<String, dynamic>> maps =  await db.query(
+    final List<Map<String, dynamic>> maps = await db.query(
       _tableName,
       where: 'type = ? AND monthThreshold IS NOT NULL',
       whereArgs: [type.toString().split('.').last],
@@ -117,4 +174,5 @@ class CategoryEntityService {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName);
   }
+
 }
