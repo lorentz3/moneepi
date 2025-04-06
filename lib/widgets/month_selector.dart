@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:myfinance2/utils/date_utils.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MonthSelector extends StatefulWidget {
   final DateTime selectedDate;
@@ -49,7 +50,6 @@ class MonthSelectorState extends State<MonthSelector> {
       initialDate: _currentDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2200),
-      
     );
 
     if (picked != null) {
@@ -67,7 +67,7 @@ class MonthSelectorState extends State<MonthSelector> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(2.0),
+      padding: const EdgeInsets.all(1.0),
       child: Row(
         mainAxisAlignment: _alignment,
         children: [
@@ -78,8 +78,8 @@ class MonthSelectorState extends State<MonthSelector> {
           GestureDetector(
             onTap: _pickMonthYear,
             child: Text(
-              DateFormat(' MMM yyyy ').format(_currentDate),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              DateFormat('MMM yyyy').format(_currentDate),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
           ),
           IconButton(

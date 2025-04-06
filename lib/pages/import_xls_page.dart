@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
 
 import 'package:myfinance2/pages/import_xls_map_page.dart';
@@ -16,13 +17,25 @@ class ImportXlsPageState extends State<ImportXlsPage> {
   String? _filePath;
   bool _hasHeaderRow = true;
   bool _isExtractingAccountsAndCategories = false;
-  final Map<String, TextEditingController> columnControllers = {
+  final Map<String, TextEditingController> _columnControllers = {
     'Date': TextEditingController(text: "0"),
-    'Account': TextEditingController(text: "1"),
-    'Category': TextEditingController(text: "2"),
-    'SubCategory': TextEditingController(text: "3"),
-    'Note': TextEditingController(text: "4"),
+    'Type': TextEditingController(text: "1"),
+    'Account': TextEditingController(text: "2"),
+    'Source Account': TextEditingController(text: "3"),
+    'Category': TextEditingController(text: "4"),
+    'SubCategory': TextEditingController(text: ""),
     'Amount': TextEditingController(text: "5"),
+    'Note': TextEditingController(text: "6"),
+  };
+  final Map<String, bool> _mandatoryIndex = {
+    'Date': true,
+    'Type': false,
+    'Account': true,
+    'Source Account': false,
+    'Category': true,
+    'SubCategory': false,
+    'Amount': true,
+    'Note': false,
   };
   final Set<String> _distinctAccounts = {};
   final Set<String> _distinctCategories = {};
@@ -53,9 +66,9 @@ class ImportXlsPageState extends State<ImportXlsPage> {
     List<List<dynamic>> rows = excel.tables[sheet]!.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
 
     int startRow = _hasHeaderRow ? 1 : 0;
-    int? accountCol = int.tryParse(columnControllers['Account']!.text);
-    int? categoryCol = int.tryParse(columnControllers['Category']!.text);
-    int? subCategoryCol = int.tryParse(columnControllers['SubCategory']!.text);
+    int? accountCol = int.tryParse(_columnControllers['Account']!.text);
+    int? categoryCol = int.tryParse(_columnControllers['Category']!.text);
+    int? subCategoryCol = int.tryParse(_columnControllers['SubCategory']!.text);
 
     if (accountCol == null || categoryCol == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +124,14 @@ class ImportXlsPageState extends State<ImportXlsPage> {
               ),
               if (_filePath != null) Text("Selected file: ${_filePath!.split('/').last}", style: TextStyle(fontWeight: FontWeight.bold),),
               SizedBox(height: 8),
-              Text("For the best import, the excel file should not have expense categories with the same name of income categories"),
+              Text("For the best import, the excel file should not have expense categories with the same name of income categories.",
+                style: TextStyle(fontSize: 12.sp),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "'Type' column must contain 'EXPENSE', 'INCOME' or 'TRANSFER', in order to distinguish the types of transactions. You can leave it empty, transaction type will be deducted by the target category type.",
+                style: TextStyle(fontSize: 12.sp),
+              ),
               SizedBox(height: 8),
               Row(
                 children: [
@@ -126,15 +146,15 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                   Text("The file contains a header row")
                 ],
               ),
-              Text("Configure column index (0 = 'A', 1 = 'B', ...):"),
+              Text("Configure column index (0 = 'A', 1 = 'B', ...). If you are importing a file exported from this app, you can leave default indexes and go ahead."),
               SizedBox(height: 10),
-              ...columnControllers.entries.map((entry) => Padding(
+              ..._columnControllers.entries.map((entry) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: TextField(
                       controller: entry.value,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: "${entry.key} column index: ",
+                        labelText: "${entry.key} column index${isMandatory(entry.key) ? " (*) " : ""}: ",
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -163,6 +183,7 @@ class ImportXlsPageState extends State<ImportXlsPage> {
               if (_distinctAccounts.isNotEmpty || _distinctCategories.isNotEmpty)
                 ElevatedButton(
                   onPressed: () {
+                    // TODO validate fields
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -170,7 +191,7 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                           filePath: _filePath!,
                           distinctAccounts: _distinctAccounts,
                           distinctCategories: _distinctCategories,
-                          hasSubCategories: int.tryParse(columnControllers['SubCategory']!.text) != null,
+                          hasSubCategories: int.tryParse(_columnControllers['SubCategory']!.text) != null,
                           hasHeaderRow: _hasHeaderRow,
                           mapColumnIndexes: _getMapColumnIndexes(),
                         ),
@@ -187,8 +208,12 @@ class ImportXlsPageState extends State<ImportXlsPage> {
   }
   
   Map<String, int?> _getMapColumnIndexes() {
-    return columnControllers.map(
+    return _columnControllers.map(
       (key, controller) => MapEntry(key, int.tryParse(controller.text)),
     );
+  }
+
+  bool isMandatory(String fieldName) {
+    return _mandatoryIndex[fieldName]!;
   }
 }

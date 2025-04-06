@@ -70,8 +70,6 @@ class _HomePageState extends State<HomePage> {
   List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
   List<GroupSummaryDto> _groupSummaries = [];
   bool _isSummaryLoading = true;
-  bool _isCurrentMonth = true;
-  final bool _firstDaysOfMonth = DateTime.now().day < 7;
   MonthTotalDto _monthTotalDto = MonthTotalDto(totalExpense: 0, totalIncome: 0);
 
   @override
@@ -82,17 +80,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   _loadAllData() {
-    _isCurrentMonth = selectedDate.month == DateTime.now().month;
     _loadTransactions();
     _loadSummary();
   }
 
   Future<void> _loadTransactions() async {
-    if (_isCurrentMonth && _firstDaysOfMonth) {
-      transactions = await TransactionEntityService.getLastDaysTransactions(7);
-    } else {
-      transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month, selectedDate.year);
-    }
+    transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month, selectedDate.year);
     _monthTotalDto = await TransactionEntityService.getMonthTotalDto(selectedDate.month, selectedDate.year);
     setState(() {});
   }
@@ -181,7 +174,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 5,),
           _getGroupThresholdBars(),
           _getMonthThresholdBars(),
-          SectionDivider(text: _isCurrentMonth && _firstDaysOfMonth ? "Last 7 days transactions" : "$monthString transactions"),
+          SectionDivider(text: "$monthString transactions"),
           TransactionsListGroupedByDate(
             transactions: transactions,
             onTransactionUpdated: () {

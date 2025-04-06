@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SquareButton extends StatelessWidget {
     final String label;
@@ -34,17 +35,17 @@ class SquareButton extends StatelessWidget {
                 side: highlight ?? false ? BorderSide(color: Colors.deepPurple, width: 2) : BorderSide.none,
               ),
               backgroundColor: Colors.deepPurple[100],
-              padding: EdgeInsets.symmetric(vertical: 4),
+              padding: EdgeInsets.symmetric(vertical: 2),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: size/2, color: Colors.black54),
-                SizedBox(height: 3),
+                Icon(icon, size: size.sp/2, color: Colors.black54),
+                SizedBox(height: 1),
                 if (label != "") Text(
                   label,
                   style: TextStyle(
-                    fontSize: 11.5, 
+                    fontSize: 11.5.sp, 
                     color: Colors.black87,
                     fontWeight: FontWeight.bold,
                   ),
@@ -56,7 +57,7 @@ class SquareButton extends StatelessWidget {
         ),
         if (highlight ?? false)
         Positioned(
-          bottom: -5,
+          bottom: -10,
           left: 0,
           right: 0,
           child: LayoutBuilder(

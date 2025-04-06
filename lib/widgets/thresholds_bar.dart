@@ -63,7 +63,7 @@ class ThresholdBar extends StatelessWidget {
                     child: Text(
                       '${spent.toStringAsFixed(2)} €',
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (100 - percentage) < 0 ? Colors.red : Colors.black),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (100 - percentage) < 0 ? const Color.fromARGB(255, 141, 40, 32) : Colors.black),
                     ),
                   ),
                   SizedBox(width: 3),
@@ -81,7 +81,7 @@ class ThresholdBar extends StatelessWidget {
                     child: Text(
                       '${(100 - percentage).toStringAsFixed(0)}%',
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (100 - percentage) < 0 ? Colors.red : Colors.black),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (100 - percentage) < 0 ? const Color.fromARGB(255, 141, 40, 32) : Colors.black),
                     ),
                   ),
                 ],

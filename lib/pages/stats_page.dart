@@ -53,12 +53,11 @@ class _StatsPageState extends State<StatsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Expanded(
-              child: Container(
-                alignment: Alignment.centerLeft,
-                child: _getPeriodSelector(),
-              ),
+            Flexible(
+              fit: FlexFit.loose,
+              child: _getPeriodSelector(),
             ),
             PeriodDropdownButton(
               onChanged: (selectedOption) {
@@ -89,7 +88,7 @@ class _StatsPageState extends State<StatsPage> {
                       children: [
                         Text(
                           "${group.icon ?? ""} ${group.name}",
-                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(width: 10,),
                         Text(
@@ -159,6 +158,8 @@ class _StatsPageState extends State<StatsPage> {
 
   Widget _getCategoryWidget(BuildContext context, CategorySummaryDto category, Color rowColor) {
     String categoryTitle = "${category.icon ?? ""} ${category.name}";
+    double totalExpense = category.totalExpense ?? 0.0;
+    bool thresholdTrespassed = category.monthThreshold != null ? totalExpense > category.monthThreshold! : false;
     return GestureDetector(
       onTap: () => _navigateToCategoryStatsPage(category.id!),
       child: Container(
@@ -170,7 +171,7 @@ class _StatsPageState extends State<StatsPage> {
             Expanded(
               flex: 12,
               child: Text(
-                "      $categoryTitle",
+                "   $categoryTitle",
                 textAlign: TextAlign.left,
                 style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
@@ -180,22 +181,16 @@ class _StatsPageState extends State<StatsPage> {
             Expanded(
               flex: 9,
               child: Text(
-                " € ${(category.totalExpense ?? 0.0).toStringAsFixed(2)}",
+                " € ${(category.totalExpense ?? 0.0).toStringAsFixed(2)}  ",
                 textAlign: TextAlign.right,
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 15.sp, 
+                  fontWeight: FontWeight.bold,
+                  color: thresholdTrespassed ? const Color.fromARGB(255, 129, 34, 27) : Colors.black,
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
-            ),
-            Expanded(
-              flex: 3,
-              child: _periodOption == PeriodOption.monthly && category.monthThreshold != null ? Text(
-                "  / € ${(category.monthThreshold ?? 0.0).toStringAsFixed(2)}",
-                textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 10.sp),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ) : SizedBox(),
             ),
           ],
         ),

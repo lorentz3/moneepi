@@ -49,7 +49,7 @@ class _PeriodDropdownButtonState extends State<PeriodDropdownButton> {
         child: DropdownButton<PeriodOption>(
           value: _selected,
           isDense: true,
-          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
           dropdownColor: Theme.of(context).colorScheme.primaryContainer,
           style: const TextStyle(color: Colors.black),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
@@ -51,18 +52,18 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                 children: [
                   Text(
                     DateFormat('EEE ').format(DateTime.parse(entry.key.dt)),
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.deepPurple),
                   ),
                   Text(
                     DateFormat('dd MMM yyyy').format(DateTime.parse(entry.key.dt)),
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.left,
                   ),
                   if (entry.key.totalExpense != 0) Text(
                     entry.key.totalExpense > 0 
                       ? "  (tot: - € ${entry.key.totalExpense.toStringAsFixed(2)})" 
                       : "  (tot: € ${entry.key.totalExpense.toStringAsFixed(2)})",
-                    style: TextStyle(fontSize: 13),
+                    style: TextStyle(fontSize: 13.sp),
                   ),
                 ],
               ),
@@ -113,7 +114,10 @@ class TransactionsListGroupedByDate extends StatelessWidget {
               child: Text(
                 categoryTitle,
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16.sp, 
+                  fontWeight: FontWeight.bold
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -130,6 +134,7 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                       ? Color.fromARGB(255, 206, 35, 23)
                       : Color.fromARGB(255, 33, 122, 34),
                   fontWeight: FontWeight.bold,
+                  fontSize: 14.sp, 
                 ),
               ),
             ),
@@ -138,7 +143,10 @@ class TransactionsListGroupedByDate extends StatelessWidget {
               child: Text(
                 accountTitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18.sp, 
+                  fontWeight: FontWeight.bold
+                ),
               ),
             ),
           ],
@@ -176,7 +184,10 @@ class TransactionsListGroupedByDate extends StatelessWidget {
               child: Text(
                 accountTransferText,
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16.sp, 
+                  fontWeight: FontWeight.bold
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -184,21 +195,18 @@ class TransactionsListGroupedByDate extends StatelessWidget {
             Expanded(
               flex: 5,
               child: Text(
-                ' € ${movement.amount.toStringAsFixed(2)} ',
+                ' € ${movement.amount.toStringAsFixed(2)}',
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   color: Color.fromARGB(255, 18, 28, 121),
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
             Expanded(
-              flex: 3,
-              child: Text(
-                "",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              flex: 1,
+              child: SizedBox(),
             ),
           ],
         ),

@@ -82,7 +82,7 @@ class _GroupListPageState extends State<GroupListPage> {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ]
       ),
       floatingActionButton: FloatingActionButton(
@@ -103,7 +103,7 @@ class _GroupListPageState extends State<GroupListPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "      $categoryTitle",
+            "    $categoryTitle",
             textAlign: TextAlign.left,
             style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,

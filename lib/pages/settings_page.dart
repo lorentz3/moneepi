@@ -113,6 +113,38 @@ class SettingsPageState extends State<SettingsPage> {
               size: buttonSize,
               onPressed: () => _navigateToExportTransactionsPage(),
             ),
+            SquareButton(
+              label: "Investments",
+              icon: Icons.auto_graph_sharp,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "Coming soon!",
+              onPressed: () => {}, //TODO
+            ),
+            SquareButton(
+              label: "Page preferences",
+              icon: Icons.dashboard_customize_rounded,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "Coming soon!",
+              onPressed: () => {}, //TODO
+            ),
+            SquareButton(
+              label: "Monthly Savings",
+              icon: Icons.savings_sharp,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "Coming soon!",
+              onPressed: () => {}, //TODO
+            ),
+            SquareButton(
+              label: "Monthly Start Date",
+              icon: Icons.calendar_month,
+              size: buttonSize,
+              highlight: true,
+              highlightText: "Coming soon!",
+              onPressed: () => {}, //TODO
+            ),
             if (_debugFeaturesEnabled) SquareButton(
               label: "Reset Transactions",
               icon: Icons.warning,
