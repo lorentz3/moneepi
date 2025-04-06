@@ -4,6 +4,7 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
+import 'package:myfinance2/pages/export_transactions_page.dart';
 import 'package:myfinance2/pages/groups_page.dart';
 import 'package:myfinance2/pages/import_xls_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
@@ -55,7 +56,7 @@ class SettingsPageState extends State<SettingsPage> {
           mainAxisSpacing: 8,
           children: [
             SquareButton(
-              label: "Accounts",
+              label: "Setup Accounts",
               icon: Icons.account_balance,
               size: buttonSize,
               highlight: !_hasAccounts,
@@ -110,9 +111,7 @@ class SettingsPageState extends State<SettingsPage> {
               label: "XLSX Export",
               icon: Icons.dataset_rounded,
               size: buttonSize,
-              highlight: true,
-              highlightText: "Coming soon!",
-              onPressed: () => {},
+              onPressed: () => _navigateToExportTransactionsPage(),
             ),
             if (_debugFeaturesEnabled) SquareButton(
               label: "Reset Transactions",
@@ -138,7 +137,7 @@ class SettingsPageState extends State<SettingsPage> {
               highlightText: "DEBUG",
               onPressed: () => _resetDatabase(),
             ),
-            SquareButton(
+            if (_debugFeaturesEnabled) SquareButton(
               label: "Delete Groups",
               icon: Icons.warning,
               size: buttonSize,
@@ -188,6 +187,13 @@ class SettingsPageState extends State<SettingsPage> {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => GroupListPage()),
+    );
+  }
+
+  void _navigateToExportTransactionsPage() async{
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ExportTransactionsPage()),
     );
   }
 

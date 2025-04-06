@@ -234,8 +234,8 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
                         int index = value.toInt();
-                        if (index >= 0 && index < 12) {
-                          DateTime monthDate = DateTime(_selectedDate.year, _selectedDate.month - 11 + index);
+                        if (index >= 0 && index <= 12) {
+                          DateTime monthDate = DateTime(_selectedDate.year, index);
                           return Text(DateFormat('MMM').format(monthDate), style: TextStyle(fontSize: 10));
                         }
                         return Text('');

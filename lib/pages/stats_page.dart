@@ -55,11 +55,6 @@ class _StatsPageState extends State<StatsPage> {
         title: Row(
           children: [
             Expanded(
-              flex: 1,
-              child: SizedBox(),
-            ),
-            Expanded(
-              flex: 10,
               child: Container(
                 alignment: Alignment.centerLeft,
                 child: _getPeriodSelector(),

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/widgets.dart';
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/dto/month_total_dto.dart';
+import 'package:myfinance2/dto/transaction_export_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction.dart';
@@ -191,6 +192,59 @@ class TransactionEntityService {
       return null;
     }
     return List.generate(maps.length, (index) => Transaction.fromJson(maps[index]));
+  }
+  
+  static Future<List<Transaction>> getAllTransactionsBetween(int? startTimestamp, int? endTimestamp) async {
+    final db = await DatabaseHelper.getDb();
+    List<Map<String, dynamic>> maps = [];
+    if (startTimestamp != null && endTimestamp != null) {
+      maps = await db.query(
+        _tableName,
+        where: 'timestamp >= ? AND timestamp < ?',
+        whereArgs: [startTimestamp, endTimestamp],
+      );
+    } else {
+      maps = await db.query(_tableName);
+    }
+    return List.generate(maps.length, (index) => Transaction.fromJson(maps[index]));
+  }
+
+  static Future<List<TransactionExportDto>> getTransactionsForExport({
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    final db = await DatabaseHelper.getDb();
+    final whereClause = (from != null && to != null)
+        ? 'WHERE timestamp BETWEEN ? AND ?'
+        : '';
+    final whereArgs = (from != null && to != null)
+        ? [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch]
+        : [];
+
+    final result = await db.rawQuery('''
+      SELECT t.timestamp, t.type, t.amount, t.notes,
+            a.name AS accountName,
+            sa.name AS sourceAccountName,
+            c.name AS categoryName
+      FROM $_tableName t
+      LEFT JOIN Accounts a ON a.id = t.accountId
+      LEFT JOIN Accounts sa ON sa.id = t.sourceAccountId
+      LEFT JOIN Categories c ON c.id = t.categoryId
+      $whereClause
+      ORDER BY t.timestamp DESC
+    ''', whereArgs);
+
+    return result.map((row) {
+      return TransactionExportDto(
+        date: DateTime.fromMillisecondsSinceEpoch(row['timestamp'] as int),
+        type: (row['type'] as String),
+        account: row['accountName'] as String?,
+        sourceAccount: row['sourceAccountName'] as String?,
+        category: row['categoryName'] as String?,
+        amount: row['amount'] as double,
+        notes: row['notes'] as String?,
+      );
+    }).toList();
   }
 
   // only for debug
