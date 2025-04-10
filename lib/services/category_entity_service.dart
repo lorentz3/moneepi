@@ -38,9 +38,9 @@ class CategoryEntityService {
     );
   }
 
-  static Future<List<CategorySummaryDto>> getCategoriesWithoutGroup(int month, int year) async {
+  static Future<List<CategorySummaryDto>> getCategoriesWithoutGroup(int? month, int year) async {
     final db = await DatabaseHelper.getDb();
-    final List<Map<String, dynamic>> categoryResults = await db.rawQuery(
+    final List<Map<String, dynamic>> categoryResults = month != null ? await db.rawQuery(
       '''
       SELECT 
         c.id AS categoryId, 
@@ -56,6 +56,23 @@ class CategoryEntityService {
       ORDER BY categoryTotalExpense DESC, categorySort ASC;
       ''',
       [month, year],
+    ) : await db.rawQuery(
+      '''
+      SELECT 
+        c.id AS categoryId, 
+        c.icon AS categoryIcon, 
+        c.name AS categoryName, 
+        c.sort AS categorySort,
+        SUM(m.amount) AS categoryTotalExpense,
+        c.monthThreshold AS categoryMonthThreshold
+      FROM Categories c
+      LEFT JOIN MonthlyCategoryTransactionSummaries m ON c.id = m.categoryId AND m.year = ?
+      WHERE c.id NOT IN (SELECT categoryId FROM Categories_Groups)
+      AND c.type != 'INCOME'
+      GROUP BY c.id
+      ORDER BY categoryTotalExpense DESC, categorySort ASC;
+      ''',
+      [year],
     );
     return List.generate(categoryResults.length, (index) => CategorySummaryDto.fromJson(categoryResults[index]));
   }

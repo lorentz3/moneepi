@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myfinance2/dto/group_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/pages/group_form_page.dart';
@@ -58,12 +57,12 @@ class _GroupListPageState extends State<GroupListPage> {
                       children: [
                         Text(
                           "${group.icon ?? ""} ${group.name}",
-                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(width: 10,),
                         if (group.monthThreshold != null) Text(
                           "(Monthly budget: € ${group.monthThreshold!.toStringAsFixed(2)})",
-                          style: TextStyle(fontSize: 16.sp,),
+                          style: TextStyle(fontSize: 16,),
                         ),
                       ],
                     ),
@@ -105,7 +104,7 @@ class _GroupListPageState extends State<GroupListPage> {
           Text(
             "    $categoryTitle",
             textAlign: TextAlign.left,
-            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),

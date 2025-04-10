@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SquareButton extends StatelessWidget {
     final String label;
@@ -40,12 +39,12 @@ class SquareButton extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: size.sp/2, color: Colors.black54),
+                Icon(icon, size: size/2, color: Colors.black54),
                 SizedBox(height: 1),
                 if (label != "") Text(
                   label,
                   style: TextStyle(
-                    fontSize: 11.5.sp, 
+                    fontSize: 11.5, 
                     color: Colors.black87,
                     fontWeight: FontWeight.bold,
                   ),

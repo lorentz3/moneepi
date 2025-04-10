@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:myfinance2/utils/date_utils.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MonthSelector extends StatefulWidget {
   final DateTime selectedDate;
@@ -79,7 +78,7 @@ class MonthSelectorState extends State<MonthSelector> {
             onTap: _pickMonthYear,
             child: Text(
               DateFormat('MMM yyyy').format(_currentDate),
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           IconButton(

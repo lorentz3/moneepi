@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/dto/group_stats_dto.dart';
 import 'package:myfinance2/pages/category_stats_page.dart';
@@ -35,7 +34,7 @@ class _StatsPageState extends State<StatsPage> {
   Future<void> _loadStats() async {
     _groupStats = await GroupEntityService.getGroupStats(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _groupExists = _groupStats.isNotEmpty;
-    _categoryStats = await CategoryEntityService.getCategoriesWithoutGroup(_selectedDate.month, _selectedDate.year);
+    _categoryStats = await CategoryEntityService.getCategoriesWithoutGroup(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _otherCategoriesTotal = _categoryStats.fold(0.0, (acc, cat) => acc + (cat.totalExpense ?? 0.0));
     setState(() {});
   }
@@ -88,16 +87,16 @@ class _StatsPageState extends State<StatsPage> {
                       children: [
                         Text(
                           "${group.icon ?? ""} ${group.name}",
-                          style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(width: 10,),
                         Text(
                           "Total: € ${(group.totalExpense ?? 0.0).toStringAsFixed(2)}",
-                          style: TextStyle(fontSize: 16.sp,),
+                          style: TextStyle(fontSize: 16,),
                         ),
                         if (_periodOption == PeriodOption.monthly && group.monthThreshold != null) Text(
                           " / € ${group.monthThreshold!.toStringAsFixed(2)}",
-                          style: TextStyle(fontSize: 12.sp,),
+                          style: TextStyle(fontSize: 12,),
                         ),
                       ],
                     ),
@@ -128,12 +127,12 @@ class _StatsPageState extends State<StatsPage> {
                       children: [ 
                         Text(
                           "Other categories",
-                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(width: 10,),
                         Text(
                           "Total: € ${_otherCategoriesTotal.toStringAsFixed(2)}",
-                          style: TextStyle(fontSize: 14.sp,),
+                          style: TextStyle(fontSize: 14,),
                         ),
                       ],
                     ),
@@ -173,7 +172,7 @@ class _StatsPageState extends State<StatsPage> {
               child: Text(
                 "   $categoryTitle",
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -184,7 +183,7 @@ class _StatsPageState extends State<StatsPage> {
                 " € ${(category.totalExpense ?? 0.0).toStringAsFixed(2)}  ",
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  fontSize: 15.sp, 
+                  fontSize: 15, 
                   fontWeight: FontWeight.bold,
                   color: thresholdTrespassed ? const Color.fromARGB(255, 129, 34, 27) : Colors.black,
                 ),

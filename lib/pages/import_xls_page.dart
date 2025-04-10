@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
 
 import 'package:myfinance2/pages/import_xls_map_page.dart';
@@ -125,12 +124,12 @@ class ImportXlsPageState extends State<ImportXlsPage> {
               if (_filePath != null) Text("Selected file: ${_filePath!.split('/').last}", style: TextStyle(fontWeight: FontWeight.bold),),
               SizedBox(height: 8),
               Text("For the best import, the excel file should not have expense categories with the same name of income categories.",
-                style: TextStyle(fontSize: 12.sp),
+                style: TextStyle(fontSize: 12),
               ),
               SizedBox(height: 4),
               Text(
                 "'Type' column must contain 'EXPENSE', 'INCOME' or 'TRANSFER', in order to distinguish the types of transactions. You can leave it empty, transaction type will be deducted by the target category type.",
-                style: TextStyle(fontSize: 12.sp),
+                style: TextStyle(fontSize: 12),
               ),
               SizedBox(height: 8),
               Row(

@@ -1,6 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
@@ -83,7 +82,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                 children: [ 
                   Text(
                     "${_category.icon ?? ""} ${_category.name} ",
-                    style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -107,11 +106,11 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                 children: [ 
                   Text(
                     "    Total: ",
-                    style: TextStyle(fontSize: 18.sp),
+                    style: TextStyle(fontSize: 18),
                   ),
                   Text(
                     " € ${_total.toStringAsFixed(2)}",
-                    style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -125,11 +124,11 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                 children: [ 
                   Text(
                     "    Average: ",
-                    style: TextStyle(fontSize: 18.sp),
+                    style: TextStyle(fontSize: 18),
                   ),
                   Text(
                     " € ${_monthlyAverage().toStringAsFixed(2)}",
-                    style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -169,7 +168,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
             child: Text(
               monthTitle,
               textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
@@ -180,7 +179,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
               " € ${totalExpense.toStringAsFixed(2)}",
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: 16.sp, 
+                fontSize: 16, 
                 color: thresholdExist && totalExpense > category.monthThreshold! ? const Color.fromARGB(255, 139, 33, 25) : Colors.black,
                 fontWeight: FontWeight.bold
               ),
