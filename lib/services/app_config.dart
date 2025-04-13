@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:myfinance2/dto/currency_dto.dart';
 import 'package:myfinance2/services/configuration_entity_service.dart';
 
@@ -10,7 +9,6 @@ class AppConfig {
   CurrencyDto? _currency;
 
   Future<String> getCurrencySymbol() async {
-    debugPrint("_currency: $_currency");
     if (_currency != null) return _currency!.symbol;
     String currencyCode = await ConfigurationEntityService.getCurrency();
     _currency = CurrencyDto.availableCurrencies.firstWhere((c) => c.code == currencyCode);
@@ -25,7 +23,6 @@ class AppConfig {
   }
 
   void clearCurrencyCache() {
-    debugPrint("clear currency cache");
     _currency = null;
   }
 }

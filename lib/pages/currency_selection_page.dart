@@ -12,14 +12,25 @@ class CurrencySelectionPage extends StatefulWidget {
 
 class _CurrencySelectionPageState extends State<CurrencySelectionPage> {
   String? _selectedCurrencyCode;
+  List<CurrencyDto> _filteredCurrencies = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadCurrency();
+    _initializePage();
+    _searchController.addListener(_onSearchChanged);
   }
 
-  Future<void> _loadCurrency() async {
+  Future<void> _initializePage() async {
+    final code = await AppConfig.instance.getCurrencyCode();
+    setState(() {
+      _selectedCurrencyCode = code;
+      _filteredCurrencies = CurrencyDto.availableCurrencies;
+    });
+  }
+
+  Future<void> _updateSelection() async {
     final code = await AppConfig.instance.getCurrencyCode();
     setState(() {
       _selectedCurrencyCode = code;
@@ -27,31 +38,65 @@ class _CurrencySelectionPageState extends State<CurrencySelectionPage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredCurrencies = CurrencyDto.availableCurrencies.where((currency) {
+        return currency.name.toLowerCase().contains(query) ||
+               currency.code.toLowerCase().contains(query) ||
+               currency.symbol.toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Choose your currency:')),
-      body: ListView.builder(
-        itemCount: CurrencyDto.availableCurrencies.length,
-        itemBuilder: (context, index) {
-          final currency = CurrencyDto.availableCurrencies[index];
-          final isSelected = currency.code == _selectedCurrencyCode;
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                labelText: 'Search currency',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredCurrencies.length,
+              itemBuilder: (context, index) {
+                final currency = _filteredCurrencies[index];
+                final isSelected = currency.code == _selectedCurrencyCode;
 
-          return ListTile(
-            leading: Text(currency.symbol, style: const TextStyle(fontSize: 20)),
-            title: Text('${currency.name} (${currency.code})'),
-            trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-            onTap: () async {
-              // Salva in Configurations
-              await ConfigurationEntityService.updateCurrency(currency.code);
-              _loadCurrency();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Currency updated!"))
-              );
-            },
-          );
-        },
+                return ListTile(
+                  leading: Text(currency.symbol, style: const TextStyle(fontSize: 20)),
+                  title: Text('${currency.name} (${currency.code})'),
+                  trailing: isSelected
+                      ? const Icon(Icons.check, color: Colors.green)
+                      : null,
+                  onTap: () async {
+                    await ConfigurationEntityService.updateCurrency(currency.code);
+                    _updateSelection();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Currency updated!")),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
-
 }

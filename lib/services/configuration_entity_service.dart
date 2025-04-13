@@ -28,7 +28,6 @@ class ConfigurationEntityService {
       where: 'name = ?',
       whereArgs: [name],
     );
-    debugPrint("currency loaded from db: $maps");
     return Configuration.fromJson(maps[0]); //sempre presente
   } 
   
