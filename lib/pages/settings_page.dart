@@ -4,6 +4,7 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
+import 'package:myfinance2/pages/currency_selection_page.dart';
 import 'package:myfinance2/pages/export_transactions_page.dart';
 import 'package:myfinance2/pages/groups_page.dart';
 import 'package:myfinance2/pages/import_xls_page.dart';
@@ -17,7 +18,9 @@ import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/widgets/square_button.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final String currencySymbol;
+
+  const SettingsPage({super.key, required this.currencySymbol});
 
   @override
   State createState() => SettingsPageState();
@@ -28,11 +31,13 @@ class SettingsPageState extends State<SettingsPage> {
   bool _hasExpenseCategories = true;
   bool _hasIncomeCategories = true;
   bool _debugFeaturesEnabled = false;
+  late String _currencySymbol;
 
   @override
   void initState() {
     super.initState();
     _updateButtonFlags();
+    _currencySymbol = widget.currencySymbol;
   }
 
   _updateButtonFlags() async {
@@ -81,9 +86,7 @@ class SettingsPageState extends State<SettingsPage> {
               label: "Currency",
               icon: Icons.attach_money,
               size: buttonSize,
-              highlight: true,
-              highlightText: "Coming soon",
-              onPressed: () => {},
+              onPressed: () => _navigateToCurrencySelectionPage(),
             ),
             SquareButton(
               label: "Monthly Budgets",
@@ -204,7 +207,7 @@ class SettingsPageState extends State<SettingsPage> {
   void _navigateToMonthlyThresholdPage(BuildContext context) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => MonthlyThresholdsPage()),
+      MaterialPageRoute(builder: (context) => MonthlyThresholdsPage(currencySymbol: _currencySymbol,)),
     );
   }
 
@@ -218,7 +221,7 @@ class SettingsPageState extends State<SettingsPage> {
   void _navigateToGroupListPage() async{
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => GroupListPage()),
+      MaterialPageRoute(builder: (context) => GroupListPage(currencySymbol: _currencySymbol,)),
     );
   }
 
@@ -229,8 +232,16 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void _navigateToCurrencySelectionPage() async{
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CurrencySelectionPage()),
+    );
+  }
+
+
 //////////////////////////////////
-///
+
   void _resetDatabase() async {
     await TransactionEntityService.deleteAll();
     await MonthlyCategoryTransactionEntityService.deleteAll();

@@ -5,7 +5,9 @@ import 'package:myfinance2/dto/account_dto.dart';
 import 'package:myfinance2/dto/monthly_account_summary_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/color_identity.dart';
+import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
+import 'package:myfinance2/utils/graph_utils.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 
@@ -23,12 +25,21 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
   late DateTime _selectedDate;
   List<MonthlyAccountSummaryDto> _monthlySummaries = [];
   List<AccountDto> _accounts = [];
+  String _currency = '';
 
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
     _loadAllData();
+    _setCurrency();
+  }
+
+  _setCurrency() async {
+    final c = await AppConfig.instance.getCurrencySymbol();
+    setState(() {
+      _currency = c;
+    });
   }
 
   _loadAllData() async {
@@ -105,8 +116,8 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                     flex: 10,
                     child: Text(
                       account.balance < 0
-                          ? ' - € ${(- account.balance).toStringAsFixed(2)} '
-                          : ' + € ${account.balance.toStringAsFixed(2)} ',
+                          ? ' - ${(- account.balance).toStringAsFixed(2)} $_currency'
+                          : ' + ${account.balance.toStringAsFixed(2)} $_currency',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         color: account.balance < 0
@@ -154,7 +165,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                   ),
                   Expanded(
                     flex: 5,
-                    child: Text(' - € $expenseAmount',
+                    child: Text(' - $expenseAmount $_currency',
                       textAlign: TextAlign.right,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -167,7 +178,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                   ),
                   Expanded(
                     flex: 5,
-                    child: Text(' + € $incomeAmount',
+                    child: Text(' + $incomeAmount $_currency',
                       textAlign: TextAlign.right,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -219,7 +230,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                       getTitlesWidget: (value, meta) {
                         return Padding(
                           padding: EdgeInsets.only(left: 4),
-                          child: Text("€ ${value.toStringAsFixed(0)}", style: TextStyle(fontSize: 10)),
+                          child: Text(GraphUtils.formatThousandsTick(value), style: TextStyle(fontSize: 10)),
                         );
                       },
                     ),
@@ -310,7 +321,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                       getTitlesWidget: (value, meta) {
                         return Padding(
                           padding: EdgeInsets.only(left: 4),
-                          child: Text("€ ${value.toStringAsFixed(0)}", style: TextStyle(fontSize: 10)),
+                          child: Text(GraphUtils.formatThousandsTick(value), style: TextStyle(fontSize: 10)),
                         );
                       },
                     ),

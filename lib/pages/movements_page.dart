@@ -4,6 +4,7 @@ import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
+import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
@@ -29,12 +30,21 @@ class MovementsPageState extends State<MovementsPage> {
   int? _selectedCategory;
   List<Account> _accounts = [];
   List<Category> _categories = [];
+  String? _currency;
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
     _loadAccountsAndCategories();
+    _setCurrency();
+  }
+
+  _setCurrency() async {
+    final c = await AppConfig.instance.getCurrencySymbol();
+    setState(() {
+      _currency = c;
+    });
   }
 
   void _updateDate(DateTime newDate) {
@@ -69,7 +79,7 @@ class MovementsPageState extends State<MovementsPage> {
         child: Column(
           children: [
             _buildFilters(), 
-            transactions.isEmpty ? Center(child: const Text("Still no movements"),) : TransactionsListGroupedByDate(transactions: transactions)
+            transactions.isEmpty ? Center(child: const Text("Still no movements"),) : TransactionsListGroupedByDate(transactions: transactions, currencySymbol: _currency ?? '',)
           ],
         ),
       );

@@ -6,8 +6,9 @@ class ThresholdBar extends StatelessWidget {
   final String? icon;
   final String name;
   final Color? nameColor;
+  final String currencySymbol;
 
-  const ThresholdBar({super.key, required this.spent, required this.threshold, this.icon, required this.name, this.nameColor});
+  const ThresholdBar({super.key, required this.spent, required this.threshold, this.icon, required this.name, this.nameColor, required this.currencySymbol});
 
   @override
   Widget build(BuildContext context) {
@@ -59,20 +60,24 @@ class ThresholdBar extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                    width: 60, // Fissa la larghezza della spesa
+                    width: 80, // Fissa la larghezza della spesa
                     child: Text(
-                      '${spent.toStringAsFixed(2)} €',
+                      '${spent.toStringAsFixed(2)} $currencySymbol',
                       textAlign: TextAlign.right,
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (100 - percentage) < 0 ? const Color.fromARGB(255, 141, 40, 32) : Colors.black),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                   SizedBox(width: 3),
                   SizedBox(
                     width: 60, // Fissa la larghezza della soglia
                     child: Text(
-                      '/${threshold.toStringAsFixed(2)} €',
+                      '/${threshold.toStringAsFixed(2)} $currencySymbol',
                       textAlign: TextAlign.left,
                       style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                   SizedBox(width: 10),

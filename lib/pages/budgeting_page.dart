@@ -4,17 +4,20 @@ import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/widgets/square_button.dart';
 
 class BudgetingPage extends StatefulWidget {
-  const BudgetingPage({super.key});
+  final String currencySymbol;
+  const BudgetingPage({super.key, required this.currencySymbol});
 
   @override
   State createState() => BudgetingPageState();
 }
 
 class BudgetingPageState extends State<BudgetingPage> {
+  late String _currencySymbol;
 
   @override
   void initState() {
     super.initState();
+    _currencySymbol = widget.currencySymbol;
   }
 
   @override
@@ -53,7 +56,7 @@ class BudgetingPageState extends State<BudgetingPage> {
   void _navigateToMonthlyThresholdPage(BuildContext context) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => MonthlyThresholdsPage()),
+      MaterialPageRoute(builder: (context) => MonthlyThresholdsPage(currencySymbol: _currencySymbol,)),
     ).then((_) {
       //_updateButtonFlags();
     });
@@ -62,7 +65,7 @@ class BudgetingPageState extends State<BudgetingPage> {
   void _navigateToGroupListPage() async{
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => GroupListPage()),
+      MaterialPageRoute(builder: (context) => GroupListPage(currencySymbol: _currencySymbol,)),
     );
   }
 } 

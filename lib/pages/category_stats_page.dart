@@ -5,12 +5,14 @@ import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/utils/graph_utils.dart';
 import 'package:myfinance2/widgets/year_selector.dart';
 
 class CategoryStatsPage extends StatefulWidget {
   final int categoryId;
+  final String currencySymbol;
 
-  const CategoryStatsPage({super.key, required this.categoryId});
+  const CategoryStatsPage({super.key, required this.categoryId, required this.currencySymbol});
 
   @override
   State<CategoryStatsPage> createState() => _CategoryStatsPageState();
@@ -22,12 +24,14 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
   late int _categoryId;
   Category _category = Category(name: "Loading...", type: CategoryType.EXPENSE, sort: 1);
   double _total = 0;
+  late String _currencySymbol;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
     _categoryId = widget.categoryId;
+    _currencySymbol = widget.currencySymbol;
     _loadStats();
   }
 
@@ -109,7 +113,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                     style: TextStyle(fontSize: 18),
                   ),
                   Text(
-                    " € ${_total.toStringAsFixed(2)}",
+                    "${_total.toStringAsFixed(2)} $_currencySymbol",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -127,10 +131,14 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                     style: TextStyle(fontSize: 18),
                   ),
                   Text(
-                    " € ${_monthlyAverage().toStringAsFixed(2)}",
+                    " ${_monthlyAverage().toStringAsFixed(2)} $_currencySymbol",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                  ),
+                  if (_category.monthThreshold != null) Text(
+                    " / ${_category.monthThreshold!.toStringAsFixed(2)} $_currencySymbol",
+                    style: TextStyle(fontSize: 12,),
                   ),
                 ],
               ),
@@ -176,7 +184,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
           Expanded(
             flex: 10,
             child: Text(
-              " € ${totalExpense.toStringAsFixed(2)}",
+              " ${totalExpense.toStringAsFixed(2)} $_currencySymbol",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 16, 
@@ -223,7 +231,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
                       getTitlesWidget: (value, meta) {
                         return Padding(
                           padding: EdgeInsets.only(left: 4),
-                          child: Text("€ ${value.toStringAsFixed(0)}", style: TextStyle(fontSize: 10)),
+                          child: Text(GraphUtils.formatThousandsTick(value), style: TextStyle(fontSize: 10)),
                         );
                       },
                     ),

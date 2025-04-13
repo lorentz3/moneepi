@@ -4,7 +4,8 @@ import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 
 class MonthlyThresholdsPage extends StatefulWidget {
-  const MonthlyThresholdsPage({super.key});
+  final String currencySymbol;
+  const MonthlyThresholdsPage({super.key, required this.currencySymbol});
 
   @override
   MonthlyThresholdsPageState createState() => MonthlyThresholdsPageState();
@@ -14,11 +15,13 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
   List<Category> _categories = [];
   final Map<int, TextEditingController> _controllers = {};
   final Map<int, String> _initialValues = {};
+  late String _currencySymbol;
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
+    _currencySymbol = widget.currencySymbol;
   }
   
   Future<void> _loadCategories() async {
@@ -62,7 +65,7 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Text("Monthly Budget (€)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.right),
+                            child: Text("Monthly Budget ($_currencySymbol)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.right),
                           ),
                         ],
                       ),

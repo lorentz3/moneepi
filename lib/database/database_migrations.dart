@@ -77,4 +77,27 @@ Map<int, List<String>> migrationScripts = {
           FOREIGN KEY(categoryId) REFERENCES Categories(id));
       """,
     ],
+    4: [
+      """  
+        CREATE TABLE IF NOT EXISTS Configurations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          intValue INTEGER,
+          textValue TEXT,
+          realValue REAL
+        );
+      """,
+      """  
+        INSERT INTO Configurations (name, intValue, textValue) VALUES
+          ('CURRENCY', NULL, 'USD'),
+          ('FIRST_SETUP_CURRENCY', 0, NULL),
+          ('FIRST_SETUP_ACCOUNTS', 0, NULL),
+          ('FIRST_SETUP_EXPENSE_CATEGORIES', 0, NULL),
+          ('FIRST_SETUP_INCOME_CATEGORIES', 0, NULL),
+          ('PERIOD_STARTING_DAY', 1, NULL),
+          ('HOMEPAGE_SHOW_THRESHOLD_BARS', 1, NULL),
+          ('HOMEPAGE_SHOW_GROUP_THRESHOLD_BARS', 1, NULL),
+          ('TRANSACTION_FORM_BY_STEPS', 0, NULL);
+      """,
+    ],
   };

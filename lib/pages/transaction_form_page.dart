@@ -14,8 +14,9 @@ class TransactionFormPage extends StatefulWidget {
   final int? transactionId;
   final Transaction? transaction;
   final bool isNew;
+  final DateTime? dateTime;
 
-  const TransactionFormPage({super.key, this.transactionId, this.transaction, required this.isNew,});
+  const TransactionFormPage({super.key, this.transactionId, this.transaction, required this.isNew, this.dateTime});
 
   @override
   TransactionFormPageState createState() => TransactionFormPageState();
@@ -53,6 +54,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     _isNew = widget.isNew;
     if (_isNew) {
       _transaction = widget.transaction!;
+      _selectedDate = widget.dateTime ?? DateTime.now();
     } else {
       _transactionId = widget.transactionId!;
       _loadTransaction();

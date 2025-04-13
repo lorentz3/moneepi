@@ -14,6 +14,7 @@ import 'package:myfinance2/pages/settings_page.dart';
 import 'package:myfinance2/pages/stats_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
 import 'package:myfinance2/pages/movements_page.dart';
+import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
@@ -65,12 +66,30 @@ class _HomePageState extends State<HomePage> {
   List<GroupSummaryDto> _groupSummaries = [];
   bool _isSummaryLoading = true;
   MonthTotalDto _monthTotalDto = MonthTotalDto(totalExpense: 0, totalIncome: 0);
+  String? _currencySymbol;
 
   @override
   void initState() {
     super.initState();
     selectedDate = DateTime.now();
     _loadAllData();
+    _setCurrency();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ricarico solo se la schermata è tornata visibile
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      _setCurrency();
+    }
+  }
+
+  _setCurrency() async {
+    final c = await AppConfig.instance.getCurrencySymbol();
+    setState(() {
+      _currencySymbol = c;
+    });
   }
 
   _loadAllData() {
@@ -125,7 +144,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsPage()),
+                MaterialPageRoute(builder: (context) => SettingsPage(currencySymbol: _currencySymbol ?? '',)),
               ).then((_) {
                 _loadAllData(); 
               });
@@ -171,6 +190,7 @@ class _HomePageState extends State<HomePage> {
           SectionDivider(text: "$monthString transactions"),
           TransactionsListGroupedByDate(
             transactions: transactions,
+            currencySymbol: _currencySymbol ?? '',
             onTransactionUpdated: () {
               _loadAllData();
             },
@@ -203,7 +223,7 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               flex: 12,
               child: Text(
-                " + € ${_monthTotalDto.totalIncome.toStringAsFixed(2)}",
+                " + ${_monthTotalDto.totalIncome.toStringAsFixed(2)} $_currencySymbol",
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   fontSize: 15/*.sp*/, 
@@ -216,7 +236,7 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               flex: 12,
               child: Text(
-                " - € ${_monthTotalDto.totalExpense.toStringAsFixed(2)}",
+                " - ${_monthTotalDto.totalExpense.toStringAsFixed(2)} $_currencySymbol",
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   fontSize: 15/*.sp*/, 
@@ -308,6 +328,7 @@ class _HomePageState extends State<HomePage> {
               threshold: groupSummary.monthThreshold ?? 0.0,
               icon: groupSummary.icon,
               nameColor: Color.fromARGB(255, 0, 3, 136),
+              currencySymbol: _currencySymbol ?? '',
               )
             )
             .toList(),
@@ -323,7 +344,7 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         children: monthCategoriesSummary
             .where((t) => t.monthThreshold != null) 
-            .map((t) => MonthlyThresholdsBar(summary: t)) //TODO refactor use ThresholdsBar
+            .map((t) => MonthlyThresholdsBar(summary: t, currencySymbol: _currencySymbol ?? '',)) //TODO refactor use ThresholdsBar
             .toList(),
         ),
     );
@@ -348,7 +369,7 @@ class _HomePageState extends State<HomePage> {
   _navigateToBudgetingPage() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => BudgetingPage()),
+      MaterialPageRoute(builder: (context) => BudgetingPage(currencySymbol: _currencySymbol ?? '',)),
     ).then((_) {
       _loadAllData(); // TODO only if something changed
     });
@@ -357,7 +378,7 @@ class _HomePageState extends State<HomePage> {
   _navigateToStatsPage() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => StatsPage()),
+      MaterialPageRoute(builder: (context) => StatsPage(currencySymbol: _currencySymbol ?? '',)),
     );
   }
 }

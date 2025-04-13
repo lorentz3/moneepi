@@ -9,7 +9,9 @@ import 'package:myfinance2/widgets/period_dropdown_button.dart';
 import 'package:myfinance2/widgets/year_selector.dart';
 
 class StatsPage extends StatefulWidget {
-  const StatsPage({super.key});
+  final String currencySymbol;
+
+  const StatsPage({super.key, required this.currencySymbol});
 
   @override
   State<StatsPage> createState() => _StatsPageState();
@@ -22,12 +24,14 @@ class _StatsPageState extends State<StatsPage> {
   bool _groupExists = false;
   double _otherCategoriesTotal = 0.0;
   late PeriodOption _periodOption;
+  late String _currencySymbol;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
     _periodOption = PeriodOption.monthly;
+    _currencySymbol = widget.currencySymbol;
     _loadStats();
   }
 
@@ -91,11 +95,11 @@ class _StatsPageState extends State<StatsPage> {
                         ),
                         SizedBox(width: 10,),
                         Text(
-                          "Total: € ${(group.totalExpense ?? 0.0).toStringAsFixed(2)}",
+                          "Total: ${(group.totalExpense ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
                           style: TextStyle(fontSize: 16,),
                         ),
                         if (_periodOption == PeriodOption.monthly && group.monthThreshold != null) Text(
-                          " / € ${group.monthThreshold!.toStringAsFixed(2)}",
+                          " / ${group.monthThreshold!.toStringAsFixed(2)} $_currencySymbol",
                           style: TextStyle(fontSize: 12,),
                         ),
                       ],
@@ -131,7 +135,7 @@ class _StatsPageState extends State<StatsPage> {
                         ),
                         SizedBox(width: 10,),
                         Text(
-                          "Total: € ${_otherCategoriesTotal.toStringAsFixed(2)}",
+                          "Total: ${_otherCategoriesTotal.toStringAsFixed(2)} $_currencySymbol",
                           style: TextStyle(fontSize: 14,),
                         ),
                       ],
@@ -180,7 +184,7 @@ class _StatsPageState extends State<StatsPage> {
             Expanded(
               flex: 9,
               child: Text(
-                " € ${(category.totalExpense ?? 0.0).toStringAsFixed(2)}  ",
+                " ${(category.totalExpense ?? 0.0).toStringAsFixed(2)} $_currencySymbol ",
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   fontSize: 15, 
@@ -209,7 +213,7 @@ class _StatsPageState extends State<StatsPage> {
   _navigateToCategoryStatsPage(int categoryId) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CategoryStatsPage(categoryId: categoryId,)),
+      MaterialPageRoute(builder: (context) => CategoryStatsPage(categoryId: categoryId, currencySymbol: _currencySymbol,)),
     );
   }
 }

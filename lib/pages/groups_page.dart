@@ -5,7 +5,8 @@ import 'package:myfinance2/pages/group_form_page.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 
 class GroupListPage extends StatefulWidget {
-  const GroupListPage({super.key});
+  final String currencySymbol;
+  const GroupListPage({super.key, required this.currencySymbol});
 
   @override
   State<GroupListPage> createState() => _GroupListPageState();
@@ -13,11 +14,13 @@ class GroupListPage extends StatefulWidget {
 
 class _GroupListPageState extends State<GroupListPage> {
   List<GroupDto> _groups = [];
+  late String _currencySymbol;
 
   @override
   void initState() {
     super.initState();
     _loadGroups();
+    _currencySymbol = widget.currencySymbol;
   }
 
   Future<void> _loadGroups() async {
@@ -61,7 +64,7 @@ class _GroupListPageState extends State<GroupListPage> {
                         ),
                         SizedBox(width: 10,),
                         if (group.monthThreshold != null) Text(
-                          "(Monthly budget: € ${group.monthThreshold!.toStringAsFixed(2)})",
+                          "(Monthly budget: ${group.monthThreshold!.toStringAsFixed(2)} $_currencySymbol)",
                           style: TextStyle(fontSize: 16,),
                         ),
                       ],
