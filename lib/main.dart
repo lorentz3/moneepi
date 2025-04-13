@@ -22,6 +22,7 @@ import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:myfinance2/widgets/categories_pie_chart.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
+import 'package:myfinance2/widgets/month_totals.dart';
 import 'package:myfinance2/widgets/monthly_thresholds_bar.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 import 'package:myfinance2/widgets/square_button.dart';
@@ -183,7 +184,13 @@ class _HomePageState extends State<HomePage> {
         children: [
           _getPieChartAndButtons(),
           SizedBox(height: 5,),
-          _getMonthTotalWidget(),
+          MonthTotals(
+            currencySymbol: _currencySymbol ?? '', 
+            selectedDate: selectedDate, 
+            totalExpense: _monthTotalDto.totalExpense, 
+            totalIncome: _monthTotalDto.totalIncome,
+            showMonth: true,
+          ),
           SizedBox(height: 5,),
           _getGroupThresholdBars(),
           _getMonthThresholdBars(),
@@ -197,59 +204,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-    );
-  }
-  Widget _getMonthTotalWidget() {
-    final monthString = DateFormat('MMMM yyyy').format(selectedDate);
-    return Container(
-        color: Colors.deepPurple[100],
-        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              flex: 18,
-              child: Text(
-                "$monthString totals: ",
-                textAlign: TextAlign.left,
-                style: TextStyle(
-                  fontSize: 14/*.sp*/, 
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-            Expanded(
-              flex: 12,
-              child: Text(
-                " + ${_monthTotalDto.totalIncome.toStringAsFixed(2)} $_currencySymbol",
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: 15/*.sp*/, 
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 66, 114, 68)),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-            Expanded(
-              flex: 12,
-              child: Text(
-                " - ${_monthTotalDto.totalExpense.toStringAsFixed(2)} $_currencySymbol",
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: 15/*.sp*/, 
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 150, 85, 80)
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-            SizedBox(width: 15,)
-          ],
-        ),
     );
   }
 

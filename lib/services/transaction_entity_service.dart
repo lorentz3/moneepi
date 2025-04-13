@@ -61,10 +61,10 @@ class TransactionEntityService {
     return List.generate(maps.length, (index) => TransactionDto.fromJson(maps[index]));
   }
 
-  static Future<MonthTotalDto> getMonthTotalDto(int month, int year) async {
+  static Future<MonthTotalDto> getMonthTotalDto(int? month, int year) async {
     final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+    final int startTimestamp = DateTime(year, month ?? 1, 1).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(month != null ? year : year + 1, month != null ? month + 1 : 1, 31).millisecondsSinceEpoch;
     final List<Map<String, dynamic>> totals = await db.rawQuery('''
       SELECT 
           SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END) AS total_expense,

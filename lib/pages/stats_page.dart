@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/dto/group_stats_dto.dart';
+import 'package:myfinance2/dto/month_total_dto.dart';
 import 'package:myfinance2/pages/category_stats_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
+import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
+import 'package:myfinance2/widgets/month_totals.dart';
 import 'package:myfinance2/widgets/period_dropdown_button.dart';
 import 'package:myfinance2/widgets/year_selector.dart';
 
@@ -25,6 +28,7 @@ class _StatsPageState extends State<StatsPage> {
   double _otherCategoriesTotal = 0.0;
   late PeriodOption _periodOption;
   late String _currencySymbol;
+  MonthTotalDto _monthTotalDto = MonthTotalDto(totalExpense: 0.0, totalIncome: 0.0);
 
   @override
   void initState() {
@@ -36,6 +40,7 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Future<void> _loadStats() async {
+    _monthTotalDto = await TransactionEntityService.getMonthTotalDto(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _groupStats = await GroupEntityService.getGroupStats(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _groupExists = _groupStats.isNotEmpty;
     _categoryStats = await CategoryEntityService.getCategoriesWithoutGroup(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
@@ -79,6 +84,14 @@ class _StatsPageState extends State<StatsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            MonthTotals(
+              currencySymbol: _currencySymbol,
+              selectedDate: _selectedDate, 
+              totalExpense: _monthTotalDto.totalExpense, 
+              totalIncome: _monthTotalDto.totalIncome,
+              showMonth: _periodOption == PeriodOption.monthly,
+            ),
+            SizedBox(height: 5,),
             ..._groupStats.map((group) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
