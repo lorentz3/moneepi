@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
-import 'package:myfinance2/pages/color_identity.dart';
+import 'package:myfinance2/utils/color_identity.dart';
 
 class CategoriesPieChart extends StatelessWidget {
   final List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary; 

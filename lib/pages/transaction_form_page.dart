@@ -7,6 +7,7 @@ import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
+import 'package:myfinance2/utils/date_utils.dart';
 import 'package:myfinance2/widgets/emoji_button.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 
@@ -44,7 +45,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   bool _isLoading = true;
   final Color? _selectedButtonColor = Colors.deepPurple[200]; // Selected
   final Color? _notSelectedButtonColor = Colors.grey[50];
-  bool _showTime = false; // TODO config
+  bool _showTime = true; // TODO config
   bool _showDropdownMenus = false; // TODO config
   bool _showTiles = true; // TODO config
 
@@ -55,6 +56,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     if (_isNew) {
       _transaction = widget.transaction!;
       _selectedDate = widget.dateTime ?? DateTime.now();
+      _selectedType = widget.transaction!.type;
     } else {
       _transactionId = widget.transactionId!;
       _loadTransaction();
@@ -134,23 +136,6 @@ class TransactionFormPageState extends State<TransactionFormPage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              ToggleButtons(
-                isSelected: [_selectedType == TransactionType.EXPENSE, _selectedType == TransactionType.INCOME, _selectedType == TransactionType.TRANSFER],
-                onPressed: (int index) {
-                  setState(() {
-                    _selectedType = index == 0 ? TransactionType.EXPENSE : 
-                      index == 1 ? TransactionType.INCOME : TransactionType.TRANSFER;
-                    _selectedCategory = null;
-                    _selectedAccount = null;
-                    _loadData();
-                  });
-                },
-                children: [
-                  Padding(padding: EdgeInsets.all(8.0), child: Text('Expense')),
-                  Padding(padding: EdgeInsets.all(8.0), child: Text('Income')),
-                  Padding(padding: EdgeInsets.all(8.0), child: Text('Transfer')),
-                ],
-              ),
               SizedBox(height: 20),
               Text("You still need to configure accounts and/or categories")
             ]
@@ -165,7 +150,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     double buttonSize = (screenWidth - (buttonsPerRow * spaceBetweenButtons) - padding - 10) / buttonsPerRow;
     return Scaffold(
       appBar: AppBar(
-        title: _isNew ? Text('New transaction') : Text('Edit transaction'),
+        title: _isNew ? Text('New ${getTransactionTypeText(_selectedType)}') : Text('Edit ${getTransactionTypeText(_selectedType)}'),
         actions: [
           _isNew ? SizedBox(height: 1,) : IconButton(
             icon: Icon(Icons.delete),
@@ -182,52 +167,63 @@ class TransactionFormPageState extends State<TransactionFormPage> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                ToggleButtons(
-                  isSelected: [_selectedType == TransactionType.EXPENSE, _selectedType == TransactionType.INCOME, _selectedType == TransactionType.TRANSFER],
-                  onPressed: (int index) {
-                    setState(() {
-                      _selectedType = index == 0 ? TransactionType.EXPENSE : 
-                        index == 1 ? TransactionType.INCOME : TransactionType.TRANSFER;
-                      _selectedCategory = null;
-                      _loadData();
-                    });
-                  },
-                  children: [
-                    Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5), child: Text('Expense')),
-                    Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5), child: Text('Income')),
-                  Padding(padding: EdgeInsets.all(8.0), child: Text('Transfer')),
-                  ],
-                ),
                 SizedBox(height: 5,),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: ElevatedButton(
-                    onPressed: () => _selectDate(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: ElevatedButton(
+                          onPressed: () => _selectDate(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[200],
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_month),
+                              SizedBox(width: 10,),
+                              Text(MyDateUtils.formatDate(_selectedDate),
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Text("Date: "),
-                        Text(_selectedDate.toLocal().toString().split(' ')[0], //TODO date format
-                          style: TextStyle(fontSize: 16),
+                    SizedBox(width: 12,),
+                    _showTime ? Expanded(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: ElevatedButton(
+                          onPressed: () => _selectTime(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[200],
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.access_time),
+                              SizedBox(width: 10,),
+                              Text("${_selectedTime.format(context)}",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
                         ),
-                        SizedBox(width: 10,),
-                        Icon(Icons.calendar_today),
-                      ],
-                    ),
-                  ),
+                      ),
+                    ) : SizedBox(height: 0,),
+                  ],
                 ),
-                _showTime ? ListTile(
-                  title: Text("Time: ${_selectedTime.format(context)}"),
-                  trailing: Icon(Icons.access_time),
-                  onTap: () => _selectTime(context),
-                ) : SizedBox(height: 0,),
+                
 
                 // source account
                 _selectedType == TransactionType.TRANSFER ? 

@@ -1,4 +1,4 @@
-  import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 final colors = [Colors.blue[900], Colors.purple[900], Colors.green[900], Colors.brown[700], Colors.red[900],
   Colors.orange[900], Colors.yellow[900], Colors.lime[900], Colors.pink[900],
@@ -15,4 +15,24 @@ final lightColors = [Colors.blue[500], Colors.purple[500], Colors.green[700], Co
 
 Color getLightColor(int index) {
   return lightColors[index % colors.length]!;
+}
+
+Color green() {
+  return Colors.green[900]!;
+}
+
+Color blue() {
+  return Colors.blue[900]!;
+}
+
+Color magenta() {
+  return Colors.pink[900]!;
+}
+
+Color red() {
+  return Colors.red[900]!;
+}
+
+Color backgroundGrey() {
+  return Colors.grey[300]!;
 }

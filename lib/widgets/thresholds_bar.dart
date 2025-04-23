@@ -12,9 +12,25 @@ class ThresholdBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double percentage = 100 * ((threshold > 0) ? (spent / threshold).clamp(0.0, 10.99) : 0.0);
-    Color progressColor = percentage > 75 ? (percentage > 89 ? Colors.red[300]! : Colors.orange[200]!) : Colors.green[300]!;
-    String barTitle = icon != null ? "${icon!} $name" : name;
+
+    DateTime now = DateTime.now();
+    int currentDay = now.day;
+    int totalDays = DateUtils.getDaysInMonth(now.year, now.month);
+    double dayProgress = (100 * currentDay / totalDays).clamp(0.0, 100.0);
+
+    double spentPercent = (threshold > 0)
+        ? (100 * spent / threshold).clamp(0.0, 999.0)
+        : 0.0;
+
+    Color progressColor;
+    if (spentPercent < dayProgress) {
+      progressColor = Colors.green[300]!;
+    } else if (spentPercent < 100) {
+      progressColor = Colors.orange[200]!;
+    } else {
+      progressColor = Colors.red[300]!;
+    }
+    String barTitle = icon != null ? "$icon $name" : name;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -23,25 +39,42 @@ class ThresholdBar extends StatelessWidget {
           Container(
             height: 20,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: Colors.grey[300],
               borderRadius: BorderRadius.circular(4),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: (100 - percentage).toInt(),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: progressColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: percentage.toInt(),
-                  child: SizedBox(),
-                ),
-              ],
+          ),
+          FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: dayProgress / 100,
+            child: Container(
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.blueGrey[200],
+                borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
+              ),
+            ),
+          ),
+          FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: spentPercent.clamp(0.0, 100.0) / 100,
+            child: Container(
+              height: 20,
+              decoration: BoxDecoration(
+                color: progressColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+          FractionallySizedBox(
+            alignment: Alignment.centerRight,
+            widthFactor: dayProgress / 100,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                width: 2,
+                height: 20,
+                color: Colors.black.withValues(alpha: 0.1),
+              ),
             ),
           ),
           Positioned.fill(
@@ -51,31 +84,41 @@ class ThresholdBar extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    flex: 3, // Permette alla categoria di adattarsi allo spazio disponibile
+                    flex: 3,
                     child: Text(
                       barTitle,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: nameColor ?? Colors.black),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
                   ),
                   SizedBox(
-                    width: 80, // Fissa la larghezza della spesa
+                    width: 80,
                     child: Text(
                       '${spent.toStringAsFixed(2)} $currencySymbol',
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (100 - percentage) < 0 ? const Color.fromARGB(255, 141, 40, 32) : Colors.black),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                   SizedBox(width: 3),
                   SizedBox(
-                    width: 60, // Fissa la larghezza della soglia
+                    width: 60,
                     child: Text(
                       '/${threshold.toStringAsFixed(2)} $currencySymbol',
                       textAlign: TextAlign.left,
-                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey,
+                      ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
@@ -84,9 +127,15 @@ class ThresholdBar extends StatelessWidget {
                   SizedBox(
                     width: 40,
                     child: Text(
-                      '${(100 - percentage).toStringAsFixed(0)}%',
+                      '${(spentPercent).toStringAsFixed(0)}%',
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (100 - percentage) < 0 ? const Color.fromARGB(255, 141, 40, 32) : Colors.black),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                 ],

@@ -53,7 +53,7 @@ class MonthSelectorState extends State<MonthSelector> {
 
     if (picked != null) {
       setState(() {
-        if (!_enableFutureArrow && MonthYearUtils.isFutureMonth(picked.month, picked.year)) {
+        if (!_enableFutureArrow && MyDateUtils.isFutureMonth(picked.month, picked.year)) {
           _currentDate = DateTime.now();
         } else {
           _currentDate = DateTime(picked.year, picked.month, 1);
@@ -82,8 +82,8 @@ class MonthSelectorState extends State<MonthSelector> {
             ),
           ),
           IconButton(
-            icon: (_enableFutureArrow || MonthYearUtils.isPastMonth(_currentDate.month, _currentDate.year)) ? const Icon(Icons.chevron_right) : const Icon(Icons.block_rounded),
-            onPressed: () => _enableFutureArrow || MonthYearUtils.isPastMonth(_currentDate.month, _currentDate.year) ? _changeMonth(1) : (),
+            icon: (_enableFutureArrow || MyDateUtils.isPastMonth(_currentDate.month, _currentDate.year)) ? const Icon(Icons.chevron_right) : const Icon(Icons.block_rounded),
+            onPressed: () => _enableFutureArrow || MyDateUtils.isPastMonth(_currentDate.month, _currentDate.year) ? _changeMonth(1) : (),
           ),
         ],
       ),

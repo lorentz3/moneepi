@@ -1,4 +1,6 @@
-class MonthYearUtils {
+import 'package:intl/intl.dart';
+
+class MyDateUtils {
   static bool isPastMonth(int month, int year) {
     DateTime now = DateTime.now();
     int currentMonth = now.month;
@@ -42,5 +44,9 @@ class MonthYearUtils {
 
   static bool areMonthYearEqualsToday(DateTime dt) {
     return areMonthYearEquals(dt, DateTime.now());
+  }
+
+  static String formatDate(DateTime dt) {
+    return DateFormat('dd MMM yyyy').format(dt);
   }
 }

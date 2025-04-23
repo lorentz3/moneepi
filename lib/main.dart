@@ -14,17 +14,18 @@ import 'package:myfinance2/pages/settings_page.dart';
 import 'package:myfinance2/pages/stats_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
 import 'package:myfinance2/pages/movements_page.dart';
+import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:month_year_picker/month_year_picker.dart';
-import 'package:myfinance2/widgets/bottom_bar_item.dart';
+import 'package:myfinance2/utils/color_identity.dart';
 import 'package:myfinance2/widgets/categories_pie_chart.dart';
+import 'package:myfinance2/widgets/footer_button.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/month_totals.dart';
-import 'package:myfinance2/widgets/monthly_thresholds_bar.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 import 'package:myfinance2/widgets/square_button.dart';
 import 'package:myfinance2/widgets/thresholds_bar.dart';
@@ -67,6 +68,7 @@ class _HomePageState extends State<HomePage> {
   List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
   List<GroupSummaryDto> _groupSummaries = [];
   bool _isSummaryLoading = true;
+  bool _accountsAreMoreThanOne = false;
   MonthTotalDto _monthTotalDto = MonthTotalDto(totalExpense: 0, totalIncome: 0);
   String? _currencySymbol;
 
@@ -97,11 +99,17 @@ class _HomePageState extends State<HomePage> {
   _loadAllData() {
     _loadTransactions();
     _loadSummary();
+    _loadFlags();
   }
 
   Future<void> _loadTransactions() async {
     transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month, selectedDate.year);
     _monthTotalDto = await TransactionEntityService.getMonthTotalDto(selectedDate.month, selectedDate.year);
+    setState(() {});
+  }
+
+  Future<void> _loadFlags() async {
+    _accountsAreMoreThanOne = await AccountEntityService.multipleAccountExist();
     setState(() {});
   }
 
@@ -138,70 +146,97 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context);
+                // Aggiungi navigazione se vuoi
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Impostazioni'),
+              onTap: () => _navigateToSettingsPage(),
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('Info'),
+              onTap: () {
+                Navigator.pop(context);
+                // Mostra info app
+              },
+            ),
+          ],
+        ),
+      ),
       appBar: AppBar(
         title: MonthSelector(selectedDate: selectedDate, onDateChanged: _updateDate),
       ),
       body: _getMainBody(),
-      floatingActionButton: SizedBox(
-        width: 72,
-        height: 72,
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => TransactionFormPage(
-                      transaction: Transaction(
-                        type: TransactionType.EXPENSE,
-                        timestamp: DateTime.now(),
-                      ),
-                      isNew: true,
-                    ),
-              ),
-            ).then((_) {
-              _loadAllData(); 
-            });
-          },
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add, size: 35,),
-        ),
-      ),
-      floatingActionButtonLocation: const _EndDockedFabLocation(),
-      bottomNavigationBar: BottomAppBar(
+      bottomNavigationBar: Container(
         height: 60,
-        color: Colors.deepPurple[100],
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            BottomBarItem(
-              icon: Icons.home,
-              label: 'Home',
-              onTap: () {},
-            ),
-            BottomBarItem(
-              icon: Icons.bar_chart,
-              label: 'Stats',
-              onTap: () {},
-            ),
-            BottomBarItem(
-              icon: Icons.more_horiz,
-              label: 'More',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SettingsPage(currencySymbol: _currencySymbol ?? '',)),
-                ).then((_) {
-                  _loadAllData(); 
-                });
-              },
-            ),
-            const SizedBox(width: 72), // spazio per il FAB tondo
-          ],
+        color: backgroundGrey(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            children: [
+              FooterButton(
+                text: "Income",
+                onPressed: () => _navigateToTransactionPage(TransactionType.INCOME), 
+                color: green()
+              ),
+              SizedBox(width: 12,),
+              if (_accountsAreMoreThanOne) FooterButton(
+                text: "Transfer", 
+                onPressed: () => _navigateToTransactionPage(TransactionType.TRANSFER),
+                color: blue()
+              ),
+              if (_accountsAreMoreThanOne) SizedBox(width: 12,),
+              FooterButton(
+                text: "Expense",
+                onPressed: () => _navigateToTransactionPage(TransactionType.EXPENSE), 
+                color: red()
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  _navigateToTransactionPage(TransactionType type) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => TransactionFormPage(
+              transaction: Transaction(
+                type: type,
+                timestamp: DateTime.now(),
+              ),
+              isNew: true,
+            ),
+      ),
+    ).then((_) {
+      _loadAllData(); 
+    });
   }
 
   _getMainBody() {
@@ -326,7 +361,13 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         children: monthCategoriesSummary
             .where((t) => t.monthThreshold != null) 
-            .map((t) => MonthlyThresholdsBar(summary: t, currencySymbol: _currencySymbol ?? '',)) //TODO refactor use ThresholdsBar
+            .map((t) => ThresholdBar(
+              name: t.categoryName,
+              spent: t.amount ?? 0.0,
+              threshold: t.monthThreshold ?? 0.0,
+              icon: t.categoryIcon,
+              nameColor: Colors.black, 
+              currencySymbol: _currencySymbol ?? '',))
             .toList(),
         ),
     );
@@ -363,15 +404,12 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(builder: (context) => StatsPage(currencySymbol: _currencySymbol ?? '',)),
     );
   }
-}
-
-class _EndDockedFabLocation extends FloatingActionButtonLocation {
-  const _EndDockedFabLocation();
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final double fabX = scaffoldGeometry.scaffoldSize.width - scaffoldGeometry.floatingActionButtonSize.width - 16.0;
-    final double fabY = scaffoldGeometry.scaffoldSize.height - scaffoldGeometry.floatingActionButtonSize.height - scaffoldGeometry.minInsets.bottom - 16.0;
-    return Offset(fabX, fabY);
+  
+  _navigateToSettingsPage() {
+    Navigator.pop(context); // closes the drawer
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SettingsPage(currencySymbol: _currencySymbol ?? '',)),
+    );
   }
 }

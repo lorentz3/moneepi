@@ -62,9 +62,9 @@ class MonthlyAccountEntityService {
     double cumulativeBalance = previousBalance + incomeAmount - expenseAmount;
     await insertOrUpdateMonthlyAccountSummary(accountId, month, year, previousBalance, cumulativeBalance, expenseAmount, incomeAmount);
 
-    if (MonthYearUtils.isPastMonth(month, year)) {
+    if (MyDateUtils.isPastMonth(month, year)) {
       // update in cascata dei cumulative balance dei mesi successivi
-      await updateCumulativeBalances(accountId, MonthYearUtils.getNextMonth(month), MonthYearUtils.getNextYear(month, year));
+      await updateCumulativeBalances(accountId, MyDateUtils.getNextMonth(month), MyDateUtils.getNextYear(month, year));
     }
   }
 

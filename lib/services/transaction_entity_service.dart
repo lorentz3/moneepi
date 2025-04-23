@@ -115,7 +115,7 @@ class TransactionEntityService {
     //update old referenced summaries
     int monthToUpdate = oldTimestamp.month;
     int yearToUpdate = oldTimestamp.year;
-    if (oldCategoryId != null && (transaction.categoryId != oldCategoryId || !MonthYearUtils.areMonthYearEquals(transaction.timestamp, oldTimestamp))) {
+    if (oldCategoryId != null && (transaction.categoryId != oldCategoryId || !MyDateUtils.areMonthYearEquals(transaction.timestamp, oldTimestamp))) {
       debugPrint("updateMonthlyCategoryTransactionSummary $oldCategoryId");
       await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategoryId, monthToUpdate, yearToUpdate);
     }

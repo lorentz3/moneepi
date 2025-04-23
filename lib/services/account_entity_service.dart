@@ -62,10 +62,22 @@ class AccountEntityService {
     return result.isNotEmpty ? (result.first['initialBalance'] as double?) : null;
   }
 
+  static Future<bool> multipleAccountExist() async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      "SELECT id FROM $_tableName LIMIT 2"
+    );
+    if (maps.isEmpty || maps.length == 1) {
+      return false;
+    }
+    return true;
+  }
+
   // only for debug
   static Future<void> deleteAll() async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName);
   }
+
 
 }
