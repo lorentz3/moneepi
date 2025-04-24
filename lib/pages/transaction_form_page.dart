@@ -8,6 +8,7 @@ import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/utils/date_utils.dart';
+import 'package:myfinance2/widgets/amount_input_field.dart';
 import 'package:myfinance2/widgets/emoji_button.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 
@@ -31,7 +32,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   int? _selectedSourceAccount;
   int? _selectedAccount;
   int? _selectedCategory;
-  double? _amount;
+  double _amount = 0.0;
   String? _notes = '';
   List<Account> _accounts = [];
   List<Category> _categories = [];
@@ -73,7 +74,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     _selectedAccount = _transaction.accountId;
     _selectedSourceAccount = _transaction.sourceAccountId;
     _selectedCategory = _transaction.categoryId;
-    _amount = _transaction.amount;
+    _amount = _transaction.amount ?? 0.0;
     _notes = _transaction.notes;
     _oldCategoryId = _transaction.categoryId;
     _oldAccountId = _transaction.accountId;
@@ -128,259 +129,268 @@ class TransactionFormPageState extends State<TransactionFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: _isNew ? Text('New transaction') : Text('Edit transaction')),
-        body: Center(child: CircularProgressIndicator())
-      );
-    }
-    if (_accounts.isEmpty || _categories.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(title: _isNew ? Text('New transaction') : Text('Edit transaction')),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              SizedBox(height: 20),
-              Text("You still need to configure accounts and/or categories")
-            ]
-          )
-        )
-      );
-    }
-    final double padding = 16.0;
-    int buttonsPerRow = 6;
-    double spaceBetweenButtons = 6;
-    double screenWidth = MediaQuery.of(context).size.width;
-    double buttonSize = (screenWidth - (buttonsPerRow * spaceBetweenButtons) - padding - 10) / buttonsPerRow;
+    if (_isLoading) return _buildLoadingScaffold();
+    if (_accounts.isEmpty || _categories.isEmpty) return _buildEmptyConfigScaffold();
+
     return Scaffold(
-      appBar: AppBar(
-        title: _isNew ? Text('New ${getTransactionTypeText(_selectedType)}') : Text('Edit ${getTransactionTypeText(_selectedType)}'),
-        actions: [
-          _isNew ? SizedBox(height: 1,) : IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () {
-              _showDeleteConfirmationDialog(context);
-            },
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: Padding(
-        padding: EdgeInsets.all(padding),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(height: 5,),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: ElevatedButton(
-                          onPressed: () => _selectDate(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[200],
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.calendar_month),
-                              SizedBox(width: 10,),
-                              Text(MyDateUtils.formatDate(_selectedDate),
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12,),
-                    _showTime ? Expanded(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: ElevatedButton(
-                          onPressed: () => _selectTime(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[200],
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.access_time),
-                              SizedBox(width: 10,),
-                              Text(_selectedTime.format(context),
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ) : SizedBox(height: 0,),
-                  ],
-                ),
-
-                // source account
-                _selectedType == TransactionType.TRANSFER ? 
-                  _showDropdownMenus ?
-                  DropdownButtonFormField<int>(
-                    decoration: InputDecoration(labelText: 'Source account'),
-                    value: _selectedSourceAccount,
-                    items: _accounts.map((account) {
-                      String accountTitle = account.icon != null ? "${account.icon!} ${account.name}" : account.name;
-                      return DropdownMenuItem<int>(
-                        value: account.id,
-                        child: Text(accountTitle),
-                      );
-                    }).toList(),
-                    onChanged: (value) => setState(() => _selectedSourceAccount = value),
-                    validator: (value) => value == null ? 'Choose an account' : null,
-                  ) : SectionDivider(text: 'Source account') : SizedBox(height: 1,),
-                  //source account tiles
-                  _showTiles && _selectedType == TransactionType.TRANSFER ? Align(
-                    alignment: Alignment.center,
-                    child: Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: _accounts.take(5).map((account) {
-                        return EmojiButton(
-                          icon: account.icon != null ? account.icon! : account.name.substring(0, 2),
-                          label: account.name,
-                          width: buttonSize,
-                          height: buttonSize,
-                          onPressed: () {
-                            setState(() {
-                              _selectedSourceAccount = account.id;
-                            });
-                          },
-                          backgroundColor: _selectedSourceAccount == account.id
-                                ? _selectedButtonColor // Selected
-                                : _notSelectedButtonColor,
-                        );
-                      }).toList(),
-                    ),
-                  ) : SizedBox(height: 1,),
-
-                // target account
-                _showDropdownMenus ? DropdownButtonFormField<int>(
-                  decoration: _selectedType != TransactionType.TRANSFER ? InputDecoration(labelText: 'Account') : InputDecoration(labelText: 'Target account') ,
-                  value: _selectedAccount,
-                  items: _accounts.map((account) {
-                    String accountTitle = account.icon != null ? "${account.icon!} ${account.name}" : account.name;
-                    return DropdownMenuItem<int>(
-                      value: account.id,
-                      child: Text(accountTitle),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => _selectedAccount = value),
-                  validator: (value) => value == null ? 'Choose an account' : null,
-                ) : _multipleAccounts ? SectionDivider(text: _selectedType != TransactionType.TRANSFER ? 'Account' : 'Target account') : SizedBox(),
-                //target account tiles
-                _multipleAccounts && _showTiles ? Align(
-                  alignment: Alignment.center,
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: _accounts.map((account) {
-                      return EmojiButton(
-                        icon: account.icon != null ? account.icon! : account.name.substring(0, 2),
-                        label: account.name,
-                        width: buttonSize,
-                        height: buttonSize,
-                        onPressed: () {
-                          setState(() {
-                            _selectedAccount = account.id;
-                          });
-                        },
-                        backgroundColor: _selectedAccount == account.id
-                              ? _selectedButtonColor// Selected
-                              : _notSelectedButtonColor,
-                      );
-                    }).toList(),
-                  ),
-                ) : SizedBox(height: 1,),
-
-                // category
-                _selectedType != TransactionType.TRANSFER ?
-                  _showDropdownMenus ? DropdownButtonFormField<int>(
-                  decoration: InputDecoration(labelText: 'Category'),
-                  value: _selectedCategory,
-                  items: _categories.map((category) {
-                    String categoryTitle = category.icon != null ? "${category.icon!} ${category.name}" : category.name;
-                    return DropdownMenuItem<int>(
-                      value: category.id,
-                      child: Text(categoryTitle),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => _selectedCategory = value),
-                  validator: (value) => value == null ? 'Choose a category' : null,
-                ) : SectionDivider(text: 'Category') : SizedBox(height: 1,),
-                // category buttons
-                SizedBox(height: spaceBetweenButtons,),
-                _showTiles && _selectedType != TransactionType.TRANSFER ? Align(
-                  alignment: Alignment.center,
-                  child: Wrap(
-                    spacing: spaceBetweenButtons,
-                    runSpacing: spaceBetweenButtons,
-                    children: _categories.map((category) {
-                      return EmojiButton(
-                        icon: category.icon != null ? category.icon! : category.name.substring(0, 2),
-                        label: category.name,
-                        width: buttonSize,
-                        height: buttonSize,
-                        onPressed: () {
-                          setState(() {
-                            _selectedCategory = category.id;
-                          });
-                        },
-                        backgroundColor: _selectedCategory == category.id
-                              ? _selectedButtonColor // Selected
-                              : _notSelectedButtonColor,
-                      );
-                    }).toList(),
-                  ),
-                ) : SizedBox(height: 1,),
-                
-                //amount
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Amount'),
-                  keyboardType: TextInputType.number,
-                  initialValue: _amount != null ? "$_amount" : "",
-                  onChanged: (value) => _amount = double.tryParse(_replaceCommaWithPoint(value)) ?? 0.0,
-                  validator: (value) => value == null || double.tryParse(_replaceCommaWithPoint(value)) == null || value == '' ? 'Insert a valid amount' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Notes'),
-                  onChanged: (value) => _notes = value,
-                ),
+                _buildDateTimeRow(context),
+                _buildSourceAccountSelector(),
+                _buildTargetAccountSelector(),
+                _buildCategorySelector(),
                 SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _saveTransaction();
-                    }
-                  },
-                  child: Text('Save'),
-                ),
+                _buildAmountField(),
+                _buildNotesField(),
+                SizedBox(height: 20),
               ],
             ),
           ),
         ),
       ),
+      bottomNavigationBar: _buildSaveButton(),
     );
   }
 
-  String _replaceCommaWithPoint(String value) {
-    return value.replaceAll(",", ".");
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: Text(_isNew ? 'New ${getTransactionTypeText(_selectedType)}' : 'Edit ${getTransactionTypeText(_selectedType)}'),
+      actions: [
+        if (!_isNew)
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () => _showDeleteConfirmationDialog(context),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingScaffold() {
+    return Scaffold(
+      appBar: AppBar(title: Text(_isNew ? 'New ${getTransactionTypeText(_selectedType)}' : 'Edit ${getTransactionTypeText(_selectedType)}')),
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _buildEmptyConfigScaffold() {
+    return Scaffold(
+      appBar: AppBar(title: Text(_isNew ? 'New ${getTransactionTypeText(_selectedType)}' : 'Edit ${getTransactionTypeText(_selectedType)}')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: const [
+            SizedBox(height: 20),
+            Text("You still need to configure accounts and/or categories"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateTimeRow(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildDateButton(context),
+        ),
+        const SizedBox(width: 12),
+        _showTime ? Expanded(child: _buildTimeButton(context)) : const SizedBox(),
+      ],
+    );
+  }
+
+  Widget _buildDateButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => _selectDate(context),
+      style: _elevatedStyle(),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_month),
+          const SizedBox(width: 10),
+          Text(MyDateUtils.formatDate(_selectedDate), style: TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => _selectTime(context),
+      style: _elevatedStyle(),
+      child: Row(
+        children: [
+          Icon(Icons.access_time),
+          const SizedBox(width: 10),
+          Text(_selectedTime.format(context), style: TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  ButtonStyle _elevatedStyle() {
+    return ElevatedButton.styleFrom(
+      backgroundColor: Colors.grey[200],
+      foregroundColor: Colors.black,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    );
+  }
+
+  Widget _buildSourceAccountSelector() {
+    if (_selectedType != TransactionType.TRANSFER) return const SizedBox();
+    return Column(
+      children: [
+        _showDropdownMenus
+            ? _buildDropdown(
+                label: 'Source account',
+                value: _selectedSourceAccount,
+                items: _accounts,
+                onChanged: (value) => setState(() => _selectedSourceAccount = value),
+              )
+            : SectionDivider(text: 'Source account'),
+        if (_showTiles)
+          _buildEmojiGrid(
+            items: _accounts,
+            selectedId: _selectedSourceAccount,
+            onPressed: (id) => setState(() => _selectedSourceAccount = id),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTargetAccountSelector() {
+    return Column(
+      children: [
+        _showDropdownMenus
+            ? _buildDropdown(
+                label: _selectedType == TransactionType.TRANSFER ? 'Target account' : 'Account',
+                value: _selectedAccount,
+                items: _accounts,
+                onChanged: (value) => setState(() => _selectedAccount = value),
+              )
+            : (_multipleAccounts ? SectionDivider(text: 'Target account') : const SizedBox()),
+        if (_multipleAccounts && _showTiles)
+          _buildEmojiGrid(
+            items: _accounts,
+            selectedId: _selectedAccount,
+            onPressed: (id) => setState(() => _selectedAccount = id),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCategorySelector() {
+    if (_selectedType == TransactionType.TRANSFER) return const SizedBox();
+    return Column(
+      children: [
+        _showDropdownMenus
+            ? _buildDropdown(
+                label: 'Category',
+                value: _selectedCategory,
+                items: _categories,
+                onChanged: (value) => setState(() => _selectedCategory = value),
+              )
+            : SectionDivider(text: 'Category'),
+        const SizedBox(height: 6),
+        if (_showTiles)
+          _buildEmojiGrid(
+            items: _categories,
+            selectedId: _selectedCategory,
+            onPressed: (id) => setState(() => _selectedCategory = id),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required int? value,
+    required List<dynamic> items,
+    required Function(int?) onChanged,
+  }) {
+    return DropdownButtonFormField<int>(
+      decoration: InputDecoration(labelText: label),
+      value: value,
+      items: items.map((item) {
+        String title = item.icon != null ? "${item.icon!} ${item.name}" : item.name;
+        return DropdownMenuItem<int>(
+          value: item.id,
+          child: Text(title),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      validator: (value) => value == null ? 'Choose ${label.toLowerCase()}' : null,
+    );
+  }
+
+  Widget _buildEmojiGrid({
+    required List<dynamic> items,
+    required int? selectedId,
+    required Function(int) onPressed,
+  }) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double buttonSize = (screenWidth - (6 * 6) - 16 - 10) / 6;
+
+    return Align(
+      alignment: Alignment.center,
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: items.map<Widget>((item) {
+          final String icon = item.icon ?? item.name.substring(0, 2);
+          return EmojiButton(
+            icon: icon,
+            label: item.name,
+            width: buttonSize,
+            height: buttonSize,
+            onPressed: () => onPressed(item.id),
+            backgroundColor: selectedId == item.id ? _selectedButtonColor : _notSelectedButtonColor,
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildAmountField() {
+    return AmountInputField(
+      initialAmount: _amount,
+      label: "Amount",
+      onChanged: (val) {
+        setState(() {
+          _amount = val;
+        });
+      },
+    );
+  }
+
+  Widget _buildNotesField() {
+    return TextFormField(
+      decoration: InputDecoration(labelText: 'Notes'),
+      onChanged: (value) => _notes = value,
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 40),
+      child: ElevatedButton(
+        onPressed: () {
+          if (_formKey.currentState!.validate()) _saveTransaction();
+        },
+        child: Text(
+          'Save',
+          style: TextStyle(
+            fontSize: 20,
+          ),
+        ),
+      ),
+    );
   }
 
   _saveTransaction() async {
