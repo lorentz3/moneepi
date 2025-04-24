@@ -33,9 +33,9 @@ class _AmountInputFieldState extends State<AmountInputField> {
         if (_valueString.isNotEmpty) {
           _valueString = _valueString.substring(0, _valueString.length - 1);
         }
-      } else if (key == ',') {
-        if (!_valueString.contains(',')) {
-          _valueString += ',';
+      } else if (key == '.') {
+        if (!_valueString.contains('.')) {
+          _valueString += '.';
         }
       } else {
         _valueString += key;
@@ -76,7 +76,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    _valueString.isEmpty ? "0,00" : _valueString,
+                    _valueString.isEmpty ? "0.00" : _valueString,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -96,7 +96,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
             spacing: 4,
             runSpacing: 4,
             children: [
-              for (var key in ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫'])
+              for (var key in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'])
                 SizedBox(
                   width: 70,
                   height: 50,

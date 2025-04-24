@@ -50,6 +50,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   bool _showDropdownMenus = false; // TODO config
   bool _showTiles = true; // TODO config
   bool _multipleAccounts = false;
+  bool _multipleCategories = false;
 
   @override
   void initState() {
@@ -94,7 +95,11 @@ class TransactionFormPageState extends State<TransactionFormPage> {
       }
     }
     if (_categories.isNotEmpty) {
-      _selectedCategory ??= _categories[0].id;
+      if (_categories.length > 1) {
+        _multipleCategories = true;
+      } else {
+        _selectedCategory ??= _categories[0].id;
+      }
     }
     _isLoading = false;
     setState(() { });
@@ -132,29 +137,33 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     if (_isLoading) return _buildLoadingScaffold();
     if (_accounts.isEmpty || _categories.isEmpty) return _buildEmptyConfigScaffold();
 
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildDateTimeRow(context),
-                _buildSourceAccountSelector(),
-                _buildTargetAccountSelector(),
-                _buildCategorySelector(),
-                SizedBox(height: 20),
-                _buildAmountField(),
-                _buildNotesField(),
-                SizedBox(height: 20),
-              ],
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque, // molto importante per rilevare i tap ovunque
+      child: Scaffold(
+        appBar: _buildAppBar(),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildDateTimeRow(context),
+                  _buildSourceAccountSelector(),
+                  _buildTargetAccountSelector(),
+                  _buildCategorySelector(),
+                  SizedBox(height: 20),
+                  _buildAmountField(),
+                  _buildNotesField(),
+                  SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
+        bottomNavigationBar: _buildSaveButton(),
       ),
-      bottomNavigationBar: _buildSaveButton(),
     );
   }
 
@@ -296,9 +305,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                 items: _categories,
                 onChanged: (value) => setState(() => _selectedCategory = value),
               )
-            : SectionDivider(text: 'Category'),
+            : (_multipleCategories ? SectionDivider(text: 'Category') : const SizedBox()),
         const SizedBox(height: 6),
-        if (_showTiles)
+        if (_multipleCategories && _showTiles)
           _buildEmojiGrid(
             items: _categories,
             selectedId: _selectedCategory,
@@ -378,7 +387,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
 
   Widget _buildSaveButton() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 40),
+      padding: EdgeInsets.only(left: 60, right: 60, bottom: 30, top: 5),
       child: ElevatedButton(
         onPressed: () {
           if (_formKey.currentState!.validate()) _saveTransaction();
