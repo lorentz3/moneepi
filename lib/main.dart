@@ -63,7 +63,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late DateTime selectedDate;
+  late DateTime _selectedDate;
   List<TransactionDto> transactions = [];
   List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
   List<GroupSummaryDto> _groupSummaries = [];
@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    selectedDate = DateTime.now();
+    _selectedDate = DateTime.now();
     _loadAllData();
     _setCurrency();
   }
@@ -103,8 +103,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadTransactions() async {
-    transactions = await TransactionEntityService.getMonthTransactions(selectedDate.month, selectedDate.year);
-    _monthTotalDto = await TransactionEntityService.getMonthTotalDto(selectedDate.month, selectedDate.year);
+    transactions = await TransactionEntityService.getMonthTransactions(_selectedDate.month, _selectedDate.year);
+    _monthTotalDto = await TransactionEntityService.getMonthTotalDto(_selectedDate.month, _selectedDate.year);
     setState(() {});
   }
 
@@ -117,17 +117,17 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isSummaryLoading = true;
     });
-    _groupSummaries = await GroupEntityService.getGroupWithThresholdSummaries(selectedDate.month, selectedDate.year);
+    _groupSummaries = await GroupEntityService.getGroupWithThresholdSummaries(_selectedDate.month, _selectedDate.year);
     List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(CategoryType.EXPENSE);
-    monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(selectedDate.month, selectedDate.year);
+    monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(_selectedDate.month, _selectedDate.year);
     for (Category c in categoriesWithThreshold) {
       if (!monthCategoriesSummary.any((element) => element.categoryId == c.id)) {
         monthCategoriesSummary.add(MonthlyCategoryTransactionSummaryDto(
           categoryId: c.id!, 
           categoryIcon: c.icon,
           categoryName: c.name, 
-          month: selectedDate.month, 
-          year: selectedDate.year,
+          month: _selectedDate.month, 
+          year: _selectedDate.year,
           monthThreshold: c.monthThreshold));
       }
     }
@@ -138,7 +138,7 @@ class _HomePageState extends State<HomePage> {
 
  void _updateDate(DateTime newDate) {
     setState(() {
-      selectedDate = newDate;
+      _selectedDate = newDate;
     });
     _loadAllData();
   }
@@ -187,14 +187,14 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       appBar: AppBar(
-        title: MonthSelector(selectedDate: selectedDate, onDateChanged: _updateDate),
+        title: MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
       ),
       body: _getMainBody(),
       bottomNavigationBar: Container(
-        height: 60,
+        height: 70,
         color: backgroundGrey(),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.only(top: 2, left: 6, right: 6, bottom: 14),
           child: Row(
             children: [
               FooterButton(
@@ -202,13 +202,13 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => _navigateToTransactionPage(TransactionType.INCOME), 
                 color: green()
               ),
-              SizedBox(width: 12,),
+              SizedBox(width: 6,),
               if (_accountsAreMoreThanOne) FooterButton(
                 text: "Transfer", 
                 onPressed: () => _navigateToTransactionPage(TransactionType.TRANSFER),
                 color: blue()
               ),
-              if (_accountsAreMoreThanOne) SizedBox(width: 12,),
+              if (_accountsAreMoreThanOne) SizedBox(width: 6,),
               FooterButton(
                 text: "Expense",
                 onPressed: () => _navigateToTransactionPage(TransactionType.EXPENSE), 
@@ -240,7 +240,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   _getMainBody() {
-    final monthString = DateFormat('MMMM').format(selectedDate);
+    final monthString = DateFormat('MMMM').format(_selectedDate);
     return SingleChildScrollView(
       child: Column (
         children: [
@@ -248,7 +248,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 5,),
           MonthTotals(
             currencySymbol: _currencySymbol ?? '', 
-            selectedDate: selectedDate, 
+            selectedDate: _selectedDate, 
             totalExpense: _monthTotalDto.totalExpense, 
             totalIncome: _monthTotalDto.totalIncome,
             showMonth: true,
@@ -346,6 +346,7 @@ class _HomePageState extends State<HomePage> {
               icon: groupSummary.icon,
               nameColor: Color.fromARGB(255, 0, 3, 136),
               currencySymbol: _currencySymbol ?? '',
+              showTodayBar: _selectedDate.month == DateTime.now().month && _selectedDate.year == DateTime.now().year,
               )
             )
             .toList(),
@@ -367,7 +368,9 @@ class _HomePageState extends State<HomePage> {
               threshold: t.monthThreshold ?? 0.0,
               icon: t.categoryIcon,
               nameColor: Colors.black, 
-              currencySymbol: _currencySymbol ?? '',))
+              currencySymbol: _currencySymbol ?? '',
+              showTodayBar: _selectedDate.month == DateTime.now().month && _selectedDate.year == DateTime.now().year,
+            ))
             .toList(),
         ),
     );
@@ -376,7 +379,7 @@ class _HomePageState extends State<HomePage> {
   void _navigateToTransactionsPage(BuildContext context) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => MovementsPage(dateTime: selectedDate,)),
+      MaterialPageRoute(builder: (context) => MovementsPage(dateTime: _selectedDate,)),
     ).then((_) {
       _loadAllData(); // TODO only if something changed
     });

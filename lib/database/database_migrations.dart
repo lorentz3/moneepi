@@ -1,3 +1,5 @@
+import 'package:myfinance2/database/database_defaults.dart';
+
 Map<int, List<String>> migrationScripts = {
     0: [
       """  
@@ -31,7 +33,10 @@ Map<int, List<String>> migrationScripts = {
           FOREIGN KEY(accountId) REFERENCES Accounts(id),
           FOREIGN KEY(sourceAccountId) REFERENCES Accounts(id),
           FOREIGN KEY(categoryId) REFERENCES Categories(id));
-      """
+      """,
+      insertDefaultAccountsQuery,
+      insertDefaultExpenseCategoriesQuery,
+      insertDefaultIncomeCategoriesQuery
     ],
     1: [
       """  

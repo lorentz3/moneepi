@@ -48,6 +48,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   bool _showTime = true; // TODO config
   bool _showDropdownMenus = false; // TODO config
   bool _showTiles = true; // TODO config
+  bool _multipleAccounts = false;
 
   @override
   void initState() {
@@ -84,8 +85,12 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     _accounts = await AccountEntityService.getAllAccounts();
     _categories = await CategoryEntityService.getAllCategories(_selectedType == TransactionType.EXPENSE ? CategoryType.EXPENSE : CategoryType.INCOME);
     if (_accounts.isNotEmpty) {
-      _selectedAccount ??= _accounts[0].id;
-      _selectedSourceAccount ??= _accounts[0].id;
+      if (_accounts.length > 1) {
+        _multipleAccounts = true;
+      } else {
+        _selectedAccount ??= _accounts[0].id;
+        _selectedSourceAccount ??= _accounts[0].id;
+      }
     }
     if (_categories.isNotEmpty) {
       _selectedCategory ??= _categories[0].id;
@@ -213,7 +218,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                             children: [
                               Icon(Icons.access_time),
                               SizedBox(width: 10,),
-                              Text("${_selectedTime.format(context)}",
+                              Text(_selectedTime.format(context),
                                 style: TextStyle(fontSize: 16),
                               ),
                             ],
@@ -223,7 +228,6 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                     ) : SizedBox(height: 0,),
                   ],
                 ),
-                
 
                 // source account
                 _selectedType == TransactionType.TRANSFER ? 
@@ -279,9 +283,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
                   }).toList(),
                   onChanged: (value) => setState(() => _selectedAccount = value),
                   validator: (value) => value == null ? 'Choose an account' : null,
-                ) : SectionDivider(text: _selectedType != TransactionType.TRANSFER ? 'Account' : 'Target account'),
+                ) : _multipleAccounts ? SectionDivider(text: _selectedType != TransactionType.TRANSFER ? 'Account' : 'Target account') : SizedBox(),
                 //target account tiles
-                _showTiles ? Align(
+                _multipleAccounts && _showTiles ? Align(
                   alignment: Alignment.center,
                   child: Wrap(
                     spacing: 6,

@@ -1,7 +1,6 @@
 String insertDefaultAccountsQuery = """  
         INSERT INTO Accounts (icon, name, sort) VALUES
-        ('🏦', 'Bank account', 1),
-        ('💵', 'Cash', 2);
+        ('💵', 'Cash', 1);
       """;
 
 String insertDefaultExpenseCategoriesQuery = """  

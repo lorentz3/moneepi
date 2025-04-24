@@ -7,8 +7,17 @@ class ThresholdBar extends StatelessWidget {
   final String name;
   final Color? nameColor;
   final String currencySymbol;
+  final bool showTodayBar;
 
-  const ThresholdBar({super.key, required this.spent, required this.threshold, this.icon, required this.name, this.nameColor, required this.currencySymbol});
+  const ThresholdBar({super.key, 
+    required this.spent, 
+    required this.threshold, 
+    this.icon, 
+    required this.name, 
+    this.nameColor, 
+    required this.currencySymbol,
+    required this.showTodayBar,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +34,7 @@ class ThresholdBar extends StatelessWidget {
     Color progressColor;
     if (spentPercent < dayProgress) {
       progressColor = Colors.green[300]!;
-    } else if (spentPercent < 100) {
+    } else if (spentPercent <= 100) {
       progressColor = Colors.orange[200]!;
     } else {
       progressColor = Colors.red[300]!;
@@ -43,13 +52,13 @@ class ThresholdBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          FractionallySizedBox(
+          if (showTodayBar) FractionallySizedBox(
             alignment: Alignment.centerLeft,
             widthFactor: dayProgress / 100,
             child: Container(
               height: 20,
               decoration: BoxDecoration(
-                color: Colors.blueGrey[200],
+                color: Colors.blueGrey[100],
                 borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
               ),
             ),
@@ -65,7 +74,7 @@ class ThresholdBar extends StatelessWidget {
               ),
             ),
           ),
-          FractionallySizedBox(
+          if (showTodayBar) FractionallySizedBox(
             alignment: Alignment.centerRight,
             widthFactor: dayProgress / 100,
             child: Align(
@@ -99,7 +108,7 @@ class ThresholdBar extends StatelessWidget {
                   SizedBox(
                     width: 80,
                     child: Text(
-                      '${spent.toStringAsFixed(2)} $currencySymbol',
+                      '${(threshold - spent).toStringAsFixed(2)} $currencySymbol',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 12,
