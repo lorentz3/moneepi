@@ -17,106 +17,149 @@ class AmountInputField extends StatefulWidget {
 }
 
 class _AmountInputFieldState extends State<AmountInputField> {
-  String _valueString = "";
-  String _label = "";
+  late TextEditingController _controller;
+  bool _showKeypad = true;
 
   @override
   void initState() {
     super.initState();
-    _valueString = widget.initialAmount > 0 ? widget.initialAmount.toStringAsFixed(2) : "";
-    _label = widget.label;
+    _controller = TextEditingController(
+      text: widget.initialAmount > 0 ? widget.initialAmount.toStringAsFixed(2) : '',
+    );
+    _controller.addListener(_onTextChanged);
   }
 
-  void _onKeyPressed(String key) {
-    setState(() {
-      if (key == '⌫') {
-        if (_valueString.isNotEmpty) {
-          _valueString = _valueString.substring(0, _valueString.length - 1);
-        }
-      } else if (key == '.') {
-        if (!_valueString.contains('.')) {
-          _valueString += '.';
-        }
-      } else {
-        _valueString += key;
-      }
+  void _onTextChanged() {
+    final parsed = double.tryParse(_controller.text.replaceAll(',', '.')) ?? 0.0;
+    widget.onChanged(parsed);
+  }
 
-      double parsed = double.tryParse(_valueString.replaceAll(',', '.')) ?? 0.0;
-      widget.onChanged(parsed);
+  void _onKeypadPressed(String key) {
+    String text = _controller.text;
+
+    if (key == '⌫') {
+      if (text.isNotEmpty) {
+        text = text.substring(0, text.length - 1);
+      }
+    } else if (key == '.') {
+      if (!text.contains('.')) {
+        text += '.';
+      }
+    } else {
+      // Blocca a 2 cifre decimali
+      if (text.contains('.')) {
+        final parts = text.split('.');
+        if (parts.length > 1 && parts[1].length >= 2) return;
+      }
+      text += key;
+    }
+
+    setState(() {
+      _controller.text = text;
+      _controller.selection = TextSelection.fromPosition(
+        TextPosition(offset: _controller.text.length),
+      );
     });
   }
 
   @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Row(
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double padHorizontalPadding = screenWidth / 6;
+    final double buttonSize = (screenWidth - (2 * padHorizontalPadding) - 50) / 3;
+    debugPrint("screenWidth: $screenWidth, padHorizontalPadding: $padHorizontalPadding, buttonSize: $buttonSize");
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Display
-        Expanded(
-          flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4.0),
-                child: Text(
-                  _label,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        // Text field with toggle button
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _controller,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: widget.label,
                 ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-                margin: EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.white,
-                ),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    _valueString.isEmpty ? "0.00" : _valueString,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: Icon(_showKeypad ? Icons.keyboard_hide : Icons.keyboard),
+              onPressed: () {
+                setState(() {
+                  _showKeypad = !_showKeypad;
+                });
+              },
+            ),
+          ],
         ),
 
-        // Keypad
-        Expanded(
-          flex: 3,
-          child: Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: [
-              for (var key in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'])
-                SizedBox(
-                  width: 70,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () => _onKeyPressed(key),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: Text(
-                      key,
-                      style: TextStyle(fontSize: 22),
-                    ),
+        // Animated Keypad
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (child, animation) {
+            return SizeTransition(sizeFactor: animation, axisAlignment: -1.0, child: child);
+          },
+          child: _showKeypad
+              ? Padding(
+                  padding: EdgeInsets.only(top: 16, left: padHorizontalPadding, right: padHorizontalPadding),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: _buildKeypadRows(buttonSize),
                   ),
-                ),
-            ],
-          ),
+                )
+              : const SizedBox.shrink(),
         ),
       ],
     );
+  }
+
+  List<String> keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
+
+  List<Row> _buildKeypadRows(double buttonSize) {
+    List<Row> rows = [];
+
+    for (int i = 0; i < keys.length; i += 3) {
+      rows.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (int j = i; j < i + 3 && j < keys.length; j++)
+              Padding(
+                padding: const EdgeInsets.all(2),
+                child: SizedBox(
+                  width: buttonSize,
+                  height: 40,
+                  child: ElevatedButton(
+                    onPressed: () => _onKeypadPressed(keys[j]),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[200],
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      keys[j],
+                      style: const TextStyle(fontSize: 22),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return rows;
   }
 }

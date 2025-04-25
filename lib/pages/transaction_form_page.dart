@@ -386,12 +386,20 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   Widget _buildSaveButton() {
+    bool isSaveEnabled = _selectedType == TransactionType.TRANSFER 
+      ? _selectedAccount != null && _selectedSourceAccount != null
+      : _selectedAccount != null && _selectedCategory != null;
     return Padding(
       padding: EdgeInsets.only(left: 60, right: 60, bottom: 30, top: 5),
       child: ElevatedButton(
-        onPressed: () {
-          if (_formKey.currentState!.validate()) _saveTransaction();
-        },
+        onPressed: isSaveEnabled
+            ? () {
+                if (_formKey.currentState!.validate()) _saveTransaction();
+              }
+            : null, // disabilita il bottone
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSaveEnabled ? null : Colors.grey.shade400, // opzionale
+        ),
         child: Text(
           'Save',
           style: TextStyle(

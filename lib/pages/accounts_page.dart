@@ -13,16 +13,18 @@ class AccountsPage extends StatefulWidget {
 
 class AccountsPageState extends State<AccountsPage> {
   int? _listSize = 0;
+  bool _dataChanged = false;
 
   @override
   Widget build(BuildContext context) {
     double width = 300;
     if (mounted) width = MediaQuery.of(context).size.width;
-    return GestureDetector(
-      onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.unfocus();
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          debugPrint("Popping AccountsPage _dataChanged=$_dataChanged, result=$result");
+          Navigator.pop(context, _dataChanged);
         }
       },
       child: Scaffold(
@@ -80,15 +82,18 @@ class AccountsPageState extends State<AccountsPage> {
                           flex: 2,
                           child: IconButton(
                             icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              Navigator.push(
+                            onPressed: () async {
+                              _dataChanged = await Navigator.push(
                                 context, 
                                 MaterialPageRoute(builder: (context) => AccountFormPage(
                                   account: elements[index],
                                   isNew: false,
                                   )
                                 )
-                              ).then((_) => setState(() {}));
+                              );//.then((_) => setState(() {}));
+                              if (_dataChanged == true) {
+                                setState(() {});
+                              }
                             },
                           ),
                         ),

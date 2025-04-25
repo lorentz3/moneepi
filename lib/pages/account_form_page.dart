@@ -29,57 +29,66 @@ class AccountFormPageState extends State<AccountFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.unfocus();
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          debugPrint("Popping AccountFormPage _dataChanged=false, result=$result");
+          Navigator.pop(context, false);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(title: widget.isNew! ? const Text("Create new account") : const Text("Edit account")),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child:
-            Column(
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Account symbol', hintText: 'Emoji strongly suggested'),
-                  initialValue: _icon,
-                  onChanged: (value) => _icon = value,
-                  validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Account name *'),
-                  initialValue: _accountName,
-                  onChanged: (value) => _accountName = value,
-                  validator: (value) => value!.isEmpty ? 'Enter a name' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Initial balance', hintText: 'Account value before every transaction'),
-                  initialValue: _initialBalance,
-                  keyboardType: TextInputType.numberWithOptions(
-                    decimal: true,
-                    signed: true
+      child: GestureDetector(
+        onTap: () {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus) {
+            currentFocus.unfocus();
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(title: widget.isNew! ? const Text("Create new account") : const Text("Edit account")),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child:
+              Column(
+                children: [
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Account symbol', hintText: 'Emoji strongly suggested'),
+                    initialValue: _icon,
+                    onChanged: (value) => _icon = value,
+                    validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
                   ),
-                  onChanged: (value) => _initialBalance = value,
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _saveAccount();
-                    }
-                  },
-                  child: Text('Save'),
-                ),
-              ],
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Account name *'),
+                    initialValue: _accountName,
+                    onChanged: (value) => _accountName = value,
+                    validator: (value) => value!.isEmpty ? 'Enter a name' : null,
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Initial balance', hintText: 'Account value before every transaction'),
+                    initialValue: _initialBalance,
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: true
+                    ),
+                    onChanged: (value) => _initialBalance = value,
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        _saveAccount();
+                      }
+                    },
+                    child: Text('Save'),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      )
+        )
+      ),
     );
   }
 
@@ -93,6 +102,6 @@ class AccountFormPageState extends State<AccountFormPage> {
     } else {
       AccountEntityService.updateAccount(account);
     }
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
 } 

@@ -104,7 +104,7 @@ class TransactionsListGroupedByDate extends StatelessWidget {
   }
 
   Widget _getTransactionWidget(BuildContext context, TransactionDto movement, Color rowColor) {
-    String categoryTitle = movement.categoryIcon != null ? "${movement.categoryIcon!} ${movement.categoryName}" : movement.categoryName!;
+    String categoryTitle = movement.categoryIcon != null ? "${movement.categoryIcon!} ${movement.categoryName}" : movement.categoryName ?? "";
     String accountTitle = movement.accountIcon != null ? movement.accountIcon! : movement.accountName[0];
     return InkWell(
       onTap: () {

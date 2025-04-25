@@ -8,6 +8,7 @@ import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/accounts_summaries_page.dart';
 import 'package:myfinance2/pages/budgeting_page.dart';
 import 'package:myfinance2/pages/settings_page.dart';
@@ -169,6 +170,11 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
                 // Aggiungi navigazione se vuoi
               },
+            ),
+            ListTile(
+              leading: const Icon(Icons.account_balance),
+              title: const Text('Accounts setup'),
+              onTap: () => _navigateToAccounts(),
             ),
             ListTile(
               leading: const Icon(Icons.settings),
@@ -408,11 +414,28 @@ class _HomePageState extends State<HomePage> {
     );
   }
   
-  _navigateToSettingsPage() {
+  _navigateToSettingsPage() async {
     Navigator.pop(context); // closes the drawer
-    Navigator.push(
+    final bool? dataChanged = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SettingsPage(currencySymbol: _currencySymbol ?? '',)),
     );
+    if (dataChanged != null && dataChanged) {
+      _loadAllData();
+      _setCurrency();
+    }
+  }
+
+  void _navigateToAccounts() async {
+    Navigator.pop(context); // closes the drawer
+    final bool? dataChanged = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AccountsPage()),
+    );
+    if (dataChanged != null && dataChanged) {
+      debugPrint("Account data changed! Reload data");
+      _loadAllData();
+      _setCurrency();
+    }
   }
 }
