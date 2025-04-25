@@ -14,6 +14,7 @@ class _CurrencySelectionPageState extends State<CurrencySelectionPage> {
   String? _selectedCurrencyCode;
   List<CurrencyDto> _filteredCurrencies = [];
   final TextEditingController _searchController = TextEditingController();
+  bool _dataChanged = false;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _CurrencySelectionPageState extends State<CurrencySelectionPage> {
   }
 
   Future<void> _updateSelection() async {
+    _dataChanged = true;
     final code = await AppConfig.instance.getCurrencyCode();
     setState(() {
       _selectedCurrencyCode = code;
@@ -56,46 +58,55 @@ class _CurrencySelectionPageState extends State<CurrencySelectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Choose your currency:')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search currency',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          debugPrint("Popping CurrencySelectionPage _dataChanged=$_dataChanged, result=$result");
+          Navigator.pop(context, _dataChanged);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Choose your currency:')),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  labelText: 'Search currency',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filteredCurrencies.length,
-              itemBuilder: (context, index) {
-                final currency = _filteredCurrencies[index];
-                final isSelected = currency.code == _selectedCurrencyCode;
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filteredCurrencies.length,
+                itemBuilder: (context, index) {
+                  final currency = _filteredCurrencies[index];
+                  final isSelected = currency.code == _selectedCurrencyCode;
 
-                return ListTile(
-                  leading: Text(currency.symbol, style: const TextStyle(fontSize: 20)),
-                  title: Text('${currency.name} (${currency.code})'),
-                  trailing: isSelected
-                      ? const Icon(Icons.check, color: Colors.green)
-                      : null,
-                  onTap: () async {
-                    await ConfigurationEntityService.updateCurrency(currency.code);
-                    _updateSelection();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Currency updated!")),
-                    );
-                  },
-                );
-              },
+                  return ListTile(
+                    leading: Text(currency.symbol, style: const TextStyle(fontSize: 20)),
+                    title: Text('${currency.name} (${currency.code})'),
+                    trailing: isSelected
+                        ? const Icon(Icons.check, color: Colors.green)
+                        : null,
+                    onTap: () async {
+                      await ConfigurationEntityService.updateCurrency(currency.code);
+                      _updateSelection();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Currency updated!")),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

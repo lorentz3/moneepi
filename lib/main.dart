@@ -11,7 +11,12 @@ import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/accounts_summaries_page.dart';
 import 'package:myfinance2/pages/budgeting_page.dart';
-import 'package:myfinance2/pages/settings_page.dart';
+import 'package:myfinance2/pages/categories_page.dart';
+import 'package:myfinance2/pages/currency_selection_page.dart';
+import 'package:myfinance2/pages/export_transactions_page.dart';
+import 'package:myfinance2/pages/groups_page.dart';
+import 'package:myfinance2/pages/import_xls_page.dart';
+import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/pages/stats_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
 import 'package:myfinance2/pages/movements_page.dart';
@@ -153,7 +158,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             const DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Colors.deepPurple,
               ),
               child: Text(
                 'Menu',
@@ -164,23 +169,56 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
-                // Aggiungi navigazione se vuoi
+                // TODO
               },
+            ),
+            Divider(),
+            ListTile(
+              leading: const Icon(Icons.attach_money),
+              title: const Text('Change currency'),
+              onTap: () => _navigateTo(Pages.currencies),
             ),
             ListTile(
               leading: const Icon(Icons.account_balance),
               title: const Text('Accounts setup'),
-              onTap: () => _navigateToAccounts(),
+              onTap: () => _navigateTo(Pages.accounts),
             ),
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Impostazioni'),
-              onTap: () => _navigateToSettingsPage(),
+              leading: const Icon(Icons.category_outlined),
+              title: const Text('Expense Categories setup'),
+              onTap: () => _navigateTo(Pages.expenseCategories),
             ),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Income Categories setup'),
+              onTap: () => _navigateTo(Pages.incomeCategories),
+            ),
+            ListTile(
+              leading: const Icon(Icons.data_thresholding_outlined),
+              title: const Text('Category Budgets'),
+              onTap: () => _navigateTo(Pages.categoryBudgets),
+            ),
+            ListTile(
+              leading: const Icon(Icons.group_work_outlined),
+              title: const Text('Groups setup'),
+              onTap: () => _navigateTo(Pages.groups),
+            ),
+            Divider(),
+            ListTile(
+              leading: const Icon(Icons.dataset_outlined),
+              title: const Text('XLSX Import'),
+              onTap: () => _navigateTo(Pages.xlsxImport),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dataset_rounded),
+              title: const Text('XLSX Export'),
+              onTap: () => _navigateTo(Pages.xlsxExport),
+            ),
+            Divider(),
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('Info'),
@@ -413,29 +451,52 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(builder: (context) => StatsPage(currencySymbol: _currencySymbol ?? '',)),
     );
   }
-  
-  _navigateToSettingsPage() async {
+
+  void _navigateTo(Pages page) async {
     Navigator.pop(context); // closes the drawer
     final bool? dataChanged = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsPage(currencySymbol: _currencySymbol ?? '',)),
+      MaterialPageRoute(builder: (context) => _getPage(page)),
     );
     if (dataChanged != null && dataChanged) {
+      debugPrint("Data changed! Reload data");
       _loadAllData();
       _setCurrency();
     }
   }
 
-  void _navigateToAccounts() async {
-    Navigator.pop(context); // closes the drawer
-    final bool? dataChanged = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => AccountsPage()),
-    );
-    if (dataChanged != null && dataChanged) {
-      debugPrint("Account data changed! Reload data");
-      _loadAllData();
-      _setCurrency();
-    }
+_getPage(Pages page) {
+  switch(page) {
+    case Pages.accounts:
+      return AccountsPage();
+    case Pages.currencies:
+      return CurrencySelectionPage();
+    case Pages.expenseCategories:
+      return CategoriesPage(type: CategoryType.EXPENSE,);
+    case Pages.incomeCategories:
+      return CategoriesPage(type: CategoryType.INCOME,);
+    case Pages.categoryBudgets:
+      return MonthlyThresholdsPage(currencySymbol: _currencySymbol ?? '');
+    case Pages.groups:
+      return GroupListPage(currencySymbol: _currencySymbol ?? '');
+    case Pages.xlsxImport:
+      return ImportXlsPage();
+    case Pages.xlsxExport:
+      return ExportTransactionsPage();
+    case Pages.settings:
+      return AccountsPage(); //TODO
   }
+}
+}
+
+enum Pages {
+  currencies,
+  accounts,
+  expenseCategories,
+  incomeCategories,
+  categoryBudgets,
+  groups,
+  xlsxImport,
+  xlsxExport,
+  settings,
 }

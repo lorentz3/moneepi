@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/pages/category_form_page.dart';
@@ -18,196 +17,123 @@ class CategoriesPage extends StatefulWidget {
 class CategoriesPageState extends State<CategoriesPage> {
   int? _listSize = 0;
   final GlobalKey<CategoriesPageState> categoriesPageKey = GlobalKey();
+  bool _dataChanged = false;
 
   @override
   Widget build(BuildContext context) {
     double width = 300;
     if (mounted) width = MediaQuery.of(context).size.width;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_getTitle(widget.type)),
-        actions: [
-          PopupMenuButton(
-            onSelected: (value) => _handleClick(value, context),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: "AddDefaultCategories", child: Text("Add default categories")),
-            ],
-          )
-        ],
-      ),
-      body: FutureBuilder<List<Category>>(
-        future: _getCategories(), 
-        builder: (BuildContext context, AsyncSnapshot<List<Category>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text(snapshot.error.toString()));
-          } else if (snapshot.hasData) {
-            if (snapshot.data != null) {
-              List<Category> elements = snapshot.data!;
-              _listSize = elements.length;
-              if (_listSize == 0) {
-                return const Text("  No categories configured: tap '+', or add defaults");
-              }
-              return ListView.builder(
-                itemCount: elements.length,
-                itemBuilder: (context, index) => Container(
-                  width: width,
-                  margin: const EdgeInsets.all(10),
-                  height: 25,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: elements[index].icon != null ? Text(
-                          elements[index].icon!,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ) : const Text(" - "),
-                      ),
-                      Expanded(
-                        flex: 10,
-                        child: Text(
-                          elements[index].name,
-                          textAlign: TextAlign.left,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            Navigator.push(
-                              context, 
-                              MaterialPageRoute(builder: (context) => CategoryFormPage(
-                                category: elements[index],
-                                isNew: false,
-                                )
-                              )
-                            ).then((_) => setState(() {}));
-                          },
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _showDeleteDialog(elements[index]);
-                          },
-                        ),
-                      ),
-                    ],
-                  )
-                )
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          debugPrint("Popping CategoriesPageState _dataChanged=$_dataChanged, result=$result");
+          Navigator.pop(context, _dataChanged);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_getTitle(widget.type)),
+          actions: [
+            IconButton(
+            onPressed: () async {
+              _dataChanged = await Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => CategoryFormPage(
+                  category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
+                  isNew: true,
+                ))
               );
+              if (_dataChanged == true) {
+                setState(() {});
+              }
+            },
+            tooltip: 'Add category',
+            icon: const Icon(Icons.add),
+        ),
+          ],
+        ),
+        body: FutureBuilder<List<Category>>(
+          future: _getCategories(), 
+          builder: (BuildContext context, AsyncSnapshot<List<Category>> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text(snapshot.error.toString()));
+            } else if (snapshot.hasData) {
+              if (snapshot.data != null) {
+                List<Category> elements = snapshot.data!;
+                _listSize = elements.length;
+                if (_listSize == 0) {
+                  return const Text("  No categories configured: tap '+', or add defaults");
+                }
+                return ListView.builder(
+                  itemCount: elements.length,
+                  itemBuilder: (context, index) => Container(
+                    width: width,
+                    margin: const EdgeInsets.all(10),
+                    height: 25,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: elements[index].icon != null ? Text(
+                            elements[index].icon!,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ) : const Text(" - "),
+                        ),
+                        Expanded(
+                          flex: 10,
+                          child: Text(
+                            elements[index].name,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () async {
+                              _dataChanged = await Navigator.push(
+                                context, 
+                                MaterialPageRoute(builder: (context) => CategoryFormPage(
+                                  category: elements[index],
+                                  isNew: false,
+                                  )
+                                )
+                              );
+                              if (_dataChanged == true) {
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              _showDeleteDialog(elements[index]);
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  )
+                );
+              }
+              return const Text("No categories");
             }
             return const Text("No categories");
           }
-          return const Text("No categories");
-        }
-      ),
-      floatingActionButton: 
-        FloatingActionButton (
-          onPressed: () {
-            Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => CategoryFormPage(
-                category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
-                isNew: true,
-              ))
-            ).then((_) => setState(() {}));
-          },
-          tooltip: 'Add category',
-          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
 
-  _handleClick(String value, BuildContext context) {
-    if (widget.type == CategoryType.EXPENSE){
-      switch(value) {
-        case "AddDefaultCategories":
-          showDialog(
-            context: context, 
-            barrierDismissible: true,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Adding default categories'),
-                content: SingleChildScrollView(
-                  child: ListBody(
-                    children: <Widget>[
-                      const Text("This will add app default categories to your expense categories list, like:"),
-                      const Text(" - Groceries"),
-                      const Text(" - Car"),
-                      const Text(" - ..."),
-                      const Text("Continue?"),
-                    ],
-                  ),
-                ),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    child: const Text('Continue'),
-                    onPressed: () {
-                      setState(() {
-                        CategoryEntityService.insertDefaultExpenseCategories();
-                        Navigator.pop(context);
-                      });
-                    },
-                  ),
-                ],
-              );
-            }
-          );
-          break;
-      }
-    }
-    else if (widget.type == CategoryType.INCOME){
-      switch(value) {
-        case "AddDefaultCategories":
-          showDialog(
-            context: context, 
-            barrierDismissible: true,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Adding default categories'),
-                content: SingleChildScrollView(
-                  child: ListBody(
-                    children: <Widget>[
-                      const Text("This will add app default categories to your income categories list, like:"),
-                      const Text(" - Salary"),
-                      const Text("Continue?"),
-                    ],
-                  ),
-                ),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    child: const Text('Continue'),
-                    onPressed: () {
-                      setState(() {
-                        CategoryEntityService.insertDefaultIncomeCategories();
-                        Navigator.pop(context);
-                      });
-                    },
-                  ),
-                ],
-              );
-            }
-          );
-          break;
-      }
-    }
-  }
 
   Future<List<Category>> _getCategories() async {
     Future<List<Category>?> categories = CategoryEntityService.getAllCategories(widget.type);
