@@ -17,6 +17,10 @@ Color getLightColor(int index) {
   return lightColors[index % colors.length]!;
 }
 
+Color deepPurple() {
+  return Colors.deepPurple[900]!;
+}
+
 Color green() {
   return Colors.green[900]!;
 }

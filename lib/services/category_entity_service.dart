@@ -1,6 +1,7 @@
 import 'package:myfinance2/database/database_defaults.dart';
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/dto/category_summary_dto.dart';
+import 'package:myfinance2/dto/group_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 
@@ -169,6 +170,30 @@ class CategoryEntityService {
     if(maps.isEmpty){
       return [];
     }
+    return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
+  }
+  
+  static Future<List<Category>> getCategoriesWithMonthlyThresholdNotInGroups(CategoryType type, List<GroupDto> groups) async {
+    // Se non ci sono gruppi, fai la query semplice
+    if (groups.isEmpty) {
+      return getAllCategoriesWithMonthlyThreshold(type);
+    }
+    final db = await DatabaseHelper.getDb();
+    // Altrimenti costruisci la query con esclusione
+    final groupIds = groups.map((g) => g.id).toList();
+    final placeholders = List.generate(groupIds.length, (index) => '?').join(', ');
+
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT * FROM $_tableName
+      WHERE type = ?
+        AND monthThreshold IS NOT NULL
+        AND id NOT IN (
+          SELECT categoryId
+          FROM Categories_Groups
+          WHERE groupId IN ($placeholders)
+        )
+    ''', [type.toString().split('.').last, ...groupIds]);
+
     return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
   }
 

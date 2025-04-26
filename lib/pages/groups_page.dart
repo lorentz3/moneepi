@@ -25,7 +25,7 @@ class _GroupListPageState extends State<GroupListPage> {
   }
 
   Future<void> _loadGroups() async {
-    _groups = await GroupEntityService.getGroupsWithCategories();
+    _groups = await GroupEntityService.getGroupsWithCategories(false);
     setState(() {});
   }
 

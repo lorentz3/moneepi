@@ -20,9 +20,17 @@ class GroupEntityService {
     }
     return List.generate(maps.length, (index) => Group.fromJson(maps[index]));
   } 
+
+  static Future<List<GroupDto>> getGroupsWithMonthlyThreshold() async {
+    return getGroupsWithCategories(true);
+  }
   
-  static Future<List<GroupDto>> getGroupsWithCategories() async {
+  static Future<List<GroupDto>> getGroupsWithCategories(bool onlyThresholds) async {
     final db = await DatabaseHelper.getDb();
+    String conditions = "";
+    if (onlyThresholds) {
+      conditions = "WHERE g.monthThreshold IS NOT NULL";
+    }
     final List<Map<String, dynamic>> results = await db.rawQuery('''
       SELECT 
         g.id AS groupId, g.icon AS groupIcon, g.name AS groupName, g.sort AS groupSort, 
@@ -32,6 +40,7 @@ class GroupEntityService {
       FROM Groups g
       LEFT JOIN Categories_Groups cg ON g.id = cg.groupId
       LEFT JOIN Categories c ON cg.categoryId = c.id
+      $conditions
       ORDER BY g.sort, c.sort
     ''');
     Map<int, GroupDto> groupMap = {};
@@ -264,4 +273,5 @@ class GroupEntityService {
           .map((entry) => GroupStatsDto.fromJson(entry.value, categoriesByGroup[entry.key]!))
           .toList();
   }
+
 }
