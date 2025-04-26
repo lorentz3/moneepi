@@ -105,4 +105,10 @@ Map<int, List<String>> migrationScripts = {
           ('TRANSACTION_FORM_BY_STEPS', 0, NULL);
       """,
     ],
+    5: [
+      """  
+        INSERT INTO Configurations (name, intValue, textValue, realValue) VALUES
+          ('MONTHLY_SAVING', NULL, NULL, 0.0);
+      """,
+    ],
   };

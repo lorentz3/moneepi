@@ -14,6 +14,7 @@ import 'package:myfinance2/pages/budgeting_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
 import 'package:myfinance2/pages/currency_selection_page.dart';
 import 'package:myfinance2/pages/export_transactions_page.dart';
+import 'package:myfinance2/pages/general_settings_page.dart';
 import 'package:myfinance2/pages/groups_page.dart';
 import 'package:myfinance2/pages/import_xls_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
@@ -77,6 +78,8 @@ class _HomePageState extends State<HomePage> {
   bool _accountsAreMoreThanOne = false;
   MonthTotalDto _monthTotalDto = MonthTotalDto(totalExpense: 0, totalIncome: 0);
   String? _currencySymbol;
+  double? _monthlySaving;
+  int? _periodStartingDay;
 
   @override
   void initState() {
@@ -106,6 +109,14 @@ class _HomePageState extends State<HomePage> {
     _loadTransactions();
     _loadSummary();
     _loadFlags();
+    _loadConfigs();
+  }
+
+  _loadConfigs() async {
+    _monthlySaving = await AppConfig.instance.getMonthlySaving();
+    _periodStartingDay = await AppConfig.instance.getPeriodStartingDay();
+    debugPrint("reloaded configs: _monthlySaving=$_monthlySaving, _periodStartingDay=$_periodStartingDay");
+    setState(() {});
   }
 
   Future<void> _loadTransactions() async {
@@ -171,10 +182,7 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO
-              },
+              onTap: () => _navigateTo(Pages.settings),
             ),
             Divider(),
             ListTile(
@@ -484,7 +492,7 @@ _getPage(Pages page) {
     case Pages.xlsxExport:
       return ExportTransactionsPage();
     case Pages.settings:
-      return AccountsPage(); //TODO
+      return GeneralSettingsPage(monthlySaving: _monthlySaving ?? 0.0, periodStartingDay: _periodStartingDay ?? 1,);
   }
 }
 }

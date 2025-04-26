@@ -25,6 +25,10 @@ Color blue() {
   return Colors.blue[900]!;
 }
 
+Color blueGrey() {
+  return Colors.blueGrey[700]!;
+}
+
 Color magenta() {
   return Colors.pink[900]!;
 }
@@ -35,4 +39,8 @@ Color red() {
 
 Color backgroundGrey() {
   return Colors.grey[300]!;
+}
+
+Color backgroundLightBlue() {
+  return Colors.blue[50]!;
 }

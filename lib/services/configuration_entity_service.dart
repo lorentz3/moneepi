@@ -15,10 +15,21 @@ class ConfigurationEntityService {
   static const String homepageShowThresholdBars = 'HOMEPAGE_SHOW_THRESHOLD_BARS';
   static const String homepageShowGroupThresholdBars = 'HOMEPAGE_SHOW_GROUP_THRESHOLD_BARS';
   static const String transactionFormBySteps = 'TRANSACTION_FORM_BY_STEPS';
+  static const String monthlySaving = 'MONTHLY_SAVING';
 
   static Future<String> getCurrency() async {
     Configuration conf = await _getConfiguration(currency);
     return conf.textValue ?? "USD";
+  }
+  
+  static Future<double> getMonthlySaving() async {
+    Configuration conf = await _getConfiguration(monthlySaving);
+    return conf.realValue ?? 0.0;
+  }
+  
+  static Future<int> getPeriodStartingDay() async {
+    Configuration conf = await _getConfiguration(periodStartingDay);
+    return conf.intValue ?? 0;
   }
 
   static Future<Configuration> _getConfiguration(String name) async {
@@ -38,6 +49,20 @@ class ConfigurationEntityService {
     _updateConfiguration(conf);
   }
 
+  static Future<void> updateMonthlySaving(double? monthlySavingAmount) async {
+    Configuration conf = await _getConfiguration(monthlySaving);
+    conf.realValue = monthlySavingAmount;
+    _updateConfiguration(conf);
+    AppConfig.instance.updateMonthlySavingCache(monthlySavingAmount);
+  }
+
+  static Future<void> updatePeriodStartingDay(int? periodStartingDayValue) async {
+    Configuration conf = await _getConfiguration(periodStartingDay);
+    conf.intValue = periodStartingDayValue;
+    _updateConfiguration(conf);
+    AppConfig.instance.updatePeriodStartingDayCache(periodStartingDayValue);
+  }
+
   static Future<void> _updateConfiguration(Configuration configuration) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
@@ -47,5 +72,4 @@ class ConfigurationEntityService {
     );
     debugPrint("updated configuration ${configuration.name}: ${configuration.intValue} ${configuration.textValue} ${configuration.realValue}");
   }
- 
 }

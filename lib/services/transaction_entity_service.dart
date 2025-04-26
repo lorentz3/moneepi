@@ -78,7 +78,43 @@ class TransactionEntityService {
       return MonthTotalDto(totalExpense: 0, totalIncome: 0);
     }
   }
+  
+  static Future<List<MonthTotalDto>> getMonthTotals(int year) async {
+    final db = await DatabaseHelper.getDb();
+    final int startTimestamp = DateTime(year, 1, 1).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year + 1, 1, 1).millisecondsSinceEpoch;
+    
+    final List<Map<String, dynamic>> totals = await db.rawQuery('''
+      SELECT 
+        strftime('%m', datetime(timestamp / 1000, 'unixepoch')) AS month,
+        SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END) AS total_expense,
+        SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END) AS total_income
+      FROM $_tableName
+      WHERE timestamp >= $startTimestamp AND timestamp < $endTimestamp
+      GROUP BY month
+      ORDER BY month
+    ''');
 
+    // Creiamo una lista con tutti i mesi (anche se non ci sono dati per alcuni mesi)
+    List<MonthTotalDto> monthTotals = List.generate(12, (index) {
+      return MonthTotalDto(
+        month: index + 1, // gennaio = 1
+        totalExpense: 0.0,
+        totalIncome: 0.0,
+      );
+    });
+
+    for (var row in totals) {
+      int month = int.parse(row['month']);
+      monthTotals[month - 1] = MonthTotalDto(
+        month: month,
+        totalExpense: (row['total_expense'] as double?) ?? 0.0,
+        totalIncome: (row['total_income'] as double?) ?? 0.0,
+      );
+    }
+
+    return monthTotals;
+  }
   static Future<bool> transactionExistsByCategoryId(int categoryId) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, Object?>> result = await db.query(

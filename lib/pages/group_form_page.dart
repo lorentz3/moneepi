@@ -54,87 +54,96 @@ class _GroupFormPageState extends State<GroupFormPage> {
     double spaceBetweenButtons = 6;
     double screenWidth = MediaQuery.of(context).size.width;
     double buttonSize = (screenWidth - (buttonsPerRow * spaceBetweenButtons) - padding - 10) / buttonsPerRow;
-    return Scaffold(
-      appBar: AppBar(
-        title: _isNew ? const Text("Create new group") : const Text("Edit group"),
-        actions: [
-          if (!_isNew) IconButton(
-            icon: Icon(Icons.delete_forever),
-            onPressed: () {
-              _showDeleteDialog();
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Group symbol', hintText: 'Emoji strongly suggested'),
-                  initialValue: _icon,
-                  onChanged: (value) => _icon = value,
-                  validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Group name *'),
-                  initialValue: _groupName,
-                  onChanged: (value) => _groupName = value,
-                  validator: (value) => value!.isEmpty ? 'Enter a name' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Monthly Budget'),
-                  initialValue: _monthThreshold != null ? "$_monthThreshold" : "",
-                  keyboardType: TextInputType.numberWithOptions(
-                    decimal: true,
-                    signed: false
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          debugPrint("Popping GroupFormPage _dataChanged=false, result=$result");
+          Navigator.pop(context, false);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: _isNew ? const Text("Create new group") : const Text("Edit group"),
+          actions: [
+            if (!_isNew) IconButton(
+              icon: Icon(Icons.delete_forever),
+              onPressed: () {
+                _showDeleteDialog();
+              },
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Group symbol', hintText: 'Emoji strongly suggested'),
+                    initialValue: _icon,
+                    onChanged: (value) => _icon = value,
+                    validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
                   ),
-                  onChanged: (value) => _monthThreshold = double.tryParse(value),
-                ),
-                const SizedBox(height: 40),
-                SectionDivider(text: "Select group categories"), 
-                SizedBox(height: spaceBetweenButtons,),
-                !_isLoading ? Align(
-                  alignment: Alignment.center,
-                  child: Wrap(
-                    spacing: spaceBetweenButtons,
-                    runSpacing: spaceBetweenButtons,
-                    children: _categories.map((category) {
-                      bool isSelected = _selectedCategories.contains(category.id);
-                      return EmojiButton(
-                        icon: category.icon ?? category.name.substring(0, 2),
-                        label: category.name,
-                        width: buttonSize,
-                        height: buttonSize,
-                        onPressed: () {
-                          setState(() {
-                            if (isSelected) {
-                              _selectedCategories.remove(category.id);
-                            } else {
-                              _selectedCategories.add(category.id!);
-                            }
-                          });
-                        },
-                        backgroundColor: _selectedCategories.contains(category.id)
-                              ? _selectedButtonColor // Selected
-                              : _notSelectedButtonColor,
-                      );
-                    }).toList(),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Group name *'),
+                    initialValue: _groupName,
+                    onChanged: (value) => _groupName = value,
+                    validator: (value) => value!.isEmpty ? 'Enter a name' : null,
                   ),
-                ) : SizedBox(height: 1,),
-                SizedBox(height: 20,),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _saveGroup();
-                    }
-                  },
-                  child: Text('Save'),
-                ),
-              ],
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Monthly Budget'),
+                    initialValue: _monthThreshold != null ? "$_monthThreshold" : "",
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: false
+                    ),
+                    onChanged: (value) => _monthThreshold = double.tryParse(value),
+                  ),
+                  const SizedBox(height: 40),
+                  SectionDivider(text: "Select group categories"), 
+                  SizedBox(height: spaceBetweenButtons,),
+                  !_isLoading ? Align(
+                    alignment: Alignment.center,
+                    child: Wrap(
+                      spacing: spaceBetweenButtons,
+                      runSpacing: spaceBetweenButtons,
+                      children: _categories.map((category) {
+                        bool isSelected = _selectedCategories.contains(category.id);
+                        return EmojiButton(
+                          icon: category.icon ?? category.name.substring(0, 2),
+                          label: category.name,
+                          width: buttonSize,
+                          height: buttonSize,
+                          onPressed: () {
+                            setState(() {
+                              if (isSelected) {
+                                _selectedCategories.remove(category.id);
+                              } else {
+                                _selectedCategories.add(category.id!);
+                              }
+                            });
+                          },
+                          backgroundColor: _selectedCategories.contains(category.id)
+                                ? _selectedButtonColor // Selected
+                                : _notSelectedButtonColor,
+                        );
+                      }).toList(),
+                    ),
+                  ) : SizedBox(height: 1,),
+                  SizedBox(height: 20,),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        _saveGroup();
+                      }
+                    },
+                    child: Text('Save'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -155,7 +164,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
     }
     await GroupEntityService.updateGroupCategoriesLinks(groupId!, _selectedCategories);
     if (mounted) {
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     }
   }
 
@@ -175,7 +184,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.pop(context, 'Cancel'),
+              onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel'),
             ),
             TextButton(
@@ -186,8 +195,8 @@ class _GroupFormPageState extends State<GroupFormPage> {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text("Group deleted."),
                   ));
-                  Navigator.pop(context);
-                  Navigator.pop(context);
+                  Navigator.pop(context, true);
+                  Navigator.pop(context, true);
                 });
               },
             ),

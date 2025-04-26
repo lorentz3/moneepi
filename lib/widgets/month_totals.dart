@@ -21,6 +21,7 @@ class MonthTotals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final balance = totalIncome - totalExpense;
+    String monthTitle = DateFormat(" MMM ").format(selectedDate);
     return Container(
         color: Colors.deepPurple[100],
         padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
@@ -28,7 +29,7 @@ class MonthTotals extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Balance: ",
+              showMonth ? "$monthTitle Balance: " : "Balance: ",
               textAlign: TextAlign.left,
               style: TextStyle(
                 fontSize: 12, 
