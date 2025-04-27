@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/dto/group_dto.dart';
-import 'package:myfinance2/dto/group_stats_dto.dart';
 import 'package:myfinance2/dto/month_total_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
-import 'package:myfinance2/model/group.dart';
 import 'package:myfinance2/pages/general_settings_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/services/app_config.dart';
@@ -85,6 +82,45 @@ class BudgetingPageState extends State<BudgetingPage> {
   Widget build(BuildContext context) {
     final Color groupBgColor = Colors.blueGrey.shade100;
     final Color groupBgColor2 = Colors.blueGrey.shade200;
+
+    List<Widget> listItems = [];
+    bool isEven = true; // Per alternare i colori
+
+    // Aggiungo i gruppi
+    for (var group in _groups) {
+      Color rowColor = isEven ? Colors.white : Colors.grey[200]!;
+      listItems.add(
+        Container(
+          color: rowColor,
+          padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+          child: Row(
+            children: [
+              Text(
+                "${group.icon ?? ""} ${group.name}",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Expanded(child: SizedBox(width: 1)),
+              Text(
+                "${(group.monthThreshold ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
+                style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(width: 10),
+            ],
+          ),
+        ),
+      );
+      isEven = !isEven; // Alterno il colore
+    }
+
+    // Aggiungo le categorie senza gruppo
+    for (var category in _categories) {
+      Color rowColor = isEven ? Colors.white : Colors.grey[200]!;
+      listItems.add(
+        _getCategoryWidget(context, category, rowColor, true),
+      );
+      isEven = !isEven; // Alterno il colore
+    }
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -138,90 +174,63 @@ class BudgetingPageState extends State<BudgetingPage> {
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 15),
+                color: groupBgColor,
+                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
                 child: Text(
                   "Categories with planned budget:",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
-              ..._groups.map((group) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header con gruppo
-                    Container(
-                      color: groupBgColor,
-                      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            "${group.icon ?? ""} ${group.name}",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Expanded(child: SizedBox(width: 1,)),
-                          Text(
-                            "${(group.monthThreshold ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
-                            style: TextStyle(fontSize: 16,),
-                          ),
-                          SizedBox(width: 10,)
-                        ],
-                      ),
-                    ),
-
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: group.categories.length,
-                      itemBuilder: (context, index) {
-                        Category category = group.categories[index];
-                        Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                        return _getCategoryWidget(context, category, rowColor, false);
-                      },
-                    ),
-                  ],
-                );
-              }),
-              // Lista senza raggruppamenti
-            if (_categories.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_groupExists) Container(
-                    color: groupBgColor,
-                    padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                    child: Row(
-                      children: [ 
-                        Text(
-                          "Other categories",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      Category category = _categories[index];
-                      Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                      return _getCategoryWidget(context, category, rowColor, true);
-                    },
-                  ),
-                ],
+              ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: listItems.length,
+                itemBuilder: (context, index) {
+                  return listItems[index];
+                },
               ),
               Container(
-                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 15),
-                child: Text(
-                  "Monthly Saving amount: ${(_monthlySaving ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                color: groupBgColor2,
+                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                child: Row(
+                  children: [
+                    Text(
+                      "Monthly Saving amount:",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ), 
+                    Expanded(child: SizedBox(width: 1,)),
+                    Text(
+                      "${(_monthlySaving ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
+                      style: TextStyle(
+                        color: blue(),
+                        fontSize: 16, 
+                        fontWeight: FontWeight.bold
+                      ),
+                    ), 
+                    SizedBox(width: 10,)
+                  ],
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 15),
-                child: Text(
-                  "Total budget per month: ${(_totalPlannedBudget).toStringAsFixed(2)} $_currencySymbol",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                color: groupBgColor,
+                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                child: Row(
+                  children: [
+                    Text(
+                      "Total budget per month:",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Expanded(child: SizedBox(width: 1,)),
+                    Text(
+                      "${(_totalPlannedBudget).toStringAsFixed(2)} $_currencySymbol",
+                      style: TextStyle(
+                        color: deepPurple(),
+                        fontSize: 16, 
+                        fontWeight: FontWeight.bold
+                      ),
+                    ), 
+                    SizedBox(width: 10,)
+                  ],
                 ),
               ),
               MonthTotalsRow(
@@ -256,6 +265,7 @@ class BudgetingPageState extends State<BudgetingPage> {
                 backgroundColor: groupBgColor2,
                 savedColumnColor: ((_yearIncomes - _yearExpenses) / _effectiveMonths) - (_monthlySaving ?? 0.0) > 0 ? green() : red(),
               ),
+              SizedBox(height: 30,)
             ],
           ),
         ),
@@ -327,7 +337,7 @@ class BudgetingPageState extends State<BudgetingPage> {
       child: Row(
         children: [
           Text(
-            "   $categoryTitle",
+            categoryTitle,
             textAlign: TextAlign.left,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,

@@ -6,7 +6,6 @@ class FooterButton extends StatelessWidget {
   final Color color;
 
   const FooterButton({super.key, required this.text, required this.onPressed, required this.color});
-
   
   @override
   Widget build(BuildContext context) {

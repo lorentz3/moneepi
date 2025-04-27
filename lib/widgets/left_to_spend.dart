@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:myfinance2/utils/color_identity.dart';
 
-class MonthTotals extends StatelessWidget {
+class LeftToSpendRow extends StatelessWidget {
     final String currencySymbol;
-    final DateTime selectedDate;
-    final double totalExpense;
-    final double totalIncome;
-    final bool showMonth;
+    final double wantToSave;
+    final double leftToSpend;
 
-  const MonthTotals({
+  const LeftToSpendRow({
     super.key,
+    required this.wantToSave,
     required this.currencySymbol,
-    required this.selectedDate,
-    required this.totalExpense,
-    required this.totalIncome,
-    required this.showMonth,
+    required this.leftToSpend,
   });
 
   @override
   Widget build(BuildContext context) {
-    final balance = totalIncome - totalExpense;
-    String monthTitle = DateFormat(" MMM ").format(selectedDate);
     return Container(
       color: Colors.deepPurple[100],
       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
@@ -29,10 +22,10 @@ class MonthTotals extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            showMonth ? "$monthTitle Balance: " : "Balance: ",
+            "Want to save: ",
             textAlign: TextAlign.left,
             style: TextStyle(
-              fontSize: 12, 
+              fontSize: 11, 
               fontWeight: FontWeight.bold,
               color: Colors.black),
             overflow: TextOverflow.ellipsis,
@@ -40,12 +33,12 @@ class MonthTotals extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              "${balance.toStringAsFixed(2)} $currencySymbol",
+              "${wantToSave.toStringAsFixed(2)} $currencySymbol",
               textAlign: TextAlign.left,
               style: TextStyle(
                 fontSize: 14, 
                 fontWeight: FontWeight.bold,
-                color: balance >= 0 ? blue() : magenta()
+                color: blue()
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -53,23 +46,22 @@ class MonthTotals extends StatelessWidget {
           ),
           SizedBox(width: 5,),
           Text(
-            " + ${totalIncome.toStringAsFixed(2)} $currencySymbol",
-            textAlign: TextAlign.right,
+            "Left to spend: ",
+            textAlign: TextAlign.left,
             style: TextStyle(
-              fontSize: 14, 
+              fontSize: 11, 
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 66, 114, 68)),
+              color: Colors.black),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
-          SizedBox(width: 5,),
           Text(
-            " - ${totalExpense.toStringAsFixed(2)} $currencySymbol",
-            textAlign: TextAlign.right,
+            "${leftToSpend.toStringAsFixed(2)} $currencySymbol",
+            textAlign: TextAlign.left,
             style: TextStyle(
               fontSize: 14, 
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 150, 85, 80)
+              color: leftToSpend > 0 ? blue() : red()
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,

@@ -31,6 +31,7 @@ import 'package:month_year_picker/month_year_picker.dart';
 import 'package:myfinance2/utils/color_identity.dart';
 import 'package:myfinance2/widgets/categories_pie_chart.dart';
 import 'package:myfinance2/widgets/footer_button.dart';
+import 'package:myfinance2/widgets/left_to_spend.dart';
 import 'package:myfinance2/widgets/month_selector.dart';
 import 'package:myfinance2/widgets/month_totals.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
@@ -303,7 +304,12 @@ class _HomePageState extends State<HomePage> {
             selectedDate: _selectedDate, 
             totalExpense: _monthTotalDto.totalExpense, 
             totalIncome: _monthTotalDto.totalIncome,
-            showMonth: true,
+            showMonth: false,
+          ),
+          if ((_monthlySaving ?? 0.0) > 0) LeftToSpendRow(
+            wantToSave: _monthlySaving!, 
+            currencySymbol: _currencySymbol ?? '', 
+            leftToSpend: _monthTotalDto.totalIncome - _monthTotalDto.totalExpense - _monthlySaving!,
           ),
           SizedBox(height: 5,),
           _getGroupThresholdBars(),
