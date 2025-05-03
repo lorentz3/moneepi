@@ -76,7 +76,7 @@ class ThresholdBar extends StatelessWidget {
                 height: 20,
                 decoration: BoxDecoration(
                   color: progressColor,
-                  borderRadius: BorderRadius.horizontal(right: Radius.circular(4)),
+                  borderRadius: BorderRadius.horizontal(right: Radius.circular(4), left: Radius.circular(4)),
                 ),
               ),
             ),
