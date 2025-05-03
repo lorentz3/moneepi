@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myfinance2/utils/color_identity.dart';
 
 class ThresholdBar extends StatelessWidget {
   final double spent;
@@ -32,12 +33,16 @@ class ThresholdBar extends StatelessWidget {
         : 0.0;
 
     Color progressColor;
-    if (spentPercent < dayProgress) {
-      progressColor = Colors.green[300]!;
-    } else if (spentPercent <= 100) {
-      progressColor = Colors.orange[200]!;
+    if (showTodayBar) {
+      if (spentPercent < dayProgress) {
+        progressColor = Colors.green[300]!;
+      } else if (spentPercent <= 100) {
+        progressColor = Colors.orange[200]!;
+      } else {
+        progressColor = Colors.red[300]!;
+      }
     } else {
-      progressColor = Colors.red[300]!;
+      progressColor = Colors.green[300]!;
     }
     String barTitle = icon != null ? "$icon $name" : name;
 
@@ -63,14 +68,16 @@ class ThresholdBar extends StatelessWidget {
               ),
             ),
           ),
-          FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: spentPercent.clamp(0.0, 100.0) / 100,
-            child: Container(
-              height: 20,
-              decoration: BoxDecoration(
-                color: progressColor,
-                borderRadius: BorderRadius.circular(4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FractionallySizedBox(
+              widthFactor: (100 - spentPercent).clamp(0.0, 100.0) / 100,
+              child: Container(
+                height: 20,
+                decoration: BoxDecoration(
+                  color: progressColor,
+                  borderRadius: BorderRadius.horizontal(right: Radius.circular(4)),
+                ),
               ),
             ),
           ),
@@ -113,7 +120,7 @@ class ThresholdBar extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: spentPercent > 100 ? red() : Colors.black,
                       ),
                     ),
                   ),
@@ -141,7 +148,7 @@ class ThresholdBar extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: spentPercent > 100 ? red() : Colors.black,
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
