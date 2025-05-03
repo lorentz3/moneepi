@@ -4,11 +4,36 @@ import 'package:myfinance2/dto/account_dto.dart';
 import 'package:myfinance2/dto/monthly_account_summary_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/monthly_account_summary.dart';
+import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
+import 'package:myfinance2/services/app_config.dart';
+import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/utils/date_utils.dart';
 
 class MonthlyAccountEntityService {
   static const String _tableName = "MonthlyAccountSummaries";
+
+  static Future<void> recalculateAllMonthlyAccountSummaries() async {
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    debugPrint("recalculate all monthly account summaries for new starting day: $startingDay");
+    final List<Account> accounts = await AccountEntityService.getAllAccounts();
+    for (Account account in accounts) {
+      int accountId = account.id!;
+      Transaction? transaction = await TransactionEntityService.findFirstTransactionByAccountId(accountId);
+      if (transaction == null) {
+        continue;
+      }
+      int transactionDay = transaction.timestamp.day;
+      int transactionMonth = transaction.timestamp.month;
+      int transactionYear = transaction.timestamp.year;
+      if (transactionDay < startingDay) {
+        transactionYear = MyDateUtils.getPreviousYear(transactionMonth, transactionYear);
+        transactionMonth = MyDateUtils.getPreviousMonth(transactionMonth);
+      }
+      debugPrint("Start recalc account summaries: accountId=$accountId, accountName=${account.name}, from $transactionYear/$transactionMonth");
+      await updateMonthlyAccountSummaries(accountId, transactionMonth, transactionYear);
+    }
+  }
 
   static const String _totalsQuery = '''
       SELECT 
@@ -35,9 +60,10 @@ class MonthlyAccountEntityService {
 
   static Future<void> updateMonthlyAccountSummaries(int accountId, int month, int year) async {
     debugPrint("Updating account summary: accountId=$accountId, $month/$year");
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+    final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
 
     // Calcoliamo direttamente i totali dal database
     final result = await db.rawQuery(_totalsQuery, [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
@@ -62,7 +88,10 @@ class MonthlyAccountEntityService {
     double cumulativeBalance = previousBalance + incomeAmount - expenseAmount;
     await insertOrUpdateMonthlyAccountSummary(accountId, month, year, previousBalance, cumulativeBalance, expenseAmount, incomeAmount);
 
-    if (MyDateUtils.isPastMonth(month, year)) {
+    Transaction? lastTransaction = await TransactionEntityService.findLastTransactionByCategoryId(accountId);
+    int lastMonth = lastTransaction!.timestamp.month;
+    int lastYear = lastTransaction.timestamp.year;
+    if (MyDateUtils.isBeforeOrEqual(month, year, lastMonth, lastYear)) {
       // update in cascata dei cumulative balance dei mesi successivi
       await updateCumulativeBalances(accountId, MyDateUtils.getNextMonth(month), MyDateUtils.getNextYear(month, year));
     }
@@ -70,6 +99,7 @@ class MonthlyAccountEntityService {
 
   static Future<void> updateCumulativeBalances(int accountId, int startMonth, int startYear) async {
     final db = await DatabaseHelper.getDb();
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
 
     // Otteniamo il saldo finale del mese precedente
     final previousBalanceResult = await db.rawQuery('''
@@ -94,8 +124,8 @@ class MonthlyAccountEntityService {
     int year = startYear;
 
     while (year < currentYear || (year == currentYear && month <= currentMonth)) {
-      final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
-      final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+      final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
+      final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
       // Calcoliamo le transazioni del mese corrente
       final result = await db.rawQuery(_totalsQuery, [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
 

@@ -9,6 +9,7 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/utils/date_utils.dart';
@@ -17,24 +18,21 @@ class TransactionEntityService {
   static const String _tableName = "Transactions";
   
   static Future<List<TransactionDto>> getMonthTransactions(int month, int year) async {
-    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
-    return getTransactionsBetween(startTimestamp, endTimestamp, null, null, null, null);
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
+    return _getTransactionsBetween(startTimestamp, endTimestamp, null, null, null, null);
   }
 
   static Future<List<TransactionDto>> getMonthTransactionsWithFilters(int month, int year, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
-    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
-    return getTransactionsBetween(startTimestamp, endTimestamp, accountId, sourceAccountId, categoryId, type);
-  }
-    
-  static Future<List<TransactionDto>> getLastDaysTransactions(int daysNumber) async {
-    final int startTimestamp = DateTime.now().subtract(Duration(days: daysNumber)).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime.now().millisecondsSinceEpoch;
-    return getTransactionsBetween(startTimestamp, endTimestamp, null, null, null, null);
+    // TODO
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
+    return _getTransactionsBetween(startTimestamp, endTimestamp, accountId, sourceAccountId, categoryId, type);
   }
 
-  static Future<List<TransactionDto>> getTransactionsBetween(int startTimestamp, int endTimestamp, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
+  static Future<List<TransactionDto>> _getTransactionsBetween(int startTimestamp, int endTimestamp, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
     final db = await DatabaseHelper.getDb();
     String andAccountId = accountId != null ? "AND t.accountId = $accountId" : "";
     String andSourceAccountId = sourceAccountId != null ? "AND t.sourceAccountId = $sourceAccountId" : "";
@@ -62,9 +60,10 @@ class TransactionEntityService {
   }
 
   static Future<MonthTotalDto> getMonthTotalDto(int? month, int year) async {
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, month ?? 1, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(month != null ? year : year + 1, month != null ? month + 1 : 1, 1).millisecondsSinceEpoch;
+    final int startTimestamp = DateTime(year, month ?? 1, startingDay).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(month != null ? year : year + 1, month != null ? month + 1 : 1, startingDay).millisecondsSinceEpoch;
     final List<Map<String, dynamic>> totals = await db.rawQuery('''
       SELECT 
           SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END) AS total_expense,
@@ -79,10 +78,11 @@ class TransactionEntityService {
     }
   }
   
-  static Future<List<MonthTotalDto>> getMonthTotals(int year) async {
+  /*static Future<List<MonthTotalDto>> getMonthTotals(int year) async {
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, 1, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year + 1, 1, 1).millisecondsSinceEpoch;
+    final int startTimestamp = DateTime(year, 1, startingDay).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year + 1, 1, startingDay).millisecondsSinceEpoch;
     
     final List<Map<String, dynamic>> totals = await db.rawQuery('''
       SELECT 
@@ -114,7 +114,65 @@ class TransactionEntityService {
     }
 
     return monthTotals;
+  }*/
+
+  static Future<List<MonthTotalDto>> getMonthTotals(int year) async {
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    final db = await DatabaseHelper.getDb();
+
+    final DateTime startDate = DateTime(year, 1, startingDay);
+    final DateTime endDate = DateTime(year + 1, 1, startingDay);
+
+    final int startTimestamp = startDate.millisecondsSinceEpoch;
+    final int endTimestamp = endDate.millisecondsSinceEpoch;
+
+    final List<Map<String, dynamic>> results = await db.rawQuery('''
+      SELECT timestamp, type, amount
+      FROM $_tableName
+      WHERE timestamp >= $startTimestamp AND timestamp < $endTimestamp
+    ''');
+
+    List<MonthTotalDto> monthTotals = List.generate(12, (index) {
+      return MonthTotalDto(
+        month: index + 1,
+        totalExpense: 0.0,
+        totalIncome: 0.0,
+      );
+    });
+
+    for (var row in results) {
+      final int ts = row['timestamp'] as int;
+      final double amount = (row['amount'] as num).toDouble();
+      final String type = row['type'];
+
+      final DateTime date = DateTime.fromMillisecondsSinceEpoch(ts);
+
+      // Trova l'inizio del "mese personalizzato"
+      int adjustedYear = date.year;
+      int adjustedMonth = date.month;
+      if (date.day < startingDay) {
+        adjustedMonth -= 1;
+        if (adjustedMonth == 0) {
+          adjustedMonth = 12;
+          adjustedYear -= 1;
+        }
+      }
+
+      // Calcola l'indice rispetto al periodo richiesto
+      final int monthIndex = (adjustedYear - year) * 12 + (adjustedMonth - 1);
+      if (monthIndex >= 0 && monthIndex < 12) {
+        final current = monthTotals[monthIndex];
+        monthTotals[monthIndex] = MonthTotalDto(
+          month: monthIndex + 1,
+          totalExpense: current.totalExpense + (type == 'EXPENSE' ? amount : 0.0),
+          totalIncome: current.totalIncome + (type == 'INCOME' ? amount : 0.0),
+        );
+      }
+    }
+
+    return monthTotals;
   }
+
   static Future<bool> transactionExistsByCategoryId(int categoryId) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, Object?>> result = await db.query(
@@ -189,9 +247,10 @@ class TransactionEntityService {
   }
   
   static Future<List<Transaction>?> getAllByCategoryIdAndMonthAndYear(int categoryId, int month, int year) async {
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+    final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
     final List<Map<String, dynamic>> maps =  await db.query(
       _tableName,
       where: 'timestamp >= ? AND timestamp < ? AND categoryId = ?',
@@ -216,9 +275,10 @@ class TransactionEntityService {
   }
 
   static Future<List<Transaction>?> getAllByAccountIdAndMonthAndYear(int accountId, int month, int year) async {
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, month, 1).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, 1).millisecondsSinceEpoch;
+    final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
+    final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
     final List<Map<String, dynamic>> maps =  await db.query(
       _tableName,
       where: 'timestamp >= ? AND timestamp < ? AND accountId = ?',
@@ -230,7 +290,7 @@ class TransactionEntityService {
     return List.generate(maps.length, (index) => Transaction.fromJson(maps[index]));
   }
   
-  static Future<List<Transaction>> getAllTransactionsBetween(int? startTimestamp, int? endTimestamp) async {
+  /*static Future<List<Transaction>> getAllTransactionsBetween(int? startTimestamp, int? endTimestamp) async {
     final db = await DatabaseHelper.getDb();
     List<Map<String, dynamic>> maps = [];
     if (startTimestamp != null && endTimestamp != null) {
@@ -243,7 +303,7 @@ class TransactionEntityService {
       maps = await db.query(_tableName);
     }
     return List.generate(maps.length, (index) => Transaction.fromJson(maps[index]));
-  }
+  }*/
 
   static Future<List<TransactionExportDto>> getTransactionsForExport({
     DateTime? from,
@@ -281,6 +341,62 @@ class TransactionEntityService {
         notes: row['notes'] as String?,
       );
     }).toList();
+  }
+
+  static Future<Transaction?> findFirstTransactionByCategoryId(int categoryId) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName, 
+      where: "categoryId = ?",
+      orderBy: "timestamp",
+      limit: 1,
+      whereArgs: [categoryId]
+    );
+    if(maps.isEmpty){
+      return null;
+    }
+    return Transaction.fromJson(maps[0]);
+  }
+
+  static Future<Transaction?> findLastTransactionByCategoryId(int categoryId) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName, 
+      where: "categoryId = ?",
+      orderBy: "timestamp DESC",
+      limit: 1,
+      whereArgs: [categoryId]
+    );
+    if(maps.isEmpty){
+      return null;
+    }
+    return Transaction.fromJson(maps[0]);
+  }
+
+  static Future<Transaction?> findFirstTransactionByAccountId(int accountId) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName, 
+      where: "accountId = ?",
+      orderBy: "timestamp",
+      limit: 1,
+      whereArgs: [accountId]
+    );
+    if(maps.isEmpty){
+      return null;
+    }
+    return Transaction.fromJson(maps[0]);
+  }
+
+  static Future<Transaction?> findLastTransactionByAccountId(int accountId) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName, 
+      where: "accountId = ?",
+      orderBy: "timestamp DESC",
+      limit: 1,
+      whereArgs: [accountId]
+    );
+    if(maps.isEmpty){
+      return null;
+    }
+    return Transaction.fromJson(maps[0]);
   }
 
   // only for debug

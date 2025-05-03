@@ -132,6 +132,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadSummary() async {
+    debugPrint("_loadSummary");
     setState(() {
       _isSummaryLoading = true;
     });

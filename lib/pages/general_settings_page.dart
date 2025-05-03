@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/services/configuration_entity_service.dart';
+import 'package:myfinance2/services/monthly_account_entity_service.dart';
+import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/widgets/info_label.dart';
 
 class GeneralSettingsPage extends StatefulWidget {
@@ -96,13 +98,62 @@ class GeneralSettingsPageState extends State<GeneralSettingsPage> {
   }
 
   _saveConfigurations() async {
-    if (_previousPeriodStartingDay != _periodStartingDay) {
-      // TODO recalc
-    }
     await ConfigurationEntityService.updateMonthlySaving(_monthlySaving);
-    await ConfigurationEntityService.updatePeriodStartingDay(_periodStartingDay);
-    if (mounted){
-      Navigator.pop(context, true);
+    if (_previousPeriodStartingDay != _periodStartingDay) {
+      _showChangePeriodStartingDayDialog();
+    } else {
+      if (mounted){
+        Navigator.pop(context, true);
+      }
     }
+  }
+
+  Future<void> _showChangePeriodStartingDayDialog() async {
+    bool isLoading = false;
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (BuildContext context, void Function(void Function()) setState) {
+            return AlertDialog(
+              title: const Text('Monthly starting day update'),
+              content: isLoading
+                  ? SizedBox(
+                      height: 80,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : const Text("Changing the monthly starting day will recalculate all statistics. Proceed?"),
+              actions: isLoading
+                  ? []
+                  : <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, 'Cancel'),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        child: const Text('Confirm'),
+                        onPressed: () async {
+                          setState(() => isLoading = true);
+                          await saveAndRecalculateStatistics();
+                          if (mounted) {
+                            Navigator.pop(dialogContext); // Close dialog
+                            Navigator.pop(context, true); // Close settings page
+                          }
+                        },
+                      ),
+                    ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> saveAndRecalculateStatistics() async {
+    await ConfigurationEntityService.updatePeriodStartingDay(_periodStartingDay);
+    await MonthlyCategoryTransactionEntityService.recalculateAllMonthlyCategorySummaries();
+    await MonthlyAccountEntityService.recalculateAllMonthlyAccountSummaries();
   }
 } 
