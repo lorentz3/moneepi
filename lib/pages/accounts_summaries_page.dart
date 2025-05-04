@@ -8,7 +8,7 @@ import 'package:myfinance2/utils/color_identity.dart';
 import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/utils/graph_utils.dart';
-import 'package:myfinance2/widgets/month_selector.dart';
+import 'package:myfinance2/widgets/month_year_selector.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 
 class AccountSummaryPage extends StatefulWidget {
@@ -73,7 +73,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
             _buildBalanceChart(TransactionType.INCOME),
             SectionDivider(text: "Cumulative"),
             _buildCumulativeBalanceChart(),
-            MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center, enableFutureArrow: false,),
+            MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center, enableFutureArrow: false,),
             SectionDivider(text: "Current month totals"),
             _buildMonthlySummary(),
             SizedBox(height: 100),

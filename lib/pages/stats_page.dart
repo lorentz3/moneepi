@@ -6,7 +6,7 @@ import 'package:myfinance2/pages/category_stats_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
-import 'package:myfinance2/widgets/month_selector.dart';
+import 'package:myfinance2/widgets/month_year_selector.dart';
 import 'package:myfinance2/widgets/month_totals.dart';
 import 'package:myfinance2/widgets/period_dropdown_button.dart';
 import 'package:myfinance2/widgets/year_selector.dart';
@@ -216,7 +216,7 @@ class _StatsPageState extends State<StatsPage> {
   
   _getPeriodSelector() {
     if (_periodOption == PeriodOption.monthly){
-      return MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate);
+      return MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate);
     }
     if (_periodOption == PeriodOption.annually){
       return YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate);

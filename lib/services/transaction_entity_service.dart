@@ -24,11 +24,12 @@ class TransactionEntityService {
     return _getTransactionsBetween(startTimestamp, endTimestamp, null, null, null, null);
   }
 
-  static Future<List<TransactionDto>> getMonthTransactionsWithFilters(int month, int year, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
-    // TODO
-    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
-    final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
+  static Future<List<TransactionDto>> getTransactionsWithFilters(DateTime startDate, DateTime endDate, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
+    final int startTimestamp = startDate.millisecondsSinceEpoch;
+    final int endTimestamp = endDate.millisecondsSinceEpoch;
+    if (endTimestamp < startTimestamp) {
+      return [];
+    }
     return _getTransactionsBetween(startTimestamp, endTimestamp, accountId, sourceAccountId, categoryId, type);
   }
 

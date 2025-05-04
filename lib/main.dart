@@ -32,7 +32,7 @@ import 'package:myfinance2/utils/color_identity.dart';
 import 'package:myfinance2/widgets/categories_pie_chart.dart';
 import 'package:myfinance2/widgets/footer_button.dart';
 import 'package:myfinance2/widgets/left_to_spend.dart';
-import 'package:myfinance2/widgets/month_selector.dart';
+import 'package:myfinance2/widgets/month_year_selector.dart';
 import 'package:myfinance2/widgets/month_totals.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 import 'package:myfinance2/widgets/square_button.dart';
@@ -241,7 +241,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       appBar: AppBar(
-        title: MonthSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
+        title: MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
       ),
       body: _getMainBody(),
       bottomNavigationBar: Container(
@@ -438,7 +438,10 @@ class _HomePageState extends State<HomePage> {
   void _navigateToTransactionsPage(BuildContext context) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => MovementsPage(dateTime: _selectedDate,)),
+      MaterialPageRoute(builder: (context) => MovementsPage(
+        startDate: _selectedDate,
+        endDate: DateTime(_selectedDate.year, _selectedDate.month + 1, _selectedDate.day),
+      )),
     ).then((_) {
       _loadAllData(); // TODO only if something changed
     });
