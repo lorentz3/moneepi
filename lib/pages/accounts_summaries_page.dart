@@ -255,6 +255,24 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                   show: true,
                   border: Border.all(color: Colors.black, width: 1),
                 ),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (touchedSpot) => Colors.blueGrey.shade100,
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((touchedSpot) {
+                        final y = touchedSpot.y.toStringAsFixed(2);
+                        final color = touchedSpot.bar.color;
+                        return LineTooltipItem(
+                          y,
+                          TextStyle(
+                            color: color, 
+                            fontWeight: FontWeight.bold
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -345,6 +363,24 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
                 borderData: FlBorderData(
                   show: true,
                   border: Border.all(color: Colors.black, width: 1),
+                ),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (touchedSpot) => Colors.blueGrey.shade100,
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((touchedSpot) {
+                        final y = touchedSpot.y.toStringAsFixed(2);
+                        final color = touchedSpot.bar.color;
+                        return LineTooltipItem(
+                          y,
+                          TextStyle(
+                            color: color, 
+                            fontWeight: FontWeight.bold
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
                 ),
               ),
             ),

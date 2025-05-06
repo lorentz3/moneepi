@@ -372,13 +372,13 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SquareButton(
-                  label: "Expenses",
+                  label: "Expenses Stats",
                   size: 75,
                   icon: Icons.query_stats,
                   onPressed: () => _navigateToStatsPage()),
                 SizedBox(height: 10),
                 SquareButton(
-                  label: "Accounts",
+                  label: "Accounts Summary",
                   size: 75, 
                   icon: Icons.account_balance_wallet_outlined, 
                   onPressed: () => _navigateToAccountsSummariesPage()),
