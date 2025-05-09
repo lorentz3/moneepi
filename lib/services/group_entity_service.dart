@@ -274,4 +274,11 @@ class GroupEntityService {
           .toList();
   }
 
+  static Future<void> updateMonthThresholdById(int? groupId, double? monthThreshold) async {
+    final db = await DatabaseHelper.getDb();
+    await db.execute("""
+      UPDATE $_tableName SET monthThreshold = $monthThreshold WHERE id = $groupId
+    """);
+  }
+
 }
