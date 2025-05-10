@@ -13,6 +13,7 @@ class CategoryEntityService {
     final List<Map<String, dynamic>> maps =  await db.query(
       _tableName,
       where: 'type = ?',
+      orderBy: 'sort',
       whereArgs: [type.toString().split('.').last],
     );
     if (maps.isEmpty) {
@@ -209,6 +210,17 @@ class CategoryEntityService {
     await db.execute("""
       UPDATE $_tableName SET monthThreshold = $monthThreshold WHERE id = $categoryId
     """);
+  }
+
+  static Future<void> updateSort(List<Category> categories) async {
+    final db = await DatabaseHelper.getDb();
+    for (Category category in categories){
+      await db.update(_tableName, 
+        category.toMapSort(),
+        where: "id = ?",
+        whereArgs: [category.id]
+      );
+    }
   }
 
   // only for debug

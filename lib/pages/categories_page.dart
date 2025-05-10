@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/pages/category_form_page.dart';
+import 'package:myfinance2/pages/category_sort_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 
@@ -36,21 +37,36 @@ class CategoriesPageState extends State<CategoriesPage> {
           title: Text(_getTitle(widget.type)),
           actions: [
             IconButton(
-            onPressed: () async {
-              _dataChanged = await Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (context) => CategoryFormPage(
-                  category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
-                  isNew: true,
-                ))
-              );
-              if (_dataChanged == true) {
-                setState(() {});
-              }
-            },
-            tooltip: 'Add category',
-            icon: const Icon(Icons.add),
-        ),
+              onPressed: () async {
+                _dataChanged = await Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => CategoryFormPage(
+                    category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
+                    isNew: true,
+                  ))
+                );
+                if (_dataChanged == true) {
+                  setState(() {});
+                }
+              },
+              tooltip: 'Add category',
+              icon: const Icon(Icons.add),
+            ),
+            IconButton(
+              onPressed: () async {
+                _dataChanged = await Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => CategorySortPage(
+                    categoryType: widget.type,
+                  ))
+                );
+                if (_dataChanged == true) {
+                  setState(() {});
+                }
+              },
+              tooltip: 'Sort categories',
+              icon: const Icon(Icons.sort),
+            ),
           ],
         ),
         body: FutureBuilder<List<Category>>(

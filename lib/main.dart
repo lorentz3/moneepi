@@ -182,21 +182,11 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () => _navigateTo(Pages.settings),
-            ),
-            Divider(),
-            ListTile(
               leading: const Icon(Icons.attach_money),
               title: const Text('Change currency'),
               onTap: () => _navigateTo(Pages.currencies),
             ),
-            ListTile(
-              leading: const Icon(Icons.account_balance),
-              title: const Text('Accounts setup'),
-              onTap: () => _navigateTo(Pages.accounts),
-            ),
+            Divider(),
             ListTile(
               leading: const Icon(Icons.category_outlined),
               title: const Text('Expense Categories setup'),
@@ -206,6 +196,11 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.category),
               title: const Text('Income Categories setup'),
               onTap: () => _navigateTo(Pages.incomeCategories),
+            ),
+            ListTile(
+              leading: const Icon(Icons.account_balance),
+              title: const Text('Accounts setup'),
+              onTap: () => _navigateTo(Pages.accounts),
             ),
             ListTile(
               leading: const Icon(Icons.data_thresholding_outlined),
@@ -229,6 +224,11 @@ class _HomePageState extends State<HomePage> {
               onTap: () => _navigateTo(Pages.xlsxExport),
             ),
             Divider(),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () => _navigateTo(Pages.settings),
+            ),
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('Info'),

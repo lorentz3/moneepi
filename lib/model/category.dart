@@ -23,6 +23,12 @@ class Category {
     };
   }
 
+  Map<String, dynamic> toMapSort() {
+    return {
+      'sort': sort, 
+    };
+  }
+
   Map<String, dynamic> toMapCreate() {
     return {
       'icon': icon,

@@ -35,6 +35,15 @@ class _AmountInputFieldState extends State<AmountInputField> {
   }
 
   void _onKeypadPressed(String key) {
+    if (key == '') {
+      return;
+    }
+    if (key == '✓') {
+      setState(() {
+        _showKeypad = !_showKeypad;
+      });
+      return;
+    }
     String text = _controller.text;
 
     if (key == '⌫') {
@@ -72,8 +81,8 @@ class _AmountInputFieldState extends State<AmountInputField> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double padHorizontalPadding = screenWidth / 6;
-    final double buttonSize = (screenWidth - (2 * padHorizontalPadding) - 50) / 3;
+    final double padHorizontalPadding = screenWidth / 8;
+    final double buttonSize = (screenWidth - (2 * padHorizontalPadding) - 50) / 4;
     debugPrint("screenWidth: $screenWidth, padHorizontalPadding: $padHorizontalPadding, buttonSize: $buttonSize");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,17 +132,17 @@ class _AmountInputFieldState extends State<AmountInputField> {
     );
   }
 
-  List<String> keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
+  List<String> keys = ['1', '2', '3', '', '4', '5', '6', '', '7', '8', '9', '⌫', ',', '0', '. ', '✓'];
 
   List<Row> _buildKeypadRows(double buttonSize) {
     List<Row> rows = [];
 
-    for (int i = 0; i < keys.length; i += 3) {
+    for (int i = 0; i < keys.length; i += 4) {
       rows.add(
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            for (int j = i; j < i + 3 && j < keys.length; j++)
+            for (int j = i; j < i + 4 && j < keys.length; j++)
               Padding(
                 padding: const EdgeInsets.all(2),
                 child: SizedBox(
@@ -141,13 +150,17 @@ class _AmountInputFieldState extends State<AmountInputField> {
                   height: 40,
                   child: ElevatedButton(
                     onPressed: () => _onKeypadPressed(keys[j]),
-                    style: ElevatedButton.styleFrom(
+                    style: keys[j] != '' ? ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey[200],
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(1),
                       ),
-                    ),
+                    ) : ElevatedButton.styleFrom(
+                      shadowColor: Colors.transparent, // rimuove l'ombra
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.transparent,
+                    ) ,
                     child: Text(
                       keys[j],
                       style: const TextStyle(fontSize: 22),
