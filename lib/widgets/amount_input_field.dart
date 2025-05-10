@@ -50,7 +50,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
       if (text.isNotEmpty) {
         text = text.substring(0, text.length - 1);
       }
-    } else if (key == '.') {
+    } else if (key == '.' || key == ',') {
       if (!text.contains('.')) {
         text += '.';
       }
@@ -132,7 +132,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
     );
   }
 
-  List<String> keys = ['1', '2', '3', '', '4', '5', '6', '', '7', '8', '9', '⌫', ',', '0', '. ', '✓'];
+  List<String> keys = ['1', '2', '3', '', '4', '5', '6', '', '7', '8', '9', '⌫', ',', '0', '.', '✓'];
 
   List<Row> _buildKeypadRows(double buttonSize) {
     List<Row> rows = [];
@@ -154,7 +154,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
                       backgroundColor: Colors.grey[200],
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(1),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ) : ElevatedButton.styleFrom(
                       shadowColor: Colors.transparent, // rimuove l'ombra
