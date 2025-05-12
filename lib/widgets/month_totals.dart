@@ -4,7 +4,7 @@ import 'package:myfinance2/utils/color_identity.dart';
 
 class MonthTotals extends StatelessWidget {
     final String currencySymbol;
-    final DateTime selectedDate;
+    final DateTime? selectedDate;
     final double totalExpense;
     final double totalIncome;
     final bool showMonth;
@@ -12,7 +12,7 @@ class MonthTotals extends StatelessWidget {
   const MonthTotals({
     super.key,
     required this.currencySymbol,
-    required this.selectedDate,
+    this.selectedDate,
     required this.totalExpense,
     required this.totalIncome,
     required this.showMonth,
@@ -21,7 +21,7 @@ class MonthTotals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final balance = totalIncome - totalExpense;
-    String monthTitle = DateFormat(" MMM ").format(selectedDate);
+    String monthTitle = selectedDate != null ? DateFormat(" MMM ").format(selectedDate!) : "";
     return Container(
       color: Colors.deepPurple[100],
       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),

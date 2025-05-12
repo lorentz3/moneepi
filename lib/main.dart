@@ -8,6 +8,7 @@ import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/pages/about_page.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/accounts_summaries_page.dart';
 import 'package:myfinance2/pages/budgeting_page.dart';
@@ -232,10 +233,7 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('Info'),
-              onTap: () {
-                Navigator.pop(context);
-                // Mostra info app
-              },
+              onTap: () => _navigateTo(Pages.about),
             ),
           ],
         ),
@@ -406,6 +404,7 @@ class _HomePageState extends State<HomePage> {
               nameColor: Color.fromARGB(255, 0, 3, 136),
               currencySymbol: _currencySymbol ?? '',
               showTodayBar: _selectedDate.month == DateTime.now().month && _selectedDate.year == DateTime.now().year,
+              categories: groupSummary.categories,
               )
             )
             .toList(),
@@ -503,6 +502,8 @@ _getPage(Pages page) {
       return ExportTransactionsPage();
     case Pages.settings:
       return GeneralSettingsPage(monthlySaving: _monthlySaving ?? 0.0, periodStartingDay: _periodStartingDay ?? 1,);
+    case Pages.about:
+      return AboutPage();
   }
 }
 }
@@ -517,4 +518,5 @@ enum Pages {
   xlsxImport,
   xlsxExport,
   settings,
+  about,
 }

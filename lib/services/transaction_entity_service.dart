@@ -60,6 +60,32 @@ class TransactionEntityService {
     return List.generate(maps.length, (index) => TransactionDto.fromJson(maps[index]));
   }
 
+  static Future<MonthTotalDto> getMonthTotalDtoWithFilters(DateTime startDate, DateTime endDate, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
+    final db = await DatabaseHelper.getDb();
+    final int startTimestamp = startDate.millisecondsSinceEpoch;
+    final int endTimestamp = endDate.millisecondsSinceEpoch;
+    String andAccountId = accountId != null ? "AND accountId = $accountId" : "";
+    String andSourceAccountId = sourceAccountId != null ? "AND sourceAccountId = $sourceAccountId" : "";
+    String andCategoryId = categoryId != null ? "AND categoryId = $categoryId" : "";
+    String andType = type != null ? "AND type = '${type.toString().split('.').last}'" : "";
+    final List<Map<String, dynamic>> totals = await db.rawQuery('''
+      SELECT 
+          SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END) AS total_expense,
+          SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END) AS total_income
+      FROM $_tableName
+      WHERE timestamp >= $startTimestamp AND timestamp < $endTimestamp
+      $andAccountId
+      $andSourceAccountId
+      $andCategoryId
+      $andType
+    ''');
+    if (totals.isNotEmpty) {
+      return MonthTotalDto(totalExpense: (totals.first['total_expense'] as double?) ?? 0.0, totalIncome: (totals.first['total_income'] as double?) ?? 0.0);
+    } else {
+      return MonthTotalDto(totalExpense: 0, totalIncome: 0);
+    }
+  }
+
   static Future<MonthTotalDto> getMonthTotalDto(int? month, int year) async {
     final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     final db = await DatabaseHelper.getDb();
@@ -442,5 +468,4 @@ class TransactionEntityService {
       ));
     }
   }
-
 }

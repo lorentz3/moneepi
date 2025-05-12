@@ -178,11 +178,28 @@ class GroupEntityService {
     List<GroupSummaryDto> groups = [];
 
     for (var row in result) {
-      final categoryIdsResult = await db.rawQuery('''
-        SELECT categoryId FROM Categories_Groups WHERE groupId = ?
-      ''', [row['id']]);
+        // Recupera le categorie associate al gruppo, con le rispettive spese
+      final categoryResult = await db.rawQuery('''
+        SELECT 
+          c.id, c.icon, c.name, c.sort,
+          COALESCE(mcts.amount, 0) as totalExpense
+        FROM Categories c
+        INNER JOIN Categories_Groups cg ON c.id = cg.categoryId
+        LEFT JOIN MonthlyCategoryTransactionSummaries mcts
+          ON c.id = mcts.categoryId AND mcts.month = ? AND mcts.year = ?
+        WHERE cg.groupId = ?
+        ORDER BY c.sort ASC;
+      ''', [month, year, row['id']]);
 
-      List<int> categoryIds = categoryIdsResult.map((e) => e['categoryId'] as int).toList();
+      List<GroupCategorySummaryDto> categorySummaries = categoryResult.map((cRow) {
+        return GroupCategorySummaryDto(
+          id: cRow['id'] as int?,
+          icon: cRow['icon'] as String?,
+          name: cRow['name'] as String,
+          sort: cRow['sort'] as int,
+          totalExpense: (cRow['totalExpense'] as num?)?.toDouble(),
+        );
+      }).toList();
 
       groups.add(GroupSummaryDto(
         id: row['id'] as int?,
@@ -191,8 +208,8 @@ class GroupEntityService {
         sort: row['sort'] as int,
         monthThreshold: row['monthThreshold'] as double?,
         yearThreshold: row['yearThreshold'] as double?,
-        totalExpense: (row['totalExpense'] as num).toDouble(),
-        categoryIds: categoryIds,
+        totalExpense: (row['totalExpense'] as num?)?.toDouble(),
+        categories: categorySummaries,
       ));
     }
 

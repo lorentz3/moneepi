@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myfinance2/dto/month_total_dto.dart';
 import 'package:myfinance2/dto/movement_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
@@ -9,6 +10,7 @@ import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/utils/date_utils.dart';
 import 'package:myfinance2/widgets/date_selector_panel.dart';
+import 'package:myfinance2/widgets/month_totals.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
 
 class MovementsPage extends StatefulWidget {
@@ -26,7 +28,7 @@ class MovementsPage extends StatefulWidget {
 }
 
 class MovementsPageState extends State<MovementsPage> {
-  List<TransactionDto> transactions = [];
+  List<TransactionDto> _transactions = [];
   late DateTime _startDate;
   late DateTime _endDate;
   TransactionType? _selectedType;
@@ -37,6 +39,7 @@ class MovementsPageState extends State<MovementsPage> {
   List<Category> _categories = [];
   String? _currency;
   bool _multipleAccounts = false;
+  MonthTotalDto _monthTotalDto = MonthTotalDto(totalExpense: 0, totalIncome: 0);
 
   @override
   void initState() {
@@ -72,7 +75,9 @@ class MovementsPageState extends State<MovementsPage> {
   }
 
   Future<void> _loadTransactions() async {
-    transactions = await TransactionEntityService.getTransactionsWithFilters(_startDate, _endDate,
+    _transactions = await TransactionEntityService.getTransactionsWithFilters(_startDate, _endDate,
+      _selectedAccount, _selectedSourceAccount, _selectedCategory, _selectedType);
+    _monthTotalDto = await TransactionEntityService.getMonthTotalDtoWithFilters(_startDate, _endDate,
       _selectedAccount, _selectedSourceAccount, _selectedCategory, _selectedType);
     setState(() {});
   }
@@ -115,7 +120,13 @@ class MovementsPageState extends State<MovementsPage> {
       child: Column(
         children: [
           _buildFilters(), 
-          transactions.isEmpty ? Center(child: const Text("Still no movements"),) : TransactionsListGroupedByDate(transactions: transactions, currencySymbol: _currency ?? '',)
+          MonthTotals(
+            currencySymbol: _currency ?? '', 
+            totalExpense: _monthTotalDto.totalExpense, 
+            totalIncome: _monthTotalDto.totalIncome,
+            showMonth: false,
+          ),
+          _transactions.isEmpty ? Center(child: const Text("Still no movements"),) : TransactionsListGroupedByDate(transactions: _transactions, currencySymbol: _currency ?? '',)
         ],
       ),
     );
