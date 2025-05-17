@@ -4,26 +4,23 @@ import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/widgets/info_label.dart';
 
-class GeneralSettingsPage extends StatefulWidget {
-  final double monthlySaving;
+class PeriodSettingsPage extends StatefulWidget {
   final int periodStartingDay;
   
-  const GeneralSettingsPage({super.key, required this.monthlySaving, required this.periodStartingDay});
+  const PeriodSettingsPage({super.key, required this.periodStartingDay});
 
   @override
-  State createState() => GeneralSettingsPageState();
+  State createState() => PeriodSettingsPageState();
 }
 
-class GeneralSettingsPageState extends State<GeneralSettingsPage> {
+class PeriodSettingsPageState extends State<PeriodSettingsPage> {
   final _formKey = GlobalKey<FormState>();
-  late double _monthlySaving;
   late int _periodStartingDay;
   late int _previousPeriodStartingDay;
 
   @override
   void initState() {
     super.initState();
-    _monthlySaving = widget.monthlySaving;
     _periodStartingDay = widget.periodStartingDay;
     _previousPeriodStartingDay = widget.periodStartingDay;
   }
@@ -54,18 +51,6 @@ class GeneralSettingsPageState extends State<GeneralSettingsPage> {
               child:
               Column(
                 children: [
-                  InfoLabel(text: "You can set how much money you would like to save each month"),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Monthly saving amount'),
-                    initialValue: _monthlySaving == 0.0 ? "" : _monthlySaving.toStringAsFixed(2),
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: false,
-                      signed: false
-                    ),
-                    onChanged: (value) => _monthlySaving = double.tryParse(value) ?? 0.00,
-                    validator: (value) => value != null && (double.tryParse(value) ?? 0.00) < 0 ? 'The amount must be a positive value' : null,
-                  ),
-                  SizedBox(height: 30,),
                   InfoLabel(text: "Change the 'Monthly start day' if you prefer that your budgeting monthly stats are calculated considering another day of the month as first day (allowed values: from 1 to 28)"),
                   TextFormField(
                     decoration: InputDecoration(labelText: 'Monthly start day *'),
@@ -98,7 +83,6 @@ class GeneralSettingsPageState extends State<GeneralSettingsPage> {
   }
 
   _saveConfigurations() async {
-    await ConfigurationEntityService.updateMonthlySaving(_monthlySaving);
     if (_previousPeriodStartingDay != _periodStartingDay) {
       _showChangePeriodStartingDayDialog();
     } else {
@@ -124,7 +108,7 @@ class GeneralSettingsPageState extends State<GeneralSettingsPage> {
                       height: 80,
                       child: Center(child: CircularProgressIndicator()),
                     )
-                  : const Text("Changing the monthly starting day will recalculate all statistics. Proceed?"),
+                  : const Text("Changing the monthly starting day will recalculate all statistics, this process may require a minute. Proceed?"),
               actions: isLoading
                   ? []
                   : <Widget>[

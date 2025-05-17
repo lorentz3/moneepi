@@ -4,7 +4,7 @@ import 'package:myfinance2/dto/group_dto.dart';
 import 'package:myfinance2/dto/month_total_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
-import 'package:myfinance2/pages/general_settings_page.dart';
+import 'package:myfinance2/pages/monthly_saving_settings_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
@@ -28,7 +28,6 @@ class BudgetingPageState extends State<BudgetingPage> {
   late DateTime _selectedDate;
   List<MonthTotalDto> _monthTotals = [];
   double? _monthlySaving;
-  int ? _periodStartingDay;
   double _yearExpenses = 0.0;
   double _yearIncomes = 0.0;
   int _effectiveMonths = 1;
@@ -55,7 +54,6 @@ class BudgetingPageState extends State<BudgetingPage> {
       .map((e) => e.totalIncome)
       .fold(0.0, (prev, amount) => prev + amount);
     _monthlySaving = await AppConfig.instance.getMonthlySaving();
-    _periodStartingDay = await AppConfig.instance.getPeriodStartingDay();
     _countEffectiveMonths();
     _groups = await GroupEntityService.getGroupsWithMonthlyThreshold();
     _groupExists = _groups.isNotEmpty;
@@ -305,9 +303,8 @@ class BudgetingPageState extends State<BudgetingPage> {
   void _navigateToSettingsPage() async {
     _dataChanged = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => GeneralSettingsPage(
+      MaterialPageRoute(builder: (context) => MonthlySavingSettingsPage(
         monthlySaving: _monthlySaving ?? 0.0,
-        periodStartingDay: _periodStartingDay ?? 1,
       )),
     );
     if (_dataChanged) {

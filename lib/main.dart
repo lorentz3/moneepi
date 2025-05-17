@@ -15,9 +15,10 @@ import 'package:myfinance2/pages/budgeting_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
 import 'package:myfinance2/pages/currency_selection_page.dart';
 import 'package:myfinance2/pages/export_transactions_page.dart';
-import 'package:myfinance2/pages/general_settings_page.dart';
+import 'package:myfinance2/pages/period_settings_page.dart';
 import 'package:myfinance2/pages/groups_page.dart';
 import 'package:myfinance2/pages/import_xls_page.dart';
+import 'package:myfinance2/pages/monthly_saving_settings_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/pages/stats_page.dart';
 import 'package:myfinance2/pages/transaction_form_page.dart';
@@ -229,10 +230,16 @@ class _HomePageState extends State<HomePage> {
             ),
             Divider(),
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () => _navigateTo(Pages.settings),
+              leading: const Icon(Icons.savings),
+              title: const Text('Monthly saving settings'),
+              onTap: () => _navigateTo(Pages.monthlySavingsSettings),
             ),
+            ListTile(
+              leading: const Icon(Icons.calendar_month),
+              title: const Text('Period settings'),
+              onTap: () => _navigateTo(Pages.periodSettings),
+            ),
+            Divider(),
             ListTile(
               leading: const Icon(Icons.info),
               title: const Text('Info'),
@@ -503,8 +510,10 @@ _getPage(Pages page) {
       return ImportXlsPage();
     case Pages.xlsxExport:
       return ExportTransactionsPage();
-    case Pages.settings:
-      return GeneralSettingsPage(monthlySaving: _monthlySaving ?? 0.0, periodStartingDay: _periodStartingDay ?? 1,);
+    case Pages.monthlySavingsSettings:
+      return MonthlySavingSettingsPage(monthlySaving: _monthlySaving ?? 0.0);
+    case Pages.periodSettings:
+      return PeriodSettingsPage(periodStartingDay: _periodStartingDay ?? 1,);
     case Pages.about:
       return AboutPage();
   }
@@ -520,6 +529,7 @@ enum Pages {
   groups,
   xlsxImport,
   xlsxExport,
-  settings,
+  monthlySavingsSettings,
+  periodSettings,
   about,
 }
