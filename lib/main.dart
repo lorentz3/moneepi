@@ -221,17 +221,6 @@ class _HomePageState extends State<HomePage> {
             ),
             Divider(),
             ListTile(
-              leading: const Icon(Icons.dataset_outlined),
-              title: const Text('XLSX Import'),
-              onTap: () => _navigateTo(Pages.xlsxImport),
-            ),
-            ListTile(
-              leading: const Icon(Icons.dataset_rounded),
-              title: const Text('XLSX Export'),
-              onTap: () => _navigateTo(Pages.xlsxExport),
-            ),
-            Divider(),
-            ListTile(
               leading: const Icon(Icons.savings),
               title: const Text('Monthly saving settings'),
               onTap: () => _navigateTo(Pages.monthlySavingsSettings),
@@ -240,6 +229,17 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.calendar_month),
               title: const Text('Period settings'),
               onTap: () => _navigateTo(Pages.periodSettings),
+            ),
+            Divider(),
+            ListTile(
+              leading: const Icon(Icons.dataset_outlined),
+              title: const Text('XLSX Import'),
+              onTap: () => _navigateTo(Pages.xlsxImport),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dataset_rounded),
+              title: const Text('XLSX Export'),
+              onTap: () => _navigateTo(Pages.xlsxExport),
             ),
             Divider(),
             ListTile(
