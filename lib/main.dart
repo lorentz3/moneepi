@@ -52,7 +52,7 @@ class FinanceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MyFinance',
+      title: 'MoneyPie',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -76,6 +76,7 @@ class _HomePageState extends State<HomePage> {
   late DateTime _selectedDate;
   List<TransactionDto> transactions = [];
   List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
+  List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummaryBars = [];
   List<GroupSummaryDto> _groupSummaries = [];
   bool _isSummaryLoading = true;
   bool _accountsAreMoreThanOne = false;
@@ -154,7 +155,8 @@ class _HomePageState extends State<HomePage> {
         ));
       }
     }
-    monthCategoriesSummary.sort((a, b) => a.sort.compareTo(b.sort));
+    monthCategoriesSummaryBars = [...monthCategoriesSummary];
+    monthCategoriesSummaryBars.sort((a, b) => a.sort.compareTo(b.sort));
     setState(() {
       _isSummaryLoading = false;
     });
@@ -428,7 +430,7 @@ class _HomePageState extends State<HomePage> {
       : Padding(
       padding: EdgeInsets.symmetric(horizontal: 5),
       child: Column(
-        children: monthCategoriesSummary
+        children: monthCategoriesSummaryBars
             .where((t) => t.monthThreshold != null) 
             .map((t) => ThresholdBar(
               name: t.categoryName,

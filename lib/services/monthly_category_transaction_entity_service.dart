@@ -106,7 +106,7 @@ class MonthlyCategoryTransactionEntityService {
       FROM MonthlyCategoryTransactionSummaries t 
       LEFT JOIN Categories c ON t.categoryId = c.id
       WHERE t.month = $month AND t.year = $year AND c.type = 'EXPENSE'
-      ORDER BY c.sort
+      ORDER BY t.amount DESC
     """
     );
     return List.generate(maps.length, (index) => MonthlyCategoryTransactionSummaryDto.fromJson(maps[index]));

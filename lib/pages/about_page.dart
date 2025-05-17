@@ -9,15 +9,15 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
+  final String appUrl = 'https://sites.google.com/view/lorentz3/moneypie';
 
   void _launchURL(String url) async {
     debugPrint("trying launching $url");
-    if (await canLaunchUrl(Uri.parse(url))) {
-      debugPrint("launch $url");
+    try {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Category deleted."),
+        content: Text("Couldn't open URL"),
       ));
     }
   }
@@ -31,24 +31,16 @@ class _AboutPageState extends State<AboutPage> {
         child: ListView(
           children: [
             const Text(
-              'Moneyboh',
+              'MoneyPie',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Text('Version: 1.0.0'),
             const SizedBox(height: 16),
             const Text('Maintainer: Lorentz'),
             GestureDetector(
-              onTap: () => _launchURL('https://sites.google.com/view/lorentz3'),
+              onTap: () => _launchURL(appUrl),
               child: Text(
-                'https://sites.google.com/view/lorentz3',
-                style: TextStyle(color: Colors.blue[800]),
-              ),
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: () => _launchURL('mailto:lorenzo.marocchi.dev@gmail.com'),
-              child: Text(
-                'lorenzo.marocchi.dev@gmail.com',
+                appUrl,
                 style: TextStyle(color: Colors.blue[800]),
               ),
             ),
