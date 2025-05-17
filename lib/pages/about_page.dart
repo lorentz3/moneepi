@@ -11,8 +11,14 @@ class AboutPage extends StatefulWidget {
 class _AboutPageState extends State<AboutPage> {
 
   void _launchURL(String url) async {
+    debugPrint("trying launching $url");
     if (await canLaunchUrl(Uri.parse(url))) {
+      debugPrint("launch $url");
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Category deleted."),
+      ));
     }
   }
 
@@ -35,15 +41,15 @@ class _AboutPageState extends State<AboutPage> {
               onTap: () => _launchURL('https://sites.google.com/view/lorentz3'),
               child: Text(
                 'https://sites.google.com/view/lorentz3',
-                style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                style: TextStyle(color: Colors.blue[800]),
               ),
             ),
             const SizedBox(height: 16),
             GestureDetector(
               onTap: () => _launchURL('mailto:lorenzo.marocchi.dev@gmail.com'),
-              child: const Text(
+              child: Text(
                 'lorenzo.marocchi.dev@gmail.com',
-                style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                style: TextStyle(color: Colors.blue[800]),
               ),
             ),
             const SizedBox(height: 32),

@@ -6,9 +6,10 @@ class MonthlyCategoryTransactionSummaryDto {
   final int year;
   double? amount;
   double? monthThreshold;
+  final int sort;
 
   MonthlyCategoryTransactionSummaryDto({required this.categoryId, this.categoryIcon, required this.categoryName, required this.month, required this.year, 
-    this.amount, this.monthThreshold});
+    this.amount, this.monthThreshold, required this.sort});
   
   factory MonthlyCategoryTransactionSummaryDto.fromJson(Map<String, dynamic> json) => MonthlyCategoryTransactionSummaryDto(
     categoryId: json['categoryId'], 
@@ -18,5 +19,6 @@ class MonthlyCategoryTransactionSummaryDto {
     year: json['year'],
     amount: json['amount'],
     monthThreshold: json['monthThreshold'],
+    sort: json['sort']
   );
 }

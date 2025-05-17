@@ -148,9 +148,12 @@ class _HomePageState extends State<HomePage> {
           categoryName: c.name, 
           month: _selectedDate.month, 
           year: _selectedDate.year,
-          monthThreshold: c.monthThreshold));
+          monthThreshold: c.monthThreshold,
+          sort: c.sort
+        ));
       }
     }
+    monthCategoriesSummary.sort((a, b) => a.sort.compareTo(b.sort));
     setState(() {
       _isSummaryLoading = false;
     });

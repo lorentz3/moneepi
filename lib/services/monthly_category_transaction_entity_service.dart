@@ -102,11 +102,11 @@ class MonthlyCategoryTransactionEntityService {
   static Future<List<MonthlyCategoryTransactionSummaryDto>> getAllMonthCategoriesSummaries(int month, int year) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
-      SELECT c.id AS categoryId, c.icon AS categoryIcon, c.name AS categoryName, t.amount, t.month, t.year, c.monthThreshold
+      SELECT c.id AS categoryId, c.icon AS categoryIcon, c.name AS categoryName, t.amount, t.month, t.year, c.monthThreshold, c.sort
       FROM MonthlyCategoryTransactionSummaries t 
       LEFT JOIN Categories c ON t.categoryId = c.id
       WHERE t.month = $month AND t.year = $year AND c.type = 'EXPENSE'
-      ORDER BY t.amount DESC
+      ORDER BY c.sort
     """
     );
     return List.generate(maps.length, (index) => MonthlyCategoryTransactionSummaryDto.fromJson(maps[index]));
