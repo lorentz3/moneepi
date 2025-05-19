@@ -31,7 +31,10 @@ class MonthlyCategoryTransactionEntityService {
         transactionMonth = MyDateUtils.getPreviousMonth(transactionMonth);
       } 
       Transaction? lastTransaction = await TransactionEntityService.findLastTransactionByCategoryId(categoryId);
-      int lastMonth = lastTransaction!.timestamp.month;
+      if (lastTransaction == null) {
+        return;
+      }
+      int lastMonth = lastTransaction.timestamp.month;
       int lastYear = lastTransaction.timestamp.year;
       debugPrint("Start recalc category summaries: categoryId=$categoryId, caregoryName=${category.name}, from $transactionYear/$transactionMonth to $lastYear/$lastMonth");
       while (MyDateUtils.isBeforeOrEqual(transactionMonth, transactionYear, lastMonth, lastYear)) {
