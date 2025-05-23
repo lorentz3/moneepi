@@ -3,7 +3,9 @@ import 'package:myfinance2/utils/color_identity.dart';
 
 class InfoLabel extends StatelessWidget {
   final String text;
-  const InfoLabel({super.key, required this.text});
+  final double? fontSize;
+  
+  const InfoLabel({super.key, required this.text, this.fontSize});
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,7 @@ class InfoLabel extends StatelessWidget {
               text,
               textAlign: TextAlign.left,
               style: TextStyle(
+                fontSize: fontSize ?? 14,
                 color: Colors.black87,
               ),
             ),

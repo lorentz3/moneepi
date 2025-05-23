@@ -4,6 +4,8 @@ import 'package:excel/excel.dart';
 import 'dart:io';
 
 import 'package:myfinance2/pages/import_xls_map_page.dart';
+import 'package:myfinance2/widgets/info_label.dart';
+import 'package:myfinance2/widgets/simple_text_button.dart';
 
 class ImportXlsPage extends StatefulWidget {
   const ImportXlsPage({super.key});
@@ -59,8 +61,24 @@ class ImportXlsPageState extends State<ImportXlsPage> {
       return;
     }
 
-    var bytes = File(_filePath!).readAsBytesSync();
-    var excel = Excel.decodeBytes(bytes);
+    Excel excel;
+    try {
+      var bytes = File(_filePath!).readAsBytesSync();
+      excel = Excel.decodeBytes(bytes);
+    } catch (e, stacktrace) {
+      debugPrint('Error while reading excel file: $e, $stacktrace');
+      // Mostra il messaggio a schermo
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error while reading the file: try to copy/paste your rows in a new xlsx file'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isExtractingAccountsAndCategories = false;
+      });
+      return;
+    }
     var sheet = excel.tables.keys.first;
     List<List<dynamic>> rows = excel.tables[sheet]!.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
 
@@ -117,21 +135,17 @@ class ImportXlsPageState extends State<ImportXlsPage> {
             : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_filePath == null) ElevatedButton(
+              InfoLabel(
+                text: "For the best import, the excel file should not have expense categories with the same name of income categories.",
+                fontSize: 12,
+              ),
+              SimpleTextButton(
                 onPressed: pickFile,
-                child: Text("Select XLSX file"),
+                text: _filePath == null ? "Select XLSX file" : "Select another XLSX file",
               ),
+              SizedBox(height: 2),
               if (_filePath != null) Text("Selected file: ${_filePath!.split('/').last}", style: TextStyle(fontWeight: FontWeight.bold),),
-              SizedBox(height: 8),
-              Text("For the best import, the excel file should not have expense categories with the same name of income categories.",
-                style: TextStyle(fontSize: 12),
-              ),
-              SizedBox(height: 4),
-              Text(
-                "'Type' column must contain 'EXPENSE', 'INCOME' or 'TRANSFER', in order to distinguish the types of transactions. You can leave it empty, transaction type will be deducted by the target category type.",
-                style: TextStyle(fontSize: 12),
-              ),
-              SizedBox(height: 8),
+              SizedBox(height: 2),
               Row(
                 children: [
                   Checkbox(
@@ -145,18 +159,45 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                   Text("The file contains a header row")
                 ],
               ),
-              Text("Configure column index (0 = 'A', 1 = 'B', ...). If you are importing a file exported from this app, you can leave default indexes and go ahead."),
+              InfoLabel(
+                text: "Configure column index (0 = 'A', 1 = 'B', ...). If you are importing a file exported from this app, you can leave default indexes and go ahead.",
+                fontSize: 12,
+              ),
               SizedBox(height: 10),
               ..._columnControllers.entries.map((entry) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: TextField(
-                      controller: entry.value,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "${entry.key} column index${isMandatory(entry.key) ? " (*) " : ""}: ",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
+                    child: Column(
+                      children: [
+                        if (entry.key == 'Date') InfoLabel(
+                          text: "'Date' column must be a date cell type, or a date in 'dd/MM/yyyy HH:mm:ss' format",
+                          fontSize: 12,
+                        ),
+                        if (entry.key == 'Date') SizedBox(height: 8),
+                        if (entry.key == 'Type') InfoLabel(
+                          text: "'Type' column must contain 'EXPENSE', 'INCOME' or 'TRANSFER', in order to distinguish the types of transactions. You can leave it empty, transaction type will be deducted by the target category type.",
+                          fontSize: 12,
+                        ),
+                        if (entry.key == 'Type') SizedBox(height: 8),
+                        if (entry.key == 'Source Account') InfoLabel(
+                          text: "You need 'Source Account' column only if you are interested in importing TRANSFERs (movements from a Source Account to another Account)",
+                          fontSize: 12,
+                        ),
+                        if (entry.key == 'Source Account') SizedBox(height: 8),
+                        if (entry.key == 'SubCategory') InfoLabel(
+                          text: "You need 'Sub Categories' column only if you are importing an xlsx file from some app that uses also Sub Categories.",
+                          fontSize: 12,
+                        ),
+                        if (entry.key == 'SubCategory') SizedBox(height: 8),
+                        TextField(
+                          controller: entry.value,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: "${entry.key} column index${isMandatory(entry.key) ? " (*) " : ""}: ",
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ]
+                    )
                   )),
               SizedBox(height: 20),
               if (!_isExtractingAccountsAndCategories) ElevatedButton(

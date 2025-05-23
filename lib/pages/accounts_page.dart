@@ -31,12 +31,22 @@ class AccountsPageState extends State<AccountsPage> {
         appBar: AppBar(
           title: const Text("Accounts"),
           actions: [
-            PopupMenuButton(
-              onSelected: (value) => _handleClick(value, context),
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: "AddDefaultAccounts", child: Text("Add default accounts")),
-              ],
-            )
+            IconButton(
+              onPressed: () async {
+                _dataChanged = await Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => AccountFormPage(
+                    account: Account(id: 0, name: "", initialBalance: 0, sort: 0),
+                    isNew: true,
+                  ))
+                );
+                if (_dataChanged == true) {
+                  setState(() {});
+                }
+              },
+              tooltip: 'Add category',
+              icon: const Icon(Icons.add),
+            ),
           ],
         ),
         body: FutureBuilder<List<Account>>(
@@ -116,62 +126,8 @@ class AccountsPageState extends State<AccountsPage> {
             return const Text("No accounts");
           }
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => AccountFormPage(
-                account: Account(id: 0, name: "", initialBalance: 0, sort: 0),
-                isNew: true,
-              ))
-            ).then((_) => setState(() {}));
-          },
-          tooltip: 'Add account',
-          child: const Icon(Icons.add),
-        ),
       )
     );
-  }
-
-  _handleClick(String value, BuildContext context){
-    switch(value) {
-      case "AddDefaultAccounts":
-        showDialog(
-          context: context, 
-          barrierDismissible: true,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Adding default accounts'),
-              content: SingleChildScrollView(
-                child: ListBody(
-                  children: <Widget>[
-                    const Text("This will add app default accounts to your accounts list, like:"),
-                    const Text(" - Bank account"),
-                    const Text(" - Cash"),
-                    const Text("Continue?"),
-                  ],
-                ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.pop(context, 'Cancel'),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  child: const Text('Continue'),
-                  onPressed: () {
-                    setState(() {
-                      AccountEntityService.insertDefaultAccounts();
-                      Navigator.pop(context);
-                    });
-                  },
-                ),
-              ],
-            );
-          }
-        );
-        break;
-    }
   }
 
   Future<List<Account>> _getAccounts() async {

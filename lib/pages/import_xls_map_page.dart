@@ -35,8 +35,8 @@ class ImportXlsMapPage extends StatefulWidget {
   ImportXlsMapPageState createState() => ImportXlsMapPageState();
 }
 
-// TODO import transfers
 class ImportXlsMapPageState extends State<ImportXlsMapPage> {
+  final DateFormat _dateFormat = DateFormat("dd/MM/yyyy HH:mm:ss");
   String _filePath = "";
   bool _hasSubCategories = false;
   bool _isImporting = false;
@@ -226,28 +226,47 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     int amountCol = _mapColumnIndexes['Amount']!;
 
     for (var row in rows.skip(startRow)) {
-      String importedDate = row[dateCol]?.toString() ?? "";
-      String importedType = typeCol != null ? row[typeCol]?.toString() ?? "" : "";
+      startRow++;
+      String importedTypeString = typeCol != null ? row[typeCol]?.toString() ?? "" : "";
       String importedAccount = row[accountCol]?.toString() ?? "";
       String importedSourceAccount = sourceAccountCol != null ? row[sourceAccountCol]?.toString() ?? "" : "";
       String importedCategory = _hasSubCategories ? "${row[categoryCol]?.toString() ?? ""}/${row[subCategoryCol!]?.toString() ?? ""}" : row[categoryCol]?.toString() ?? "";
       String importedNote = noteCol != null ? row[noteCol]?.toString() ?? "" : "";
       String importedAmount = row[amountCol]?.toString() ?? "";
+      
+      DateTime? importedDateTime = parseExcelDate(row[dateCol]);
+      if (importedDateTime == null) {
+        debugPrint("Failed to import row $startRow: date time not recognized");
+        continue;
+      }
 
       int? categoryId = _categoryMapping[importedCategory];
       int? accountId = _accountMapping[importedAccount];
       int? sourceAccountId = _accountMapping[importedSourceAccount];
       if (accountId == null || (categoryId == null && sourceAccountId == null)) {
+        debugPrint("Failed to import row $startRow: missing account or category");
         continue;
       }
-      if (categoryId == null && sourceAccountId != null) {
-        await _importTransfer(importedDate, accountId, sourceAccountId, importedAmount, importedNote);
+
+      if (TransactionType.TRANSFER.name == importedTypeString || (categoryId == null && sourceAccountId != null)) {
+        if (sourceAccountId == null) {
+          debugPrint("Failed to import row $startRow: cannot import TRANSFER without sourceAccount");
+          continue;
+        }
+        if (accountId == sourceAccountId) {
+          debugPrint("Failed to import row $startRow: cannot import TRANSFER if sourceAccount and account are the same");
+          continue;
+        }
+        await _importTransfer(importedDateTime, accountId, sourceAccountId, importedAmount, importedNote);
       }
-      Category category = _existingCategories.where((category) => category.id == categoryId).first;
-      DateFormat format = DateFormat("dd/MM/yyyy HH:mm:ss");
+      Category? category = _existingCategories.where((category) => category.id == categoryId).firstOrNull;
+      if (category == null) {
+          debugPrint("Skipped row $startRow: category not mapped");
+          continue;
+      }
       await TransactionEntityService.insertTransaction(Transaction(
         accountId: accountId,
-        timestamp: format.parse(importedDate),
+        timestamp: importedDateTime,
         type: category.type == CategoryType.EXPENSE ? TransactionType.EXPENSE : TransactionType.INCOME,
         categoryId: categoryId,
         amount: double.tryParse(importedAmount) ?? 0.0,
@@ -262,20 +281,42 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("XLSX import completed"))
       );
+      // TODO go to page with errors
       Navigator.pop(context);
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     }
   }
 
-  _importTransfer(String importedDate, int accountId, int sourceAccountId, String importedAmount, String? importedNote) async {
-    DateFormat format = DateFormat("dd/MM/yyyy HH:mm:ss");
+  _importTransfer(DateTime importedDate, int accountId, int sourceAccountId, String importedAmount, String? importedNote) async {
     await TransactionEntityService.insertTransaction(Transaction(
       accountId: accountId,
-      timestamp: format.parse(importedDate),
+      timestamp: importedDate,
       type: TransactionType.TRANSFER,
       sourceAccountId: sourceAccountId,
       amount: double.tryParse(importedAmount) ?? 0.0,
       notes: importedNote,
     ));
+  }
+
+  DateTime? parseExcelDate(CellValue? cell) {
+    if (cell == null) return null;
+    switch (cell) {
+      case IntCellValue(): 
+        const gsDateBase = 2209161600 / 86400;
+        const gsDateFactor = 86400000;
+
+        final millis = (cell.value - gsDateBase) * gsDateFactor;
+        return DateTime.fromMillisecondsSinceEpoch(millis.toInt());
+      case DateCellValue():
+        debugPrint('  imported date: ${cell.year} ${cell.month} ${cell.day} (${cell.asDateTimeLocal()})');
+        return DateTime(cell.year, cell.month, cell.day);
+      case DateTimeCellValue():
+        debugPrint('  imported date with time: ${cell.year} ${cell.month} ${cell.day} ${cell.hour} ${cell.minute} ${cell.second} (${cell.asDateTimeLocal()})');
+        return DateTime(cell.year, cell.month, cell.day, cell.hour, cell.minute);
+      case TextCellValue():
+        return _dateFormat.tryParse(cell.value.text ?? "");
+      default: 
+        return null;
+    }
   }
 }
