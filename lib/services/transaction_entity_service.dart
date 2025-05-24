@@ -215,8 +215,8 @@ class TransactionEntityService {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, Object?>> result = await db.query(
       _tableName,
-      where: 'accountId = ?',
-      whereArgs: [accountId],
+      where: 'accountId = ? OR sourceAccountId = ?',
+      whereArgs: [accountId, accountId],
       limit: 1,
     );
     return result.isNotEmpty;

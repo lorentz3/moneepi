@@ -173,7 +173,8 @@ class TransactionsListGroupedByDate extends StatelessWidget {
   }
   
   Widget _getTransferWidget(BuildContext context, TransactionDto movement, Color rowColor) {
-    String sourceAccountTitle = movement.sourceAccountIcon != null ? "${movement.sourceAccountName} ${movement.sourceAccountIcon!}" : movement.sourceAccountName!;
+    String sourceAccountName = movement.sourceAccountName ?? "Deleted account";
+    String sourceAccountTitle = movement.sourceAccountIcon != null ? "${movement.sourceAccountName} ${movement.sourceAccountIcon!}" : sourceAccountName;
     String accountTitle = movement.accountIcon != null ? "${movement.accountIcon!} ${movement.accountName}" : movement.accountName;
     String accountTransferText = "$sourceAccountTitle → $accountTitle";
     return InkWell(

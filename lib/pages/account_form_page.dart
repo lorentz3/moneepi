@@ -18,6 +18,7 @@ class AccountFormPageState extends State<AccountFormPage> {
   String? _accountName;
   String? _initialBalance;
   String? _icon;
+  bool _dataChanged = false;
 
   @override
   void initState() {
@@ -34,7 +35,7 @@ class AccountFormPageState extends State<AccountFormPage> {
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
           debugPrint("Popping AccountFormPage _dataChanged=false, result=$result");
-          Navigator.pop(context, false);
+          Navigator.pop(context, _dataChanged);
         }
       },
       child: GestureDetector(
@@ -102,6 +103,7 @@ class AccountFormPageState extends State<AccountFormPage> {
     } else {
       AccountEntityService.updateAccount(account);
     }
+    _dataChanged = true;
     Navigator.pop(context, true);
   }
 } 

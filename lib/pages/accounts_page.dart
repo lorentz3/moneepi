@@ -172,6 +172,7 @@ class AccountsPageState extends State<AccountsPage> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text("Account deleted."),
                     ));
+                    _dataChanged = true;
                     Navigator.pop(context);
                   });
                 },
