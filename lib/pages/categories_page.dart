@@ -193,7 +193,8 @@ class CategoriesPageState extends State<CategoriesPage> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text("Category deleted."),
                     ));
-                    Navigator.pop(context);
+                    _dataChanged = true;
+                    Navigator.pop(context, true);
                   });
                 },
               ),
