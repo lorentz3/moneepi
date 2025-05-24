@@ -31,7 +31,7 @@ class _AboutPageState extends State<AboutPage> {
         child: ListView(
           children: [
             const Text(
-              'MoneyPie',
+              'MoneePi',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Text('Version: 1.0.0'),
