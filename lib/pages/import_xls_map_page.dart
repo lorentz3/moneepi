@@ -13,6 +13,8 @@ import 'package:excel/excel.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'dart:io';
 
+import 'package:myfinance2/widgets/simple_text_button.dart';
+
 class ImportXlsMapPage extends StatefulWidget {
   final String filePath;
   final bool hasSubCategories;
@@ -47,6 +49,13 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   final Map<String, int?> _categoryMapping = {};
   Map<String, int?> _mapColumnIndexes = {};
 
+  final Map<String, List<int>> _importErrors = {};
+  final String _dateTimeError = "dateTimeError";
+  final String _missingAccountOrCategory = "missingAccountOrCategory";
+  final String _transferWithoutSourceAccount = "transferWithoutSourceAccount";
+  final String _sameAccountAndSourceAccount = "sameAccountAndSourceAccount";
+  final String _categoryNotMapped = "categoryNotMapped";
+
   @override
   void initState() {
     super.initState();
@@ -75,7 +84,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                TextButton(
+                SimpleTextButton(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -88,9 +97,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
                       }),
                     });
                   }, // TODO: Navigare alla gestione account
-                  child: Text("Manage Accounts"),
+                  text: "Manage Accounts",
                 ),
-                TextButton(
+                SimpleTextButton(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -103,7 +112,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
                       }),
                     });
                   },
-                  child: Text("Manage Categories"),
+                  text: "Manage Categories",
                 ),
               ],
             ),
@@ -114,7 +123,8 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
             child: ListView(
               children: [
                 ...widget.distinctAccounts.map((account) => _buildAccountDropdownRow(account, _accountMapping)),
-                ...widget.distinctCategories.map((category) => _buildCategoryDropdownRow(category, _categoryMapping)),
+                SizedBox(height: 15,),
+                ...widget.distinctCategories.map((category) => category.isNotEmpty? _buildCategoryDropdownRow(category, _categoryMapping) : SizedBox()),
               ],
             ),
           ),
@@ -127,9 +137,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
                 setState(() {
                   _isImporting = true;
                 });
-                _startImport();
+                _startImport(false);
               },
-              child: Text("Start Import"),
+              child: Text("Step 3: Check errors before the real import"),
             ),
           ),
         ],
@@ -209,7 +219,12 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     );
   }
 
-  void _startImport() async {
+  void _startImport(bool realImport) async {
+    _importErrors[_missingAccountOrCategory] = [];
+    _importErrors[_dateTimeError] = [];
+    _importErrors[_transferWithoutSourceAccount] = [];
+    _importErrors[_sameAccountAndSourceAccount] = [];
+    _importErrors[_categoryNotMapped] = [];
     var bytes = File(_filePath).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
     var sheet = excel.tables.keys.first;
@@ -237,6 +252,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       DateTime? importedDateTime = parseExcelDate(row[dateCol]);
       if (importedDateTime == null) {
         debugPrint("Failed to import row $startRow: date time not recognized");
+        _importErrors.putIfAbsent(_dateTimeError, () => []).add(startRow);
         continue;
       }
 
@@ -245,46 +261,126 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       int? sourceAccountId = _accountMapping[importedSourceAccount];
       if (accountId == null || (categoryId == null && sourceAccountId == null)) {
         debugPrint("Failed to import row $startRow: missing account or category");
+        _importErrors.putIfAbsent(_missingAccountOrCategory, () => []).add(startRow);
+        continue;
+      }
+
+      if (TransactionType.EXPENSE.name == importedTypeString 
+          || TransactionType.INCOME.name == importedTypeString
+          || categoryId != null) {
+        Category? category = _existingCategories.where((category) => category.id == categoryId).firstOrNull;
+        if (category == null) {
+          debugPrint("Skipped row $startRow: category not mapped");
+          _importErrors.putIfAbsent(_categoryNotMapped, () => []).add(startRow);
+          continue;
+        }
+        if (realImport) {
+          await TransactionEntityService.insertTransaction(Transaction(
+            accountId: accountId,
+            timestamp: importedDateTime,
+            type: category.type == CategoryType.EXPENSE ? TransactionType.EXPENSE : TransactionType.INCOME,
+            categoryId: categoryId,
+            amount: double.tryParse(importedAmount) ?? 0.0,
+            notes: importedNote,
+          ));
+        }
         continue;
       }
 
       if (TransactionType.TRANSFER.name == importedTypeString || (categoryId == null && sourceAccountId != null)) {
         if (sourceAccountId == null) {
           debugPrint("Failed to import row $startRow: cannot import TRANSFER without sourceAccount");
+        _importErrors.putIfAbsent(_transferWithoutSourceAccount, () => []).add(startRow);
           continue;
         }
         if (accountId == sourceAccountId) {
           debugPrint("Failed to import row $startRow: cannot import TRANSFER if sourceAccount and account are the same");
+        _importErrors.putIfAbsent(_sameAccountAndSourceAccount, () => []).add(startRow);
           continue;
         }
-        await _importTransfer(importedDateTime, accountId, sourceAccountId, importedAmount, importedNote);
-      }
-      Category? category = _existingCategories.where((category) => category.id == categoryId).firstOrNull;
-      if (category == null) {
-          debugPrint("Skipped row $startRow: category not mapped");
+        if (realImport) {
+          await _importTransfer(importedDateTime, accountId, sourceAccountId, importedAmount, importedNote);
           continue;
+        }
       }
-      await TransactionEntityService.insertTransaction(Transaction(
-        accountId: accountId,
-        timestamp: importedDateTime,
-        type: category.type == CategoryType.EXPENSE ? TransactionType.EXPENSE : TransactionType.INCOME,
-        categoryId: categoryId,
-        amount: double.tryParse(importedAmount) ?? 0.0,
-        notes: importedNote,
-      ));
     }
-
     setState(() {
       _isImporting = false;
     });
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("XLSX import completed"))
-      );
-      // TODO go to page with errors
-      Navigator.pop(context);
-      Navigator.pop(context, true);
+
+    if (realImport) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("XLSX import completed"))
+        );
+        Navigator.pop(context);
+        Navigator.pop(context, true);
+      }
+    } else {
+      _showRealImportDialog();
     }
+  }
+
+  Future<void> _showRealImportDialog() async {
+    bool noErrors = (_importErrors[_missingAccountOrCategory] ?? []).isEmpty
+      && (_importErrors[_dateTimeError] ?? []).isEmpty
+      && (_importErrors[_transferWithoutSourceAccount] ?? []).isEmpty
+      && (_importErrors[_sameAccountAndSourceAccount] ?? []).isEmpty
+      && (_importErrors[_categoryNotMapped] ?? []).isEmpty;
+    String dateTimeErrors = (_importErrors[_dateTimeError] ?? []).isNotEmpty ? "Date time not recognized (rows: ${_formatImportErrors(_dateTimeError)})" : "";
+    String missingAccOrCatErrors = (_importErrors[_missingAccountOrCategory] ?? []).isNotEmpty ? "Missing account or category (rows: ${_formatImportErrors(_missingAccountOrCategory)})" : "";
+    String transferWithoutSourceAccountErrors = (_importErrors[_transferWithoutSourceAccount] ?? []).isNotEmpty ? "Cannot import TRANSFER without Source Account (rows: ${_formatImportErrors(_transferWithoutSourceAccount)})" : "";
+    String sameAccountsErrors = (_importErrors[_sameAccountAndSourceAccount] ?? []).isNotEmpty ? "Cannot import TRANSFER if sourceAccount and account are the same (rows: ${_formatImportErrors(_sameAccountAndSourceAccount)})" : "";
+    String categoryNotMappedErrors = (_importErrors[_categoryNotMapped] ?? []).isNotEmpty ? "Category not mapped (rows: ${_formatImportErrors(_categoryNotMapped)})" : "";
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true, 
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Import confirmation'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(noErrors ? "No errors found. Proceed with the import process?" : "Errors found - some rows will be skipped:"),
+                SizedBox(height: 4,),
+                if (!noErrors && dateTimeErrors.isNotEmpty) Text(dateTimeErrors),
+                SizedBox(height: 4,),
+                if (!noErrors && missingAccOrCatErrors.isNotEmpty) Text(missingAccOrCatErrors),
+                SizedBox(height: 4,),
+                if (!noErrors && transferWithoutSourceAccountErrors.isNotEmpty) Text(transferWithoutSourceAccountErrors),
+                SizedBox(height: 4,),
+                if (!noErrors && sameAccountsErrors.isNotEmpty) Text(sameAccountsErrors),
+                SizedBox(height: 4,),
+                if (!noErrors && categoryNotMappedErrors.isNotEmpty) Text(categoryNotMappedErrors),
+                SizedBox(height: 4,),
+                if (!noErrors) Text("Would you rather update the file and try again later, or continue with the import anyway?"),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              child: Text("Start import"),
+              onPressed: () {
+                setState(() {
+                  _startImport(true);
+                  Navigator.pop(context);
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _formatImportErrors(String key) {
+    final list = _importErrors[key];
+    if (list == null || list.isEmpty) return '';
+    return list.join(', ');
   }
 
   _importTransfer(DateTime importedDate, int accountId, int sourceAccountId, String importedAmount, String? importedNote) async {

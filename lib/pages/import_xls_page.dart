@@ -174,7 +174,7 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                         ),
                         if (entry.key == 'Date') SizedBox(height: 8),
                         if (entry.key == 'Type') InfoLabel(
-                          text: "'Type' column must contain 'EXPENSE', 'INCOME' or 'TRANSFER', in order to distinguish the types of transactions. You can leave it empty, transaction type will be deducted by the target category type.",
+                          text: "'Type' column must contain 'EXPENSE', 'INCOME' or 'TRANSFER', in order to distinguish the types of transactions. You can leave it empty, transaction type will be deducted by the target category type and the source account presence.",
                           fontSize: 12,
                         ),
                         if (entry.key == 'Type') SizedBox(height: 8),
@@ -200,14 +200,14 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                     )
                   )),
               SizedBox(height: 20),
-              if (!_isExtractingAccountsAndCategories) ElevatedButton(
+              if (!_isExtractingAccountsAndCategories && _distinctAccounts.isEmpty) ElevatedButton(
                 onPressed: () {
                   setState(() {
                     _isExtractingAccountsAndCategories = true;
                   });
                  _parseFile();
                 },
-                child: Text("Extract Accounts and Categories"),
+                child: Text("Step 1: Extract Accounts and Categories"),
               ),
               if (_distinctAccounts.isNotEmpty)
                 ...[
@@ -238,7 +238,7 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                       ),
                     );
                   },
-                  child: Text("Map imported items"),
+                  child: Text("Step 2: Map imported items"),
                 ),
               ],
           ),

@@ -113,9 +113,9 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
       String type = tx.type;
       sheet.appendRow([
         TextCellValue(dateFormat.format(tx.date)),
-        TextCellValue(tx.type),
+        TextCellValue(type),
         TextCellValue(tx.account ?? ''),
-        TextCellValue(type != 'TRANSFER' ? tx.sourceAccount ?? '' : ''),
+        TextCellValue(type == 'TRANSFER' ? tx.sourceAccount ?? '' : ''),
         TextCellValue(tx.category ?? ''),
         DoubleCellValue(tx.amount),
         TextCellValue(tx.notes ?? ''),
