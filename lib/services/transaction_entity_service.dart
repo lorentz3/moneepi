@@ -298,6 +298,7 @@ class TransactionEntityService {
     if(maps.isEmpty){
       return Transaction(type: TransactionType.EXPENSE, timestamp: DateTime.now());
     }
+    debugPrint("loaded transaction: ${maps[0]}");
     return Transaction.fromJson(maps[0]);
   }
 

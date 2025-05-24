@@ -382,6 +382,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     return TextFormField(
       decoration: InputDecoration(labelText: 'Notes'),
       onChanged: (value) => _notes = value,
+      initialValue: _notes,
     );
   }
 
