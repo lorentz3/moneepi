@@ -5,6 +5,7 @@ import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/services/clean_service.dart';
 import 'package:myfinance2/utils/graph_utils.dart';
 import 'package:myfinance2/widgets/year_selector.dart';
 
@@ -36,6 +37,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
   }
 
   Future<void> _loadStats() async {
+    await CleanService.cleanTablesFromDeletedObjects();
     _category = await CategoryEntityService.getCategoryById(_categoryId);
     _categoryStats = await CategoryEntityService.getCategoryStats(_categoryId, _selectedDate.year);
     if (_categoryStats.isNotEmpty) {

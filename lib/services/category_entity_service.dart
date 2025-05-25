@@ -4,6 +4,8 @@ import 'package:myfinance2/dto/category_summary_dto.dart';
 import 'package:myfinance2/dto/group_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
+import 'package:myfinance2/services/group_entity_service.dart';
+import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 
 class CategoryEntityService {
   static const String _tableName = "Categories";
@@ -137,6 +139,8 @@ class CategoryEntityService {
       where: "id = ?",
       whereArgs: [categoryId]
     );
+    await MonthlyCategoryTransactionEntityService.deleteMonthlyCategoryTransactionSummary(categoryId);
+    await GroupEntityService.removeCategoryFromAllGroups(categoryId);
   }
   
   static Future<Category> getCategoryById(int categoryId) async {

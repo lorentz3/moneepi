@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myfinance2/dto/group_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/pages/group_form_page.dart';
+import 'package:myfinance2/services/clean_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 
 class GroupListPage extends StatefulWidget {
@@ -25,6 +26,7 @@ class _GroupListPageState extends State<GroupListPage> {
   }
 
   Future<void> _loadGroups() async {
+    await CleanService.cleanTablesFromDeletedObjects();
     _groups = await GroupEntityService.getGroupsWithCategories(false);
     setState(() {});
   }

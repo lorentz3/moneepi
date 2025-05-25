@@ -4,6 +4,7 @@ import 'package:myfinance2/dto/group_stats_dto.dart';
 import 'package:myfinance2/dto/month_total_dto.dart';
 import 'package:myfinance2/pages/category_stats_page.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/services/clean_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/widgets/month_year_selector.dart';
@@ -40,6 +41,7 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Future<void> _loadStats() async {
+    await CleanService.cleanTablesFromDeletedObjects();
     _monthTotalDto = await TransactionEntityService.getMonthTotalDto(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _groupStats = await GroupEntityService.getGroupStats(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _groupExists = _groupStats.isNotEmpty;

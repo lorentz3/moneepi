@@ -71,25 +71,28 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(1.0),
-      child: Row(
-        mainAxisAlignment: _alignment,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () => _changeMonth(-1),
-          ),
-          GestureDetector(
-            onTap: _pickMonthYear,
-            child: Text(
-              DateFormat(_showYear ? 'MMM yyyy' : 'MMM').format(_currentDate),
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      child: SizedBox(
+        width: double.infinity, // forza la riga a occupare tutta la larghezza
+        child: Row(
+          mainAxisAlignment: _alignment,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: () => _changeMonth(-1),
             ),
-          ),
-          IconButton(
-            icon: (_enableFutureArrow || MyDateUtils.isPastMonth(_currentDate.month, _currentDate.year)) ? const Icon(Icons.chevron_right) : const Icon(Icons.block_rounded),
-            onPressed: () => _enableFutureArrow || MyDateUtils.isPastMonth(_currentDate.month, _currentDate.year) ? _changeMonth(1) : (),
-          ),
-        ],
+            GestureDetector(
+              onTap: _pickMonthYear,
+              child: Text(
+                DateFormat(_showYear ? 'MMM yyyy' : 'MMM').format(_currentDate),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            IconButton(
+              icon: (_enableFutureArrow || MyDateUtils.isPastMonth(_currentDate.month, _currentDate.year)) ? const Icon(Icons.chevron_right) : const Icon(Icons.block_rounded),
+              onPressed: () => _enableFutureArrow || MyDateUtils.isPastMonth(_currentDate.month, _currentDate.year) ? _changeMonth(1) : (),
+            ),
+          ],
+        ),
       ),
     );
   }

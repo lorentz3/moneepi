@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:myfinance2/database/database_defaults.dart';
 import 'package:myfinance2/database/database_helper.dart';
 import 'package:myfinance2/model/account.dart';
@@ -12,6 +13,7 @@ class AccountEntityService {
     if(maps.isEmpty){
       return [];
     }
+    debugPrint("Accounts: $maps");
     return List.generate(maps.length, (index) => Account.fromJson(maps[index]));
   } 
 
@@ -38,6 +40,7 @@ class AccountEntityService {
       where: "id = ?",
       whereArgs: [accountId]
     );
+    await MonthlyAccountEntityService.deleteSummaries(accountId);
   }
   
   static void insertDefaultAccounts() async {

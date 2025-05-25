@@ -94,11 +94,20 @@ class MonthlyCategoryTransactionEntityService {
     );
   }
 
-  static Future<void> deleteMonthlyCategoryTransactionSummary(int transactionId) async {
+  static Future<void> deleteSummariesOfDeletedCategories() async {
+    final db = await DatabaseHelper.getDb();
+    final String query = """
+      DELETE FROM $_tableName
+      WHERE categoryId NOT IN (SELECT id FROM Categories)
+    """;
+    await db.rawQuery(query);
+  }
+
+  static Future<void> deleteMonthlyCategoryTransactionSummary(int categoryId) async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName, 
-      where: "id = ?",
-      whereArgs: [transactionId]
+      where: "categoryId = ?",
+      whereArgs: [categoryId]
     );
   }
 

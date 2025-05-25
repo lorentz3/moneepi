@@ -3,6 +3,7 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/group.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/services/clean_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/utils/color_identity.dart';
 
@@ -26,9 +27,14 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
   @override
   void initState() {
     super.initState();
+    _clean();
     _loadCategories();
     _loadGroups();
     _currencySymbol = widget.currencySymbol;
+  }
+
+  Future<void> _clean() async {
+    await CleanService.cleanTablesFromDeletedObjects();
   }
   
   Future<void> _loadCategories() async {

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/account_dto.dart';
 import 'package:myfinance2/dto/monthly_account_summary_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/services/clean_service.dart';
 import 'package:myfinance2/utils/color_identity.dart';
 import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
@@ -43,6 +44,7 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
   }
 
   _loadAllData() async {
+    await CleanService.cleanTablesFromDeletedObjects();
     _accounts = await MonthlyAccountEntityService.getAllAccountsWithBalance();
     _monthlySummaries = await MonthlyAccountEntityService.getLast12MonthsAccountsSummaries(_selectedDate.month, _selectedDate.year);
     setState(() {});

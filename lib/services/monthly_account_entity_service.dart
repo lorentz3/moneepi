@@ -200,14 +200,22 @@ class MonthlyAccountEntityService {
     );
   }
 
-  // TODO probabilmente mai usato
-  /*static Future<void> deleteMonthlyAccountSummary(int transactionId) async {
+  static Future<void> deleteSummariesOfDeletedAccount() async {
+    final db = await DatabaseHelper.getDb();
+    final String query = """
+      DELETE FROM $_tableName
+      WHERE accountId NOT IN (SELECT id FROM Accounts)
+    """;
+    await db.rawQuery(query);
+  }
+
+  static Future<void> deleteSummaries(int accountId) async {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName, 
-      where: "id = ?",
-      whereArgs: [transactionId]
+      where: "accountId = ?",
+      whereArgs: [accountId]
     );
-  }*/
+  }
 
   static Future<List<MonthlyAccountSummaryDto>> getLast12MonthsAccountsSummaries(int month, int year) async {
     final db = await DatabaseHelper.getDb();

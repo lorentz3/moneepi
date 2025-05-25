@@ -8,6 +8,7 @@ import 'package:myfinance2/pages/monthly_saving_settings_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/services/clean_service.dart';
 import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/utils/color_identity.dart';
@@ -46,6 +47,7 @@ class BudgetingPageState extends State<BudgetingPage> {
   }
 
    Future<void> _loadStats() async {
+    await CleanService.cleanTablesFromDeletedObjects();
     _monthTotals = await TransactionEntityService.getMonthTotals(_selectedDate.year);
     _yearExpenses = _monthTotals
       .map((e) => e.totalExpense)

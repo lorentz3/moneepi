@@ -104,6 +104,24 @@ class GroupEntityService {
     );
   }
 
+  static Future<void> removeCategoryFromAllGroups(int categoryId) async {
+    final db = await DatabaseHelper.getDb();
+    await db.delete(_linksTableName, 
+      where: "categoryId = ?",
+      whereArgs: [categoryId]
+    );
+  }
+
+  static Future<void> cleanGroupCategoryLinks() async {
+    final db = await DatabaseHelper.getDb();
+    await db.delete(_linksTableName, 
+      where: "groupId NOT IN (SELECT id FROM $_tableName)",
+    );
+    await db.delete(_linksTableName, 
+      where: "categoryId NOT IN (SELECT id FROM Categories)",
+    );
+  }
+
   static Future<List<Group>> getAllGroupsWithMonthlyThreshold(TransactionType type) async {
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps =  await db.query(
