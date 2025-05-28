@@ -251,7 +251,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       appBar: AppBar(
-        title: MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
+        title: MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.start,),
       ),
       body: _getMainBody(),
       bottomNavigationBar: Container(

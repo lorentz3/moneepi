@@ -25,7 +25,7 @@ class MonthYearSelector extends StatefulWidget {
 
 class MonthYearSelectorState extends State<MonthYearSelector> {
   late DateTime _currentDate;
-  MainAxisAlignment _alignment = MainAxisAlignment.start;
+  MainAxisAlignment _alignment = MainAxisAlignment.center;
   bool _enableFutureArrow = false;
   bool _showYear = true;
 

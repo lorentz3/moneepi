@@ -9,7 +9,7 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
-  final String appUrl = 'https://sites.google.com/view/lorentz3/moneypie';
+  final String appUrl = 'https://sites.google.com/view/lorentz3/moneepi';
 
   void _launchURL(String url) async {
     debugPrint("trying launching $url");

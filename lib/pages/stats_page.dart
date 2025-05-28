@@ -218,7 +218,7 @@ class _StatsPageState extends State<StatsPage> {
   
   _getPeriodSelector() {
     if (_periodOption == PeriodOption.monthly){
-      return MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate);
+      return MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.start,);
     }
     if (_periodOption == PeriodOption.annually){
       return YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate);
