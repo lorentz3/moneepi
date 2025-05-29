@@ -4,7 +4,14 @@ import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/transaction_export_dto.dart';
+import 'package:myfinance2/model/account.dart';
+import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/model/category_type.dart';
+import 'package:myfinance2/services/account_entity_service.dart';
+import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
+import 'package:myfinance2/utils/date_utils.dart';
+import 'package:myfinance2/widgets/simple_text_button.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -16,49 +23,125 @@ class ExportTransactionsPage extends StatefulWidget {
 }
 
 class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
-  DateTime? fromDate;
-  DateTime? toDate;
-  bool exportAll = false;
+  DateTime? _fromDate;
+  DateTime? _toDate;
+  bool _exportAll = false;
+  bool _exportCategories = false;
+  bool _exportAccounts = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Esport Transactions')),
+      appBar: AppBar(title: Text('XLSX Export')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             CheckboxListTile(
-              value: exportAll,
-              title: Text('Export all'),
-              onChanged: (val) => setState(() => exportAll = val ?? false),
-            ),
-            if (!exportAll) ...[
-              ListTile(
-                title: Text('From: ${fromDate?.toLocal() ?? "Select date"}'),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2200),
-                  );
-                  if (picked != null) setState(() => fromDate = picked);
-                },
+              value: _exportAll,
+              title: Text(
+                'Export all transactions',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16
+                ),
               ),
-              ListTile(
-                title: Text('To: ${toDate?.toLocal() ?? "Select date"}'),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) setState(() => toDate = picked);
-                },
+              onChanged: (val) => setState(() => _exportAll = val ?? false),
+            ),
+            if (!_exportAll) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SizedBox(width: 30,),
+                  Text(
+                    'From: ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16
+                    ),
+                  ),
+                  SizedBox(width: 10,),
+                  _fromDate != null ? Text(
+                    '${MyDateUtils.formatDate(_fromDate)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16
+                    ),
+                  ) : SizedBox(),
+                  SizedBox(width: 10,),
+                  _fromDate != null ? Expanded(child: SizedBox()) : SizedBox(),
+                  SimpleTextButton(
+                    text: "Select date",
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(1950),
+                        lastDate: DateTime(2200),
+                      );
+                      if (picked != null) setState(() => _fromDate = picked);
+                    },
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SizedBox(width: 30,),
+                  Text(
+                    'To:     ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16
+                    ),
+                  ),
+                  SizedBox(width: 10,),
+                  _toDate != null ? Text(
+                    '${MyDateUtils.formatDate(_toDate)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16
+                    ),
+                  ) : SizedBox(),
+                  SizedBox(width: 10,),
+                  _toDate != null ? Expanded(child: SizedBox()) : SizedBox(),
+                  SimpleTextButton(
+                    text: "Select date",
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(1950),
+                        lastDate: DateTime(2200),
+                      );
+                      if (picked != null) setState(() => _toDate = picked);
+                    },
+                  ),
+                ],
               ),
             ],
+            CheckboxListTile(
+              value: _exportCategories,
+              title: Text(
+                'Export categories',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16
+                ),
+              ),
+              onChanged: (val) => setState(() => _exportCategories = val ?? false),
+            ),
+            CheckboxListTile(
+              value: _exportAccounts,
+              title: Text(
+                'Export all accounts',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16
+                ),
+              ),
+              onChanged: (val) => setState(() => _exportAccounts = val ?? false),
+            ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () => _export(),
@@ -72,7 +155,7 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
   }
 
   Future<void> _export() async {
-    if (!exportAll && (fromDate == null || toDate == null)) {
+    if (!_exportAll && (_fromDate == null || _toDate == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Select both 'From' and 'To', or export all")),
       );
@@ -80,8 +163,8 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
     }
     // Recupera i dati con i join
     final transactions = await TransactionEntityService.getTransactionsForExport(
-      from: exportAll ? null : fromDate,
-      to: exportAll ? null : toDate,
+      from: _exportAll ? null : _fromDate,
+      to: _exportAll ? null : _toDate,
     );
 
     final file = await exportTransactionsToExcel(transactions);
@@ -120,6 +203,47 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
         DoubleCellValue(tx.amount),
         TextCellValue(tx.notes ?? ''),
       ]);
+    }
+
+    if (_exportCategories) {
+  	  final expenseCategoriesSheet = excel['Expense_Categories'];
+      expenseCategoriesSheet.appendRow([TextCellValue('Icon'), TextCellValue('Name'), TextCellValue('Order'), TextCellValue('Month Threshold')]);
+
+      List<Category> expenseCategories = await CategoryEntityService.getAllCategories(CategoryType.EXPENSE);
+      for (var c in expenseCategories) {
+        expenseCategoriesSheet.appendRow([
+          TextCellValue(c.icon ?? ''),
+          TextCellValue(c.name),
+          TextCellValue("${c.sort}"),
+          TextCellValue("${c.monthThreshold ?? ''}"),
+        ]);
+      }
+  	  final incomeCategoriesSheet = excel['Income_Categories'];
+      incomeCategoriesSheet.appendRow([TextCellValue('Icon'), TextCellValue('Name'), TextCellValue('Order')]);
+
+      List<Category> incomeCategories = await CategoryEntityService.getAllCategories(CategoryType.INCOME);
+      for (var c in incomeCategories) {
+        incomeCategoriesSheet.appendRow([
+          TextCellValue(c.icon ?? ''),
+          TextCellValue(c.name),
+          TextCellValue("${c.sort}"),
+        ]);
+      }
+    }
+
+    if (_exportAccounts) {
+  	  final accountsSheet = excel['Accounts'];
+      accountsSheet.appendRow([TextCellValue('Icon'), TextCellValue('Name'), TextCellValue('Order'), TextCellValue('Initial Balance')]);
+
+      List<Account> accounts = await AccountEntityService.getAllAccounts();
+      for (var a in accounts) {
+        accountsSheet.appendRow([
+          TextCellValue(a.icon ?? ''),
+          TextCellValue(a.name),
+          TextCellValue("${a.sort}"),
+          TextCellValue("${a.initialBalance}"),
+        ]);
+      }
     }
 
     final dir = await getApplicationDocumentsDirectory();

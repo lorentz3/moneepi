@@ -66,7 +66,8 @@ class MyDateUtils {
     return areMonthYearEquals(dt, DateTime.now());
   }
 
-  static String formatDate(DateTime dt) {
+  static String? formatDate(DateTime? dt) {
+    if (dt == null) return null;
     return DateFormat('dd MMM yyyy').format(dt);
   }
 }

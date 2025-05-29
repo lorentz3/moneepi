@@ -222,7 +222,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
         children: [
           Icon(Icons.calendar_month),
           const SizedBox(width: 10),
-          Text(MyDateUtils.formatDate(_selectedDate), style: TextStyle(fontSize: 16)),
+          Text(MyDateUtils.formatDate(_selectedDate) ?? "", style: TextStyle(fontSize: 16)),
         ],
       ),
     );

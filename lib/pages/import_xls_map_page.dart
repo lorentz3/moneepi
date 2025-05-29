@@ -96,7 +96,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
                         _loadData();
                       }),
                     });
-                  }, // TODO: Navigare alla gestione account
+                  },
                   text: "Manage Accounts",
                 ),
                 SimpleTextButton(
@@ -148,6 +148,10 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   }
 
   Widget _buildAccountDropdownRow(String importedItem, Map<String, int?> mapping) {
+    int? accountFound = _tryToFindMatchingAccount(importedItem);
+    if (accountFound != null) {
+      mapping[importedItem] = accountFound;
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       child: Row(
@@ -182,6 +186,10 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   }
   
   Widget _buildCategoryDropdownRow(String importedItem, Map<String, int?> mapping) {
+    int? categoryFound = _tryToFindMatchingCategory(importedItem);
+    if (categoryFound != null) {
+      mapping[importedItem] = categoryFound;
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       child: Row(
@@ -414,5 +422,23 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       default: 
         return null;
     }
+  }
+  
+  int? _tryToFindMatchingAccount(String nameToMatch) {
+    for (Account a in _existingAccounts) {
+      if (a.name == nameToMatch) {
+        return a.id;
+      }
+    }
+    return null;
+  }
+  
+  int? _tryToFindMatchingCategory(String nameToMatch) {
+    for (Category a in _existingCategories) {
+      if (a.name == nameToMatch) {
+        return a.id;
+      }
+    }
+    return null;
   }
 }

@@ -247,6 +247,7 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Info'),
               onTap: () => _navigateTo(Pages.about),
             ),
+            SizedBox(height: 50,),
           ],
         ),
       ),
