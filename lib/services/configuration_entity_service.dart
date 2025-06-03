@@ -72,4 +72,15 @@ class ConfigurationEntityService {
     );
     debugPrint("updated configuration ${configuration.name}: ${configuration.intValue} ${configuration.textValue} ${configuration.realValue}");
   }
+  
+  //for export
+  static Future<List<Configuration>> getAllConfigurations() async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName);
+    if(maps.isEmpty){
+      return [];
+    }
+    debugPrint("Configurations: $maps");
+    return List.generate(maps.length, (index) => Configuration.fromJson(maps[index]));
+  } 
 }

@@ -7,8 +7,10 @@ import 'package:myfinance2/dto/transaction_export_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
+import 'package:myfinance2/model/configuration.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/services/configuration_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/utils/date_utils.dart';
 import 'package:myfinance2/widgets/simple_text_button.dart';
@@ -244,6 +246,18 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
           TextCellValue("${a.initialBalance}"),
         ]);
       }
+    }
+
+    final configSheet = excel['Configurations'];
+    configSheet.appendRow([TextCellValue('Name'), TextCellValue('intValue'), TextCellValue('textValue'), TextCellValue('realValue')]);
+    List<Configuration> configs = await ConfigurationEntityService.getAllConfigurations();
+    for (var a in configs) {
+      configSheet.appendRow([
+        TextCellValue(a.name),
+        TextCellValue("${a.intValue ?? ''}"),
+        TextCellValue(a.textValue ?? ''),
+        TextCellValue("${a.realValue ?? ''}"),
+      ]);
     }
 
     final dir = await getApplicationDocumentsDirectory();

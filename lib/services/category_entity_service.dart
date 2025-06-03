@@ -33,7 +33,7 @@ class CategoryEntityService {
     return List.generate(maps.length, (index) => Category.fromJson(maps[index]));
   } 
 
-  static void updateCategory(Category category) async {
+  static Future<void> updateCategory(Category category) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
       category.toMap(),
@@ -126,9 +126,9 @@ class CategoryEntityService {
     return monthlyMap;
   }
 
-  static void insertCategory(Category category) async {
+  static Future<int> insertCategory(Category category) async {
     final db = await DatabaseHelper.getDb();
-    await db.insert(_tableName, 
+    return await db.insert(_tableName, 
       category.toMapCreate()
     );
   }
@@ -151,6 +151,19 @@ class CategoryEntityService {
     );
     if (maps.isEmpty) {
       return Category(name: "Category not found", type: CategoryType.EXPENSE, sort: 1);
+    }
+    return Category.fromJson(maps[0]);
+  }
+  
+  static Future<Category?> getCategoryByName(String name) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName, 
+      where: "name = ?",
+      limit: 1,
+      whereArgs: [name]
+    );
+    if (maps.isEmpty) {
+      return null;
     }
     return Category.fromJson(maps[0]);
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' as f;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/group_summary_dto.dart';
@@ -40,8 +41,14 @@ import 'package:myfinance2/widgets/section_divider.dart';
 import 'package:myfinance2/widgets/square_button.dart';
 import 'package:myfinance2/widgets/thresholds_bar.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
+import 'package:sqflite/sqflite.dart' as sqflite;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
 void main() {
+  if (!f.kIsWeb && (f.defaultTargetPlatform == TargetPlatform.windows || f.defaultTargetPlatform == TargetPlatform.linux || f.defaultTargetPlatform == TargetPlatform.macOS)) {
+    ffi.sqfliteFfiInit();
+    sqflite.databaseFactory = ffi.databaseFactoryFfi;
+  }
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const FinanceApp());
 }

@@ -16,6 +16,7 @@ class ImportXlsPage extends StatefulWidget {
 
 class ImportXlsPageState extends State<ImportXlsPage> {
   String? _filePath;
+  bool _importingFromMoneePi = true;
   bool _hasHeaderRow = true;
   bool _isExtractingAccountsAndCategories = false;
   final Map<String, TextEditingController> _columnControllers = {
@@ -149,6 +150,19 @@ class ImportXlsPageState extends State<ImportXlsPage> {
               Row(
                 children: [
                   Checkbox(
+                    value: _importingFromMoneePi,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _importingFromMoneePi = value ?? true;
+                      });
+                    },
+                  ),
+                  Text("I'm importing data from MoneePi export"),
+                ],
+              ),
+              if (!_importingFromMoneePi) Row(
+                children: [
+                  Checkbox(
                     value: _hasHeaderRow,
                     onChanged: (bool? value) {
                       setState(() {
@@ -159,11 +173,13 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                   Text("The file contains a header row")
                 ],
               ),
-              InfoLabel(
+              if (!_importingFromMoneePi) InfoLabel(
                 text: "Configure column index (0 = 'A', 1 = 'B', ...). If you are importing a file exported from this app, you can leave default indexes and go ahead.",
                 fontSize: 12,
               ),
+              if (!_importingFromMoneePi)
               SizedBox(height: 10),
+              if (!_importingFromMoneePi)
               ..._columnControllers.entries.map((entry) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: Column(
@@ -233,6 +249,7 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                           distinctCategories: _distinctCategories,
                           hasSubCategories: int.tryParse(_columnControllers['SubCategory']!.text) != null,
                           hasHeaderRow: _hasHeaderRow,
+                          importingFromMoneePi: _importingFromMoneePi,
                           mapColumnIndexes: _getMapColumnIndexes(),
                         ),
                       ),

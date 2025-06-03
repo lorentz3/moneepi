@@ -19,6 +19,7 @@ class ImportXlsMapPage extends StatefulWidget {
   final String filePath;
   final bool hasSubCategories;
   final bool hasHeaderRow;
+  final bool importingFromMoneePi;
   final Set<String> distinctAccounts;
   final Set<String> distinctCategories;
   final Map<String, int?> mapColumnIndexes;
@@ -26,6 +27,7 @@ class ImportXlsMapPage extends StatefulWidget {
   const ImportXlsMapPage({
     super.key, 
     required this.filePath,
+    required this.importingFromMoneePi,
     required this.hasHeaderRow,
     required this.distinctAccounts,
     required this.distinctCategories,
@@ -43,6 +45,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   bool _hasSubCategories = false;
   bool _isImporting = false;
   bool _hasHeaderRow = false;
+  bool _importingFromMoneePi = false;
   List<Account> _existingAccounts = [];
   List<Category> _existingCategories = [];
   final Map<String, int?> _accountMapping = {};
@@ -56,10 +59,13 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   final String _sameAccountAndSourceAccount = "sameAccountAndSourceAccount";
   final String _categoryNotMapped = "categoryNotMapped";
 
+  List<String> _newExpenseCategories = [];
+
   @override
   void initState() {
     super.initState();
     _filePath = widget.filePath;
+    _importingFromMoneePi = widget.importingFromMoneePi;
     _hasSubCategories = widget.hasSubCategories;
     _hasHeaderRow = widget.hasHeaderRow;
     _mapColumnIndexes = widget.mapColumnIndexes;
@@ -70,6 +76,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     _existingAccounts = await AccountEntityService.getAllAccounts();
     _existingCategories = await CategoryEntityService.getAllExpenseAndIncomeCategories();
     setState(() { });
+    if (_importingFromMoneePi) {
+      _startImportFromMoneePi(false);
+    }
   }
 
   @override
@@ -119,6 +128,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
           ),
           
           // Scrollable content
+          if (!_importingFromMoneePi)
           Expanded(
             child: ListView(
               children: [
@@ -228,13 +238,73 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   }
 
   void _startImport(bool realImport) async {
+    //init report vars
     _importErrors[_missingAccountOrCategory] = [];
     _importErrors[_dateTimeError] = [];
     _importErrors[_transferWithoutSourceAccount] = [];
     _importErrors[_sameAccountAndSourceAccount] = [];
     _importErrors[_categoryNotMapped] = [];
+    _newExpenseCategories = [];
+
     var bytes = File(_filePath).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
+
+    if (_importingFromMoneePi) {
+      // import expense categories
+      var sheet = excel.tables['Expense_Categories'];
+      if (sheet != null) {
+        int iconCol = 0;
+        int nameCol = 1;
+        int orderCol = 2;
+        int thresholdCol = 3;
+        List<List<dynamic>> rows = sheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
+
+        for (var row in rows.skip(1)) {
+          String importedIcon = row[iconCol]?.toString() ?? "";
+          String importedName = row[nameCol]?.toString() ?? "";
+          String importedOrder = row[orderCol]?.toString() ?? "";
+          String importedThreshold = row[thresholdCol]?.toString() ?? "";
+          if (importedName == "") {
+            continue;
+          }
+          Category? existingCategory = await CategoryEntityService.getCategoryByName(importedName);
+          if (existingCategory == null) {
+            _newExpenseCategories.add(importedName);
+            if (realImport) {
+              Category newCategory = Category(
+                icon: importedIcon,
+                name: importedName, 
+                type: CategoryType.EXPENSE, 
+                sort: int.tryParse(importedOrder) ?? 0,
+                monthThreshold: double.tryParse(importedThreshold),
+              );
+              int insertedCategoryId = await CategoryEntityService.insertCategory(newCategory);
+              _existingCategories.add(Category(
+                  id: insertedCategoryId,
+                  icon: importedIcon,
+                  name: importedName, 
+                  type: CategoryType.EXPENSE, 
+                  sort: int.tryParse(importedOrder) ?? 0,
+                  monthThreshold: double.tryParse(importedThreshold),
+                )
+              );
+            }
+          } else {
+            if (realImport) {
+              // update category values
+              if (importedIcon != "") {
+                existingCategory.icon = importedIcon;
+              }
+              if (importedThreshold != "") {
+                existingCategory.monthThreshold = double.tryParse(importedThreshold);
+              }
+              await CategoryEntityService.updateCategory(existingCategory);
+            }
+          }
+        }
+      }
+    }
+
     var sheet = excel.tables.keys.first;
     List<List<dynamic>> rows = excel.tables[sheet]!.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
 
@@ -248,6 +318,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     int? noteCol = _mapColumnIndexes['Note'];
     int amountCol = _mapColumnIndexes['Amount']!;
 
+    //import transactions
     for (var row in rows.skip(startRow)) {
       startRow++;
       String importedTypeString = typeCol != null ? row[typeCol]?.toString() ?? "" : "";
@@ -312,6 +383,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
         }
       }
     }
+
     setState(() {
       _isImporting = false;
     });
@@ -328,6 +400,76 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       _showRealImportDialog();
     }
   }
+  
+
+  void _startImportFromMoneePi(bool realImport) async {
+    //init report vars
+    _newExpenseCategories = [];
+
+    var bytes = File(_filePath).readAsBytesSync();
+    var excel = Excel.decodeBytes(bytes);
+
+    if (_importingFromMoneePi) {
+      // import expense categories
+      var sheet = excel.tables['Expense_Categories'];
+      if (sheet != null) {
+        int iconCol = 0;
+        int nameCol = 1;
+        int orderCol = 2;
+        int thresholdCol = 3;
+        List<List<dynamic>> rows = sheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
+
+        for (var row in rows.skip(1)) {
+          String importedIcon = row[iconCol]?.toString() ?? "";
+          String importedName = row[nameCol]?.toString() ?? "";
+          String importedOrder = row[orderCol]?.toString() ?? "";
+          String importedThreshold = row[thresholdCol]?.toString() ?? "";
+          if (importedName == "") {
+            continue;
+          }
+          Category? existingCategory = await CategoryEntityService.getCategoryByName(importedName);
+          if (existingCategory == null) {
+            _newExpenseCategories.add(importedName);
+            if (realImport) {
+              Category newCategory = Category(
+                icon: importedIcon,
+                name: importedName, 
+                type: CategoryType.EXPENSE, 
+                sort: int.tryParse(importedOrder) ?? 0,
+                monthThreshold: double.tryParse(importedThreshold),
+              );
+              int insertedCategoryId = await CategoryEntityService.insertCategory(newCategory);
+              _existingCategories.add(Category(
+                  id: insertedCategoryId,
+                  icon: importedIcon,
+                  name: importedName, 
+                  type: CategoryType.EXPENSE, 
+                  sort: int.tryParse(importedOrder) ?? 0,
+                  monthThreshold: double.tryParse(importedThreshold),
+                )
+              );
+            }
+          } else {
+            if (realImport) {
+              // update category values
+              if (importedIcon != "") {
+                existingCategory.icon = importedIcon;
+              }
+              if (importedThreshold != "") {
+                existingCategory.monthThreshold = double.tryParse(importedThreshold);
+              }
+              await CategoryEntityService.updateCategory(existingCategory);
+            }
+          }
+        }
+      }
+    }
+
+    setState(() {
+      _isImporting = false;
+    });
+    _showRealImportDialog();
+  }
 
   Future<void> _showRealImportDialog() async {
     bool noErrors = (_importErrors[_missingAccountOrCategory] ?? []).isEmpty
@@ -340,6 +482,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     String transferWithoutSourceAccountErrors = (_importErrors[_transferWithoutSourceAccount] ?? []).isNotEmpty ? "Cannot import TRANSFER without Source Account (rows: ${_formatImportErrors(_transferWithoutSourceAccount)})" : "";
     String sameAccountsErrors = (_importErrors[_sameAccountAndSourceAccount] ?? []).isNotEmpty ? "Cannot import TRANSFER if sourceAccount and account are the same (rows: ${_formatImportErrors(_sameAccountAndSourceAccount)})" : "";
     String categoryNotMappedErrors = (_importErrors[_categoryNotMapped] ?? []).isNotEmpty ? "Category not mapped (rows: ${_formatImportErrors(_categoryNotMapped)})" : "";
+    String newExpenseCategoriesThatWillBeImported = _formatStringList(_newExpenseCategories);
     return showDialog<void>(
       context: context,
       barrierDismissible: true, 
@@ -349,6 +492,8 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
+                if (_importingFromMoneePi && _newExpenseCategories.isNotEmpty) Text ("New expense categories: $newExpenseCategoriesThatWillBeImported"),
+                SizedBox(height: 8,),
                 Text(noErrors ? "No errors found. Proceed with the import process?" : "Errors found - some rows will be skipped:"),
                 SizedBox(height: 4,),
                 if (!noErrors && dateTimeErrors.isNotEmpty) Text(dateTimeErrors),
@@ -389,6 +534,11 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     final list = _importErrors[key];
     if (list == null || list.isEmpty) return '';
     return list.join(', ');
+  }
+
+  String _formatStringList(List<String> strings) {
+    if (strings.isEmpty) return '';
+    return strings.join(', ');
   }
 
   _importTransfer(DateTime importedDate, int accountId, int sourceAccountId, String importedAmount, String? importedNote) async {
