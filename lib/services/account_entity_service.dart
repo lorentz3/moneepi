@@ -30,6 +30,10 @@ class AccountEntityService {
     return Account.fromJson(maps[0]);
   }
 
+  static Future<bool> existsAccountByName(String name) async {
+    return await getAccountByName(name) != null;
+  }
+
   static Future<void> updateAccount(Account account) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
@@ -94,4 +98,5 @@ class AccountEntityService {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName);
   }
+
 }

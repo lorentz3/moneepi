@@ -93,7 +93,15 @@ class AccountFormPageState extends State<AccountFormPage> {
     );
   }
 
-  _saveAccount() {
+  _saveAccount() async {
+    if (await AccountEntityService.existsAccountByName(_accountName!)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Account name '$_accountName' already used!"),
+        ));
+      }
+      return;
+    }
     Account account = widget.account;
     account.name = _accountName!;
     account.icon = _icon;

@@ -105,7 +105,15 @@ class CategoryFormPageState extends State<CategoryFormPage> {
     );
   }
 
-  _saveCategory() {
+  _saveCategory() async {
+    if (await CategoryEntityService.existsCategoryByName(_categoryName!)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Category name '$_categoryName' already used!"),
+        ));
+      }
+      return;
+    }
     Category category = widget.category;
     category.name = _categoryName!;
     category.monthThreshold = _monthThreshold;

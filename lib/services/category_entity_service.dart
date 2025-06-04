@@ -167,6 +167,10 @@ class CategoryEntityService {
     }
     return Category.fromJson(maps[0]);
   }
+
+  static Future<bool> existsCategoryByName(String name) async {
+    return await getCategoryByName(name) != null;
+  }
   
   static void insertDefaultExpenseCategories() async {
     final db = await DatabaseHelper.getDb();
