@@ -11,6 +11,12 @@ class AppConfig {
   double? _monthlySaving;
   int? _periodStartingDay;
 
+  void clearAll() {
+    _currency = null;
+    _monthlySaving = null;
+    _periodStartingDay = null;
+  }
+
   Future<String> getCurrencySymbol() async {
     if (_currency != null) return _currency!.symbol;
     String currencyCode = await ConfigurationEntityService.getCurrency();
@@ -36,7 +42,7 @@ class AppConfig {
   }
 
   void updateMonthlySavingCache(double? monthlySavingAmount) {
-    _monthlySaving = null;
+    _monthlySaving = monthlySavingAmount;
     debugPrint("updated _monthlySaving=$_monthlySaving");
   }
 

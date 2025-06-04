@@ -16,8 +16,21 @@ class AccountEntityService {
     debugPrint("Accounts: $maps");
     return List.generate(maps.length, (index) => Account.fromJson(maps[index]));
   } 
+  
+  static Future<Account?> getAccountByName(String name) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps = await db.query(_tableName, 
+      where: "name = ?",
+      limit: 1,
+      whereArgs: [name]
+    );
+    if (maps.isEmpty) {
+      return null;
+    }
+    return Account.fromJson(maps[0]);
+  }
 
-  static void updateAccount(Account account) async {
+  static Future<void> updateAccount(Account account) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
       account.toMap(),
@@ -27,9 +40,9 @@ class AccountEntityService {
     await MonthlyAccountEntityService.updateAllCumulativeBalances(account.id!);
   }
 
-  static void insertAccount(Account account) async {
+  static Future<int> insertAccount(Account account) async {
     final db = await DatabaseHelper.getDb();
-    await db.insert(_tableName, 
+    return await db.insert(_tableName, 
       account.toMapCreate()
     );
   }
@@ -81,6 +94,4 @@ class AccountEntityService {
     final db = await DatabaseHelper.getDb();
     await db.delete(_tableName);
   }
-
-
 }

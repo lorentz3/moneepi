@@ -216,7 +216,7 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                     )
                   )),
               SizedBox(height: 20),
-              if (!_isExtractingAccountsAndCategories && _distinctAccounts.isEmpty) ElevatedButton(
+              if (!_importingFromMoneePi && !_isExtractingAccountsAndCategories && _distinctAccounts.isEmpty) ElevatedButton(
                 onPressed: () {
                   setState(() {
                     _isExtractingAccountsAndCategories = true;
@@ -225,21 +225,20 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                 },
                 child: Text("Step 1: Extract Accounts and Categories"),
               ),
-              if (_distinctAccounts.isNotEmpty)
+              if (!_importingFromMoneePi && _distinctAccounts.isNotEmpty)
                 ...[
                   Text("Accounts found:", style: TextStyle(fontWeight: FontWeight.bold),),
                   ..._distinctAccounts.map((e) => Text(e)),
                 ],
-              if (_distinctCategories.isNotEmpty)
+              if (!_importingFromMoneePi && _distinctCategories.isNotEmpty)
                 ...[
                   Text("Categories found:", style: TextStyle(fontWeight: FontWeight.bold),),
                   ..._distinctCategories.map((e) => Text(e)),
                 ],
               SizedBox(height: 20),
-              if (_distinctAccounts.isNotEmpty || _distinctCategories.isNotEmpty)
+              if (_filePath != null && (_importingFromMoneePi || _distinctAccounts.isNotEmpty || _distinctCategories.isNotEmpty))
                 ElevatedButton(
                   onPressed: () {
-                    // TODO validate fields
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -255,7 +254,9 @@ class ImportXlsPageState extends State<ImportXlsPage> {
                       ),
                     );
                   },
-                  child: Text("Step 2: Map imported items"),
+                  child: _importingFromMoneePi ? 
+                    Text("Next step") : 
+                    Text("Step 2: Map imported items"),
                 ),
               ],
           ),

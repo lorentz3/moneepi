@@ -28,8 +28,8 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
   DateTime? _fromDate;
   DateTime? _toDate;
   bool _exportAll = false;
-  bool _exportCategories = false;
-  bool _exportAccounts = false;
+  bool _exportCategories = true;
+  bool _exportAccounts = true;
 
   @override
   Widget build(BuildContext context) {
@@ -122,28 +122,6 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
                 ],
               ),
             ],
-            CheckboxListTile(
-              value: _exportCategories,
-              title: Text(
-                'Export categories',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16
-                ),
-              ),
-              onChanged: (val) => setState(() => _exportCategories = val ?? false),
-            ),
-            CheckboxListTile(
-              value: _exportAccounts,
-              title: Text(
-                'Export all accounts',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16
-                ),
-              ),
-              onChanged: (val) => setState(() => _exportAccounts = val ?? false),
-            ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () => _export(),

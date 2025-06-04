@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category_type.dart';
+import 'package:myfinance2/model/configuration.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
 import 'package:myfinance2/pages/categories_page.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
+import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:excel/excel.dart';
+import 'package:myfinance2/services/configuration_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'dart:io';
 
@@ -60,6 +63,8 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   final String _categoryNotMapped = "categoryNotMapped";
 
   List<String> _newExpenseCategories = [];
+  List<String> _newIncomeCategories = [];
+  List<String> _newAccounts = [];
 
   @override
   void initState() {
@@ -75,6 +80,13 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   Future<void> _loadData() async {
     _existingAccounts = await AccountEntityService.getAllAccounts();
     _existingCategories = await CategoryEntityService.getAllExpenseAndIncomeCategories();
+
+    for (Account account in _existingAccounts) {
+      _accountMapping[account.name] = account.id;
+    }
+    for (Category category in _existingCategories) {
+      _categoryMapping[category.name] = category.id;
+    }
     setState(() { });
     if (_importingFromMoneePi) {
       _startImportFromMoneePi(false);
@@ -147,9 +159,13 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
                 setState(() {
                   _isImporting = true;
                 });
-                _startImport(false);
+                _importingFromMoneePi ? 
+                  _startImportFromMoneePi(false) :
+                  _startImport(false);
               },
-              child: Text("Step 3: Check errors before the real import"),
+              child: _importingFromMoneePi ? 
+                Text("Check imported file") : 
+                Text("Step 3: Check errors before the real import"),
             ),
           ),
         ],
@@ -158,10 +174,6 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   }
 
   Widget _buildAccountDropdownRow(String importedItem, Map<String, int?> mapping) {
-    int? accountFound = _tryToFindMatchingAccount(importedItem);
-    if (accountFound != null) {
-      mapping[importedItem] = accountFound;
-    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       child: Row(
@@ -196,10 +208,6 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   }
   
   Widget _buildCategoryDropdownRow(String importedItem, Map<String, int?> mapping) {
-    int? categoryFound = _tryToFindMatchingCategory(importedItem);
-    if (categoryFound != null) {
-      mapping[importedItem] = categoryFound;
-    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       child: Row(
@@ -244,67 +252,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     _importErrors[_transferWithoutSourceAccount] = [];
     _importErrors[_sameAccountAndSourceAccount] = [];
     _importErrors[_categoryNotMapped] = [];
-    _newExpenseCategories = [];
 
     var bytes = File(_filePath).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
-
-    if (_importingFromMoneePi) {
-      // import expense categories
-      var sheet = excel.tables['Expense_Categories'];
-      if (sheet != null) {
-        int iconCol = 0;
-        int nameCol = 1;
-        int orderCol = 2;
-        int thresholdCol = 3;
-        List<List<dynamic>> rows = sheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
-
-        for (var row in rows.skip(1)) {
-          String importedIcon = row[iconCol]?.toString() ?? "";
-          String importedName = row[nameCol]?.toString() ?? "";
-          String importedOrder = row[orderCol]?.toString() ?? "";
-          String importedThreshold = row[thresholdCol]?.toString() ?? "";
-          if (importedName == "") {
-            continue;
-          }
-          Category? existingCategory = await CategoryEntityService.getCategoryByName(importedName);
-          if (existingCategory == null) {
-            _newExpenseCategories.add(importedName);
-            if (realImport) {
-              Category newCategory = Category(
-                icon: importedIcon,
-                name: importedName, 
-                type: CategoryType.EXPENSE, 
-                sort: int.tryParse(importedOrder) ?? 0,
-                monthThreshold: double.tryParse(importedThreshold),
-              );
-              int insertedCategoryId = await CategoryEntityService.insertCategory(newCategory);
-              _existingCategories.add(Category(
-                  id: insertedCategoryId,
-                  icon: importedIcon,
-                  name: importedName, 
-                  type: CategoryType.EXPENSE, 
-                  sort: int.tryParse(importedOrder) ?? 0,
-                  monthThreshold: double.tryParse(importedThreshold),
-                )
-              );
-            }
-          } else {
-            if (realImport) {
-              // update category values
-              if (importedIcon != "") {
-                existingCategory.icon = importedIcon;
-              }
-              if (importedThreshold != "") {
-                existingCategory.monthThreshold = double.tryParse(importedThreshold);
-              }
-              await CategoryEntityService.updateCategory(existingCategory);
-            }
-          }
-        }
-      }
-    }
-
     var sheet = excel.tables.keys.first;
     List<List<dynamic>> rows = excel.tables[sheet]!.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
 
@@ -405,70 +355,250 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   void _startImportFromMoneePi(bool realImport) async {
     //init report vars
     _newExpenseCategories = [];
+    _newIncomeCategories = [];
+    _newAccounts = [];
 
     var bytes = File(_filePath).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
 
-    if (_importingFromMoneePi) {
-      // import expense categories
-      var sheet = excel.tables['Expense_Categories'];
-      if (sheet != null) {
-        int iconCol = 0;
-        int nameCol = 1;
-        int orderCol = 2;
-        int thresholdCol = 3;
-        List<List<dynamic>> rows = sheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
+    // import expense categories
+    var expenseCategoriesSheet = excel.tables['Expense_Categories'];
+    if (expenseCategoriesSheet != null) {
+      int iconCol = 0;
+      int nameCol = 1;
+      int orderCol = 2;
+      int thresholdCol = 3;
+      List<List<dynamic>> rows = expenseCategoriesSheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
+
+      for (var row in rows.skip(1)) {
+        String importedIcon = row[iconCol]?.toString() ?? "";
+        String importedName = row[nameCol]?.toString() ?? "";
+        String importedOrder = row[orderCol]?.toString() ?? "";
+        String importedThreshold = row[thresholdCol]?.toString() ?? "";
+        if (importedName == "") {
+          continue;
+        }
+        Category? existingCategory = await CategoryEntityService.getCategoryByName(importedName);
+        if (existingCategory == null) {
+          _newExpenseCategories.add(importedName);
+          if (realImport) {
+            Category newCategory = Category(
+              icon: importedIcon,
+              name: importedName, 
+              type: CategoryType.EXPENSE, 
+              sort: int.tryParse(importedOrder) ?? 0,
+              monthThreshold: double.tryParse(importedThreshold),
+            );
+            int insertedCategoryId = await CategoryEntityService.insertCategory(newCategory);
+            Category withId = Category(
+              id: insertedCategoryId,
+              icon: importedIcon,
+              name: importedName, 
+              type: CategoryType.EXPENSE, 
+              sort: int.tryParse(importedOrder) ?? 0,
+              monthThreshold: double.tryParse(importedThreshold),
+            );
+            _existingCategories.add(withId);
+            _categoryMapping[withId.name] = withId.id;
+          }
+        } else {
+          if (realImport) {
+            // update category values
+            if (importedIcon != "") {
+              existingCategory.icon = importedIcon;
+            }
+            if (importedThreshold != "") {
+              existingCategory.monthThreshold = double.tryParse(importedThreshold);
+            }
+            await CategoryEntityService.updateCategory(existingCategory);
+          }
+        }
+      }
+    }
+    
+    // import income categories
+    var incomeCategoriesSheet = excel.tables['Income_Categories'];
+    if (incomeCategoriesSheet != null) {
+      int iconCol = 0;
+      int nameCol = 1;
+      int orderCol = 2;
+      List<List<dynamic>> rows = incomeCategoriesSheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
+
+      for (var row in rows.skip(1)) {
+        String importedIcon = row[iconCol]?.toString() ?? "";
+        String importedName = row[nameCol]?.toString() ?? "";
+        String importedOrder = row[orderCol]?.toString() ?? "";
+        if (importedName == "") {
+          continue;
+        }
+        Category? existingCategory = await CategoryEntityService.getCategoryByName(importedName);
+        if (existingCategory == null) {
+          _newIncomeCategories.add(importedName);
+          if (realImport) {
+            Category newCategory = Category(
+              icon: importedIcon,
+              name: importedName, 
+              type: CategoryType.INCOME, 
+              sort: int.tryParse(importedOrder) ?? 0,
+            );
+            int insertedCategoryId = await CategoryEntityService.insertCategory(newCategory);
+            Category withId = Category(
+              id: insertedCategoryId,
+              icon: importedIcon,
+              name: importedName, 
+              type: CategoryType.EXPENSE, 
+              sort: int.tryParse(importedOrder) ?? 0,
+            );
+            _existingCategories.add(withId);
+            _categoryMapping[withId.name] = withId.id;
+          }
+        } else {
+          if (realImport) {
+            // update category values
+            if (importedIcon != "") {
+              existingCategory.icon = importedIcon;
+            }
+            await CategoryEntityService.updateCategory(existingCategory);
+          }
+        }
+      }
+    }
+    
+    // import accounts
+    var accountsSheet = excel.tables['Accounts'];
+    if (accountsSheet != null) {
+      int iconCol = 0;
+      int nameCol = 1;
+      int orderCol = 2;
+      int initialBalanceCol = 3;
+      List<List<dynamic>> rows = accountsSheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
+
+      for (var row in rows.skip(1)) {
+        String importedIcon = row[iconCol]?.toString() ?? "";
+        String importedName = row[nameCol]?.toString() ?? "";
+        String importedOrder = row[orderCol]?.toString() ?? "";
+        String importedInitialBalance = row[initialBalanceCol]?.toString() ?? "";
+        if (importedName == "") {
+          continue;
+        }
+        Account? existingAccount = await AccountEntityService.getAccountByName(importedName);
+        if (existingAccount == null) {
+          _newAccounts.add(importedName);
+          if (realImport) {
+            Account newAccount = Account(
+              icon: importedIcon,
+              name: importedName, 
+              sort: int.tryParse(importedOrder) ?? 0,
+              initialBalance: double.tryParse(importedInitialBalance) ?? 0.0,
+            );
+            int insertedAccountId = await AccountEntityService.insertAccount(newAccount);
+            Account withId = Account(
+              id: insertedAccountId,
+              icon: importedIcon,
+              name: importedName, 
+              sort: int.tryParse(importedOrder) ?? 0,
+              initialBalance: double.tryParse(importedInitialBalance) ?? 0.0,
+            );
+            _existingAccounts.add(withId);
+            _accountMapping[withId.name] = withId.id;
+          }
+        } else {
+          if (realImport) {
+            // update category values
+            if (importedIcon != "") {
+              existingAccount.icon = importedIcon;
+            }
+            if (importedInitialBalance != "") {
+              existingAccount.initialBalance = double.tryParse(importedInitialBalance) ?? 0.0;
+            }
+            await AccountEntityService.updateAccount(existingAccount);
+          }
+        }
+      }
+    }
+
+    // import configurations
+    if (realImport) {
+      var configSheet = excel.tables['Configurations'];
+      if (configSheet != null) {
+        int nameCol = 0;
+        int intValueCol = 1;
+        int textValueCol = 2;
+        int realValueCol = 3;
+        List<List<dynamic>> rows = configSheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
 
         for (var row in rows.skip(1)) {
-          String importedIcon = row[iconCol]?.toString() ?? "";
           String importedName = row[nameCol]?.toString() ?? "";
-          String importedOrder = row[orderCol]?.toString() ?? "";
-          String importedThreshold = row[thresholdCol]?.toString() ?? "";
+          String importedIntValue = row[intValueCol]?.toString() ?? "";
+          String importedTextValue = row[textValueCol]?.toString() ?? "";
+          String importedrealValue = row[realValueCol]?.toString() ?? "";
           if (importedName == "") {
             continue;
           }
-          Category? existingCategory = await CategoryEntityService.getCategoryByName(importedName);
-          if (existingCategory == null) {
-            _newExpenseCategories.add(importedName);
-            if (realImport) {
-              Category newCategory = Category(
-                icon: importedIcon,
-                name: importedName, 
-                type: CategoryType.EXPENSE, 
-                sort: int.tryParse(importedOrder) ?? 0,
-                monthThreshold: double.tryParse(importedThreshold),
-              );
-              int insertedCategoryId = await CategoryEntityService.insertCategory(newCategory);
-              _existingCategories.add(Category(
-                  id: insertedCategoryId,
-                  icon: importedIcon,
-                  name: importedName, 
-                  type: CategoryType.EXPENSE, 
-                  sort: int.tryParse(importedOrder) ?? 0,
-                  monthThreshold: double.tryParse(importedThreshold),
-                )
-              );
-            }
-          } else {
-            if (realImport) {
-              // update category values
-              if (importedIcon != "") {
-                existingCategory.icon = importedIcon;
-              }
-              if (importedThreshold != "") {
-                existingCategory.monthThreshold = double.tryParse(importedThreshold);
-              }
-              await CategoryEntityService.updateCategory(existingCategory);
-            }
-          }
+          Configuration existingConfiguration = await ConfigurationEntityService.getConfiguration(importedName);
+          existingConfiguration.intValue = int.tryParse(importedIntValue);
+          existingConfiguration.textValue = importedTextValue;
+          existingConfiguration.realValue = double.tryParse(importedrealValue);
+          await ConfigurationEntityService.updateConfiguration(existingConfiguration);
         }
+        AppConfig.instance.clearAll();
       }
     }
 
     setState(() {
       _isImporting = false;
     });
-    _showRealImportDialog();
+    if (realImport) {
+      _startImport(true);
+    } else {
+      _showRealImportFromMoneePiDialog();
+    }
+  }
+
+  Future<void> _showRealImportFromMoneePiDialog() async {
+    String newExpenseCategoriesThatWillBeImported = _formatStringList(_newExpenseCategories);
+    String newIncomeCategoriesThatWillBeImported = _formatStringList(_newIncomeCategories);
+    String newAccountsThatWillBeImported = _formatStringList(_newAccounts);
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true, 
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Import confirmation'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                if (_newExpenseCategories.isNotEmpty) Text("New expense categories that will be imported:"),
+                if (_newExpenseCategories.isNotEmpty) Text(newExpenseCategoriesThatWillBeImported, style: TextStyle(fontWeight: FontWeight.bold),),
+                SizedBox(height: 4),
+                if (_newIncomeCategories.isNotEmpty) Text("New income categories that will be imported:"),
+                if (_newIncomeCategories.isNotEmpty) Text(newIncomeCategoriesThatWillBeImported, style: TextStyle(fontWeight: FontWeight.bold),),
+                SizedBox(height: 4),
+                if (_newAccounts.isNotEmpty) Text("New accounts that will be imported:"),
+                if (_newAccounts.isNotEmpty) Text(newAccountsThatWillBeImported, style: TextStyle(fontWeight: FontWeight.bold),),
+                SizedBox(height: 4),
+                Text("Proceed with the import process?"),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              child: Text("Start import"),
+              onPressed: () {
+                setState(() {
+                  _startImportFromMoneePi(true);
+                  Navigator.pop(context);
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _showRealImportDialog() async {
@@ -482,7 +612,6 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     String transferWithoutSourceAccountErrors = (_importErrors[_transferWithoutSourceAccount] ?? []).isNotEmpty ? "Cannot import TRANSFER without Source Account (rows: ${_formatImportErrors(_transferWithoutSourceAccount)})" : "";
     String sameAccountsErrors = (_importErrors[_sameAccountAndSourceAccount] ?? []).isNotEmpty ? "Cannot import TRANSFER if sourceAccount and account are the same (rows: ${_formatImportErrors(_sameAccountAndSourceAccount)})" : "";
     String categoryNotMappedErrors = (_importErrors[_categoryNotMapped] ?? []).isNotEmpty ? "Category not mapped (rows: ${_formatImportErrors(_categoryNotMapped)})" : "";
-    String newExpenseCategoriesThatWillBeImported = _formatStringList(_newExpenseCategories);
     return showDialog<void>(
       context: context,
       barrierDismissible: true, 
@@ -492,8 +621,6 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                if (_importingFromMoneePi && _newExpenseCategories.isNotEmpty) Text ("New expense categories: $newExpenseCategoriesThatWillBeImported"),
-                SizedBox(height: 8,),
                 Text(noErrors ? "No errors found. Proceed with the import process?" : "Errors found - some rows will be skipped:"),
                 SizedBox(height: 4,),
                 if (!noErrors && dateTimeErrors.isNotEmpty) Text(dateTimeErrors),
@@ -572,23 +699,5 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       default: 
         return null;
     }
-  }
-  
-  int? _tryToFindMatchingAccount(String nameToMatch) {
-    for (Account a in _existingAccounts) {
-      if (a.name == nameToMatch) {
-        return a.id;
-      }
-    }
-    return null;
-  }
-  
-  int? _tryToFindMatchingCategory(String nameToMatch) {
-    for (Category a in _existingCategories) {
-      if (a.name == nameToMatch) {
-        return a.id;
-      }
-    }
-    return null;
   }
 }

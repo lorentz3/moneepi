@@ -18,21 +18,21 @@ class ConfigurationEntityService {
   static const String monthlySaving = 'MONTHLY_SAVING';
 
   static Future<String> getCurrency() async {
-    Configuration conf = await _getConfiguration(currency);
+    Configuration conf = await getConfiguration(currency);
     return conf.textValue ?? "USD";
   }
   
   static Future<double> getMonthlySaving() async {
-    Configuration conf = await _getConfiguration(monthlySaving);
+    Configuration conf = await getConfiguration(monthlySaving);
     return conf.realValue ?? 0.0;
   }
   
   static Future<int> getPeriodStartingDay() async {
-    Configuration conf = await _getConfiguration(periodStartingDay);
+    Configuration conf = await getConfiguration(periodStartingDay);
     return conf.intValue ?? 0;
   }
 
-  static Future<Configuration> _getConfiguration(String name) async {
+  static Future<Configuration> getConfiguration(String name) async {
     final db = await DatabaseHelper.getDb();
     final maps = await db.query(
       'Configurations',
@@ -43,27 +43,27 @@ class ConfigurationEntityService {
   } 
   
   static Future<void> updateCurrency(String newCurrency) async {
-    Configuration conf = await _getConfiguration(currency);
+    Configuration conf = await getConfiguration(currency);
     conf.textValue = newCurrency;
     AppConfig.instance.clearCurrencyCache();
-    _updateConfiguration(conf);
+    updateConfiguration(conf);
   }
 
   static Future<void> updateMonthlySaving(double? monthlySavingAmount) async {
-    Configuration conf = await _getConfiguration(monthlySaving);
+    Configuration conf = await getConfiguration(monthlySaving);
     conf.realValue = monthlySavingAmount;
-    _updateConfiguration(conf);
+    updateConfiguration(conf);
     AppConfig.instance.updateMonthlySavingCache(monthlySavingAmount);
   }
 
   static Future<void> updatePeriodStartingDay(int? periodStartingDayValue) async {
-    Configuration conf = await _getConfiguration(periodStartingDay);
+    Configuration conf = await getConfiguration(periodStartingDay);
     conf.intValue = periodStartingDayValue;
-    _updateConfiguration(conf);
+    updateConfiguration(conf);
     AppConfig.instance.updatePeriodStartingDayCache(periodStartingDayValue);
   }
 
-  static Future<void> _updateConfiguration(Configuration configuration) async {
+  static Future<void> updateConfiguration(Configuration configuration) async {
     final db = await DatabaseHelper.getDb();
     await db.update(_tableName, 
       configuration.toMap(),
