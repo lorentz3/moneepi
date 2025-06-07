@@ -412,6 +412,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   _saveTransaction() async {
+    bool isTransaction = _selectedType == TransactionType.TRANSFER;
     _transaction.type = _selectedType;
     _transaction.timestamp = DateTime(
       _selectedDate.year,
@@ -421,8 +422,8 @@ class TransactionFormPageState extends State<TransactionFormPage> {
       _selectedTime.minute,
     );
     _transaction.accountId = _selectedAccount!;
-    _transaction.sourceAccountId = _selectedSourceAccount;
-    _transaction.categoryId = _selectedCategory;
+    _transaction.sourceAccountId = isTransaction ? _selectedSourceAccount : null;
+    _transaction.categoryId = !isTransaction ? _selectedCategory : null;
     _transaction.amount = _amount;
     _transaction.notes = _notes;
     if(_isNew){

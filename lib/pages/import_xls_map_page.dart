@@ -245,6 +245,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     );
   }
 
+  //import transaction on first sheet
   void _startImport(bool realImport) async {
     //init report vars
     _importErrors[_missingAccountOrCategory] = [];
@@ -296,7 +297,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
 
       if (TransactionType.EXPENSE.name == importedTypeString 
           || TransactionType.INCOME.name == importedTypeString
-          || categoryId != null) {
+          || (TransactionType.TRANSFER.name != importedTypeString && categoryId != null)) {
         Category? category = _existingCategories.where((category) => category.id == categoryId).firstOrNull;
         if (category == null) {
           debugPrint("Skipped row $startRow: category not mapped");
