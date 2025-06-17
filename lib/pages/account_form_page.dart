@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
+import 'package:myfinance2/utils/color_identity.dart';
 
 class AccountFormPage extends StatefulWidget {
   final Account account;
@@ -105,6 +106,7 @@ class AccountFormPageState extends State<AccountFormPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text("Account name '$_accountName' already used!"),
+            backgroundColor: red(),
           ));
         }
         return;

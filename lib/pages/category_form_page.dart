@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/utils/color_identity.dart';
 
 class CategoryFormPage extends StatefulWidget {
   final Category category;
@@ -108,20 +109,30 @@ class CategoryFormPageState extends State<CategoryFormPage> {
   }
 
   _saveCategory() async {
-    if (await CategoryEntityService.existsCategoryByName(_categoryName!)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Category name '$_categoryName' already used!"),
-        ));
-      }
-      return;
-    }
     Category category = widget.category;
     category.name = _categoryName!;
     category.monthThreshold = _monthThreshold;
     category.yearThreshold = _yearThreshold;
     category.icon = _icon;
-    if(widget.isNew!){
+    if ((_monthThreshold ?? 0.0) < 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Negative values are not allowed."),
+              backgroundColor: red(),
+        ));
+      }
+      return;
+    }
+    if (widget.isNew!) {
+      if (await CategoryEntityService.existsCategoryByName(_categoryName!)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Category name '$_categoryName' already used!"),
+            backgroundColor: red(),
+          ));
+        }
+        return;
+      }
       CategoryEntityService.insertCategory(category);
     } else {
       CategoryEntityService.updateCategory(category);

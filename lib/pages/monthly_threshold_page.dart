@@ -184,7 +184,7 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
   
   Widget _buildSaveButton() {
     return Padding(
-      padding: EdgeInsets.only(left: 60, right: 60, bottom: 30, top: 10),
+      padding: EdgeInsets.only(left: 60, right: 60, bottom: 10, top: 10),
       child: ElevatedButton(
         onPressed: () {
           _saveThresholds();
