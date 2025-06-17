@@ -46,7 +46,7 @@ class BudgetingPageState extends State<BudgetingPage> {
     _loadStats();
   }
 
-   Future<void> _loadStats() async {
+  Future<void> _loadStats() async {
     await CleanService.cleanTablesFromDeletedObjects();
     _monthTotals = await TransactionEntityService.getMonthTotals(_selectedDate.year);
     _yearExpenses = _monthTotals
@@ -129,144 +129,146 @@ class BudgetingPageState extends State<BudgetingPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: SizedBox(),
-              ),
-              Expanded(
-                flex: 10,
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: SizedBox(),
                 ),
-              ),
-            ],
+                Expanded(
+                  flex: 10,
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                child: Row(
-                  children: [
-                    IconTextButton(
-                      onPressed: () => _navigateToMonthlyThresholdPage(),
-                      text: "Edit Category budgets",
-                      textColor: deepPurple(),
-                      backgroundColor: Colors.deepPurple[50],
-                      borderColor: Colors.deepPurple[300],
-                    ),
-                    Expanded(child: SizedBox(width: 20,)),
-                    IconTextButton(
-                      onPressed: () => _navigateToSettingsPage(), 
-                      text: "Edit Monthly Saving",
-                      textColor: deepPurple(),
-                      backgroundColor: Colors.deepPurple[50],
-                      borderColor: Colors.deepPurple[300],
-                    )
-                  ],
-                ),
-              ),
-              Container(
-                color: groupBgColor,
-                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-                child: Text(
-                  "Categories with planned budget:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: listItems.length,
-                itemBuilder: (context, index) {
-                  return listItems[index];
-                },
-              ),
-              Container(
-                color: groupBgColor2,
-                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-                child: Row(
-                  children: [
-                    Text(
-                      "Monthly Saving amount:",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ), 
-                    Expanded(child: SizedBox(width: 1,)),
-                    Text(
-                      "${(_monthlySaving ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
-                      style: TextStyle(
-                        color: blue(),
-                        fontSize: 16, 
-                        fontWeight: FontWeight.bold
+          body: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                  child: Row(
+                    children: [
+                      IconTextButton(
+                        onPressed: () => _navigateToMonthlyThresholdPage(),
+                        text: "Edit Category budgets",
+                        textColor: deepPurple(),
+                        backgroundColor: Colors.deepPurple[50],
+                        borderColor: Colors.deepPurple[300],
                       ),
-                    ), 
-                    SizedBox(width: 10,)
-                  ],
+                      Expanded(child: SizedBox(width: 20,)),
+                      IconTextButton(
+                        onPressed: () => _navigateToSettingsPage(), 
+                        text: "Edit Monthly Saving",
+                        textColor: deepPurple(),
+                        backgroundColor: Colors.deepPurple[50],
+                        borderColor: Colors.deepPurple[300],
+                      )
+                    ],
+                  ),
                 ),
-              ),
-              Container(
-                color: groupBgColor,
-                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-                child: Row(
-                  children: [
-                    Text(
-                      "Total budget per month:",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Expanded(child: SizedBox(width: 1,)),
-                    Text(
-                      "${(_totalPlannedBudget).toStringAsFixed(2)} $_currencySymbol",
-                      style: TextStyle(
-                        color: deepPurple(),
-                        fontSize: 16, 
-                        fontWeight: FontWeight.bold
+                Container(
+                  color: groupBgColor,
+                  padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                  child: Text(
+                    "Categories with planned budget:",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: listItems.length,
+                  itemBuilder: (context, index) {
+                    return listItems[index];
+                  },
+                ),
+                Container(
+                  color: groupBgColor2,
+                  padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Monthly Saving amount:",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ), 
+                      Expanded(child: SizedBox(width: 1,)),
+                      Text(
+                        "${(_monthlySaving ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
+                        style: TextStyle(
+                          color: blue(),
+                          fontSize: 16, 
+                          fontWeight: FontWeight.bold
+                        ),
+                      ), 
+                      SizedBox(width: 10,)
+                    ],
+                  ),
+                ),
+                Container(
+                  color: groupBgColor,
+                  padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Total budget per month:",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                    ), 
-                    SizedBox(width: 10,)
-                  ],
+                      Expanded(child: SizedBox(width: 1,)),
+                      Text(
+                        "${(_totalPlannedBudget).toStringAsFixed(2)} $_currencySymbol",
+                        style: TextStyle(
+                          color: deepPurple(),
+                          fontSize: 16, 
+                          fontWeight: FontWeight.bold
+                        ),
+                      ), 
+                      SizedBox(width: 10,)
+                    ],
+                  ),
                 ),
-              ),
-              MonthTotalsRow(
-                firstCellLabel: "Mon",
-                incomeColumn: "Incomes ($_currencySymbol)",
-                expenseColumn: "Expenses ($_currencySymbol)",
-                savedColumn: "Saved ($_currencySymbol)",
-                backgroundColor: groupBgColor2,
-              ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: _monthTotals.length,
-                itemBuilder: (context, index) {
-                  MonthTotalDto monthTotal = _monthTotals[index]; //month 1 -> 12
-                  Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                  return _getMonthTotalWidget(context, monthTotal, rowColor, index + 1);
-                },
-              ),
-              MonthTotalsRow(
-                firstCellLabel: "Tot",
-                incomeColumn: _yearIncomes.toStringAsFixed(2),
-                expenseColumn: _yearExpenses.toStringAsFixed(2),
-                savedColumn: (_yearIncomes - _yearExpenses).toStringAsFixed(2),
-                backgroundColor: groupBgColor,
-              ),
-              MonthTotalsRow(
-                firstCellLabel: "Avg",
-                incomeColumn: (_yearIncomes / _effectiveMonths).toStringAsFixed(2),
-                expenseColumn: (_yearExpenses / _effectiveMonths).toStringAsFixed(2),
-                savedColumn: ((_yearIncomes - _yearExpenses) / _effectiveMonths).toStringAsFixed(2),
-                backgroundColor: groupBgColor2,
-                savedColumnColor: ((_yearIncomes - _yearExpenses) / _effectiveMonths) - (_monthlySaving ?? 0.0) > 0 ? green() : red(),
-              ),
-              SizedBox(height: 30,)
-            ],
+                MonthTotalsRow(
+                  firstCellLabel: "Mon",
+                  incomeColumn: "Incomes ($_currencySymbol)",
+                  expenseColumn: "Expenses ($_currencySymbol)",
+                  savedColumn: "Saved ($_currencySymbol)",
+                  backgroundColor: groupBgColor2,
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: _monthTotals.length,
+                  itemBuilder: (context, index) {
+                    MonthTotalDto monthTotal = _monthTotals[index]; //month 1 -> 12
+                    Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                    return _getMonthTotalWidget(context, monthTotal, rowColor, index + 1);
+                  },
+                ),
+                MonthTotalsRow(
+                  firstCellLabel: "Tot",
+                  incomeColumn: _yearIncomes.toStringAsFixed(2),
+                  expenseColumn: _yearExpenses.toStringAsFixed(2),
+                  savedColumn: (_yearIncomes - _yearExpenses).toStringAsFixed(2),
+                  backgroundColor: groupBgColor,
+                ),
+                MonthTotalsRow(
+                  firstCellLabel: "Avg",
+                  incomeColumn: (_yearIncomes / _effectiveMonths).toStringAsFixed(2),
+                  expenseColumn: (_yearExpenses / _effectiveMonths).toStringAsFixed(2),
+                  savedColumn: ((_yearIncomes - _yearExpenses) / _effectiveMonths).toStringAsFixed(2),
+                  backgroundColor: groupBgColor2,
+                  savedColumnColor: ((_yearIncomes - _yearExpenses) / _effectiveMonths) - (_monthlySaving ?? 0.0) > 0 ? green() : red(),
+                ),
+                SizedBox(height: 30,)
+              ],
+            ),
           ),
         ),
       ),

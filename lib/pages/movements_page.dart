@@ -91,27 +91,29 @@ class MovementsPageState extends State<MovementsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Movements"),
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
-                _endDate = DateTime(MyDateUtils.getNextYear(DateTime.now().month, DateTime.now().year), MyDateUtils.getNextMonth(DateTime.now().month), 1);
-                _selectedType = null;
-                _selectedAccount = null;
-                _selectedSourceAccount = null;
-                _selectedCategory = null;
-                _loadTransactions();
-              });
-            }, 
-            icon: Icon(Icons.restart_alt_rounded)
-          ),
-        ],
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Movements"),
+          actions: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
+                  _endDate = DateTime(MyDateUtils.getNextYear(DateTime.now().month, DateTime.now().year), MyDateUtils.getNextMonth(DateTime.now().month), 1);
+                  _selectedType = null;
+                  _selectedAccount = null;
+                  _selectedSourceAccount = null;
+                  _selectedCategory = null;
+                  _loadTransactions();
+                });
+              }, 
+              icon: Icon(Icons.restart_alt_rounded)
+            ),
+          ],
+        ),
+        body: _getMainBody(),
       ),
-      body: _getMainBody(),
     );
   }
 

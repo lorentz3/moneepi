@@ -45,46 +45,48 @@ class AccountFormPageState extends State<AccountFormPage> {
             currentFocus.unfocus();
           }
         },
-        child: Scaffold(
-          appBar: AppBar(title: widget.isNew! ? const Text("Create new account") : const Text("Edit account")),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child:
-              Column(
-                children: [
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Account symbol', hintText: 'Emoji strongly suggested'),
-                    initialValue: _icon,
-                    onChanged: (value) => _icon = value,
-                    validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Account name *'),
-                    initialValue: _accountName,
-                    onChanged: (value) => _accountName = value,
-                    validator: (value) => value!.isEmpty ? 'Enter a name' : null,
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Initial balance', hintText: 'Account value before every transaction'),
-                    initialValue: _initialBalance,
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: true
+        child: SafeArea(
+          child: Scaffold(
+            appBar: AppBar(title: widget.isNew! ? const Text("Create new account") : const Text("Edit account")),
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child:
+                Column(
+                  children: [
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Account symbol', hintText: 'Emoji strongly suggested'),
+                      initialValue: _icon,
+                      onChanged: (value) => _icon = value,
+                      validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
                     ),
-                    onChanged: (value) => _initialBalance = value,
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _saveAccount();
-                      }
-                    },
-                    child: Text('Save'),
-                  ),
-                ],
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Account name *'),
+                      initialValue: _accountName,
+                      onChanged: (value) => _accountName = value,
+                      validator: (value) => value!.isEmpty ? 'Enter a name' : null,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Initial balance', hintText: 'Account value before every transaction'),
+                      initialValue: _initialBalance,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true
+                      ),
+                      onChanged: (value) => _initialBalance = value,
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _saveAccount();
+                        }
+                      },
+                      child: Text('Save'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -94,19 +96,19 @@ class AccountFormPageState extends State<AccountFormPage> {
   }
 
   _saveAccount() async {
-    if (await AccountEntityService.existsAccountByName(_accountName!)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Account name '$_accountName' already used!"),
-        ));
-      }
-      return;
-    }
     Account account = widget.account;
     account.name = _accountName!;
     account.icon = _icon;
     account.initialBalance = double.tryParse(_initialBalance ?? "0") ?? 0;
     if (widget.isNew!) {
+      if (await AccountEntityService.existsAccountByName(_accountName!)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Account name '$_accountName' already used!"),
+          ));
+        }
+        return;
+      }
       AccountEntityService.insertAccount(account);
     } else {
       AccountEntityService.updateAccount(account);

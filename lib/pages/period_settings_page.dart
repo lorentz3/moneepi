@@ -42,42 +42,44 @@ class PeriodSettingsPageState extends State<PeriodSettingsPage> {
             currentFocus.unfocus();
           }
         },
-        child: Scaffold(
-          appBar: AppBar(title: const Text("Settings")),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child:
-              Column(
-                children: [
-                  InfoLabel(text: "Change the 'Monthly start day' if you prefer that your budgeting monthly stats are calculated considering another day of the month as first day (allowed values: from 1 to 28)"),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Monthly start day *'),
-                    initialValue: "$_periodStartingDay",
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: false,
-                      signed: false
+        child: SafeArea(
+          child: Scaffold(
+            appBar: AppBar(title: const Text("Settings")),
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child:
+                Column(
+                  children: [
+                    InfoLabel(text: "Change the 'Monthly start day' if you prefer that your budgeting monthly stats are calculated considering another day of the month as first day (allowed values: from 1 to 28)"),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Monthly start day *'),
+                      initialValue: "$_periodStartingDay",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: false,
+                        signed: false
+                      ),
+                      onChanged: (value) => _periodStartingDay = int.tryParse(value) ?? 1,
+                      validator: (value) => int.tryParse(value ?? "") == null 
+                        || (int.tryParse(value ?? "") ?? 0) < 1 
+                        || (int.tryParse(value ?? "") ?? 0) > 28 ? 'Enter a number between 1 and 28' : null,
                     ),
-                    onChanged: (value) => _periodStartingDay = int.tryParse(value) ?? 1,
-                    validator: (value) => int.tryParse(value ?? "") == null 
-                      || (int.tryParse(value ?? "") ?? 0) < 1 
-                      || (int.tryParse(value ?? "") ?? 0) > 28 ? 'Enter a number between 1 and 28' : null,
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _saveConfigurations();
-                      }
-                    },
-                    child: Text('Save'),
-                  ),
-                ],
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _saveConfigurations();
+                        }
+                      },
+                      child: Text('Save'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        )
+        ),
       ),
     );
   }

@@ -178,115 +178,117 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.deepPurple,
-              ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+    return SafeArea(
+      child: Scaffold(
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple,
+                ),
+                child: Text(
+                  'Menu',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                  ),
                 ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.attach_money),
-              title: const Text('Change currency'),
-              onTap: () => _navigateTo(Pages.currencies),
-            ),
-            Divider(),
-            ListTile(
-              leading: const Icon(Icons.category_outlined),
-              title: const Text('Expense Categories setup'),
-              onTap: () => _navigateTo(Pages.expenseCategories),
-            ),
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Income Categories setup'),
-              onTap: () => _navigateTo(Pages.incomeCategories),
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_balance),
-              title: const Text('Accounts setup'),
-              onTap: () => _navigateTo(Pages.accounts),
-            ),
-            ListTile(
-              leading: const Icon(Icons.data_thresholding_outlined),
-              title: const Text('Category Budgets'),
-              onTap: () => _navigateTo(Pages.categoryBudgets),
-            ),
-            ListTile(
-              leading: const Icon(Icons.group_work_outlined),
-              title: const Text('Groups setup'),
-              onTap: () => _navigateTo(Pages.groups),
-            ),
-            Divider(),
-            ListTile(
-              leading: const Icon(Icons.savings),
-              title: const Text('Monthly saving settings'),
-              onTap: () => _navigateTo(Pages.monthlySavingsSettings),
-            ),
-            ListTile(
-              leading: const Icon(Icons.calendar_month),
-              title: const Text('Period settings'),
-              onTap: () => _navigateTo(Pages.periodSettings),
-            ),
-            Divider(),
-            ListTile(
-              leading: const Icon(Icons.dataset_outlined),
-              title: const Text('XLSX Import'),
-              onTap: () => _navigateTo(Pages.xlsxImport),
-            ),
-            ListTile(
-              leading: const Icon(Icons.dataset_rounded),
-              title: const Text('XLSX Export'),
-              onTap: () => _navigateTo(Pages.xlsxExport),
-            ),
-            Divider(),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('Info'),
-              onTap: () => _navigateTo(Pages.about),
-            ),
-            SizedBox(height: 50,),
-          ],
-        ),
-      ),
-      appBar: AppBar(
-        title: MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.start,),
-      ),
-      body: _getMainBody(),
-      bottomNavigationBar: Container(
-        height: 70,
-        color: backgroundGrey(),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 2, left: 6, right: 6, bottom: 14),
-          child: Row(
-            children: [
-              FooterButton(
-                text: "Income",
-                onPressed: () => _navigateToTransactionPage(TransactionType.INCOME), 
-                color: green()
+              ListTile(
+                leading: const Icon(Icons.attach_money),
+                title: const Text('Change currency'),
+                onTap: () => _navigateTo(Pages.currencies),
               ),
-              SizedBox(width: 6,),
-              if (_accountsAreMoreThanOne) FooterButton(
-                text: "Transfer", 
-                onPressed: () => _navigateToTransactionPage(TransactionType.TRANSFER),
-                color: blue()
+              Divider(),
+              ListTile(
+                leading: const Icon(Icons.category_outlined),
+                title: const Text('Expense Categories setup'),
+                onTap: () => _navigateTo(Pages.expenseCategories),
               ),
-              if (_accountsAreMoreThanOne) SizedBox(width: 6,),
-              FooterButton(
-                text: "Expense",
-                onPressed: () => _navigateToTransactionPage(TransactionType.EXPENSE), 
-                color: red()
+              ListTile(
+                leading: const Icon(Icons.category),
+                title: const Text('Income Categories setup'),
+                onTap: () => _navigateTo(Pages.incomeCategories),
               ),
+              ListTile(
+                leading: const Icon(Icons.account_balance),
+                title: const Text('Accounts setup'),
+                onTap: () => _navigateTo(Pages.accounts),
+              ),
+              ListTile(
+                leading: const Icon(Icons.data_thresholding_outlined),
+                title: const Text('Category Budgets'),
+                onTap: () => _navigateTo(Pages.categoryBudgets),
+              ),
+              ListTile(
+                leading: const Icon(Icons.group_work_outlined),
+                title: const Text('Groups setup'),
+                onTap: () => _navigateTo(Pages.groups),
+              ),
+              Divider(),
+              ListTile(
+                leading: const Icon(Icons.savings),
+                title: const Text('Monthly saving settings'),
+                onTap: () => _navigateTo(Pages.monthlySavingsSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.calendar_month),
+                title: const Text('Period settings'),
+                onTap: () => _navigateTo(Pages.periodSettings),
+              ),
+              Divider(),
+              ListTile(
+                leading: const Icon(Icons.dataset_outlined),
+                title: const Text('XLSX Import'),
+                onTap: () => _navigateTo(Pages.xlsxImport),
+              ),
+              ListTile(
+                leading: const Icon(Icons.dataset_rounded),
+                title: const Text('XLSX Export'),
+                onTap: () => _navigateTo(Pages.xlsxExport),
+              ),
+              Divider(),
+              ListTile(
+                leading: const Icon(Icons.info),
+                title: const Text('Info'),
+                onTap: () => _navigateTo(Pages.about),
+              ),
+              SizedBox(height: 50,),
             ],
+          ),
+        ),
+        appBar: AppBar(
+          title: MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.start,),
+        ),
+        body: _getMainBody(),
+        bottomNavigationBar: Container(
+          height: 70,
+          color: backgroundGrey(),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2, left: 6, right: 6, bottom: 14),
+            child: Row(
+              children: [
+                FooterButton(
+                  text: "Income",
+                  onPressed: () => _navigateToTransactionPage(TransactionType.INCOME), 
+                  color: green()
+                ),
+                SizedBox(width: 6,),
+                if (_accountsAreMoreThanOne) FooterButton(
+                  text: "Transfer", 
+                  onPressed: () => _navigateToTransactionPage(TransactionType.TRANSFER),
+                  color: blue()
+                ),
+                if (_accountsAreMoreThanOne) SizedBox(width: 6,),
+                FooterButton(
+                  text: "Expense",
+                  onPressed: () => _navigateToTransactionPage(TransactionType.EXPENSE), 
+                  color: red()
+                ),
+              ],
+            ),
           ),
         ),
       ),

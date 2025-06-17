@@ -32,119 +32,121 @@ class CategoriesPageState extends State<CategoriesPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(_getTitle(widget.type)),
-          actions: [
-            IconButton(
-              onPressed: () async {
-                _dataChanged = await Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (context) => CategoryFormPage(
-                    category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
-                    isNew: true,
-                  ))
-                );
-                if (_dataChanged == true) {
-                  setState(() {});
-                }
-              },
-              tooltip: 'Add category',
-              icon: const Icon(Icons.add),
-            ),
-            IconButton(
-              onPressed: () async {
-                _dataChanged = await Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (context) => CategorySortPage(
-                    categoryType: widget.type,
-                  ))
-                );
-                if (_dataChanged == true) {
-                  setState(() {});
-                }
-              },
-              tooltip: 'Sort categories',
-              icon: const Icon(Icons.sort),
-            ),
-          ],
-        ),
-        body: FutureBuilder<List<Category>>(
-          future: _getCategories(), 
-          builder: (BuildContext context, AsyncSnapshot<List<Category>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text(snapshot.error.toString()));
-            } else if (snapshot.hasData) {
-              if (snapshot.data != null) {
-                List<Category> elements = snapshot.data!;
-                _listSize = elements.length;
-                if (_listSize == 0) {
-                  return const Text("  No categories configured: tap '+', or add defaults");
-                }
-                return ListView.builder(
-                  itemCount: elements.length,
-                  itemBuilder: (context, index) => Container(
-                    width: width,
-                    margin: const EdgeInsets.all(10),
-                    height: 25,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: elements[index].icon != null ? Text(
-                            elements[index].icon!,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ) : const Text(" - "),
-                        ),
-                        Expanded(
-                          flex: 10,
-                          child: Text(
-                            elements[index].name,
-                            textAlign: TextAlign.left,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(_getTitle(widget.type)),
+            actions: [
+              IconButton(
+                onPressed: () async {
+                  _dataChanged = await Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (context) => CategoryFormPage(
+                      category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
+                      isNew: true,
+                    ))
+                  );
+                  if (_dataChanged == true) {
+                    setState(() {});
+                  }
+                },
+                tooltip: 'Add category',
+                icon: const Icon(Icons.add),
+              ),
+              IconButton(
+                onPressed: () async {
+                  _dataChanged = await Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (context) => CategorySortPage(
+                      categoryType: widget.type,
+                    ))
+                  );
+                  if (_dataChanged == true) {
+                    setState(() {});
+                  }
+                },
+                tooltip: 'Sort categories',
+                icon: const Icon(Icons.sort),
+              ),
+            ],
+          ),
+          body: FutureBuilder<List<Category>>(
+            future: _getCategories(), 
+            builder: (BuildContext context, AsyncSnapshot<List<Category>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text(snapshot.error.toString()));
+              } else if (snapshot.hasData) {
+                if (snapshot.data != null) {
+                  List<Category> elements = snapshot.data!;
+                  _listSize = elements.length;
+                  if (_listSize == 0) {
+                    return const Text("  No categories configured: tap '+', or add defaults");
+                  }
+                  return ListView.builder(
+                    itemCount: elements.length,
+                    itemBuilder: (context, index) => Container(
+                      width: width,
+                      margin: const EdgeInsets.all(10),
+                      height: 25,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: elements[index].icon != null ? Text(
+                              elements[index].icon!,
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ) : const Text(" - "),
                           ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () async {
-                              _dataChanged = await Navigator.push(
-                                context, 
-                                MaterialPageRoute(builder: (context) => CategoryFormPage(
-                                  category: elements[index],
-                                  isNew: false,
+                          Expanded(
+                            flex: 10,
+                            child: Text(
+                              elements[index].name,
+                              textAlign: TextAlign.left,
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () async {
+                                _dataChanged = await Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(builder: (context) => CategoryFormPage(
+                                    category: elements[index],
+                                    isNew: false,
+                                    )
                                   )
-                                )
-                              );
-                              if (_dataChanged == true) {
-                                setState(() {});
-                              }
-                            },
+                                );
+                                if (_dataChanged == true) {
+                                  setState(() {});
+                                }
+                              },
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              _showDeleteDialog(elements[index]);
-                            },
+                          Expanded(
+                            flex: 2,
+                            child: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                _showDeleteDialog(elements[index]);
+                              },
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      )
                     )
-                  )
-                );
+                  );
+                }
+                return const Text("No categories");
               }
               return const Text("No categories");
             }
-            return const Text("No categories");
-          }
+          ),
         ),
       ),
     );

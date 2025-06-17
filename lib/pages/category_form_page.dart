@@ -20,7 +20,7 @@ class CategoryFormPageState extends State<CategoryFormPage> {
   double? _yearThreshold;
   String? _icon;
   late CategoryType _categoryType;
-  bool _showAnnualBudget = false;
+  final bool _showAnnualBudget = false;
 
   @override
   void initState() {
@@ -49,58 +49,60 @@ class CategoryFormPageState extends State<CategoryFormPage> {
             currentFocus.unfocus();
           }
         },
-        child: Scaffold(
-          appBar: AppBar(title: widget.isNew! ? const Text("Create new category") : const Text("Edit category")),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Category symbol', hintText: 'Emoji strongly suggested'),
-                    initialValue: _icon,
-                    onChanged: (value) => _icon = value,
-                    validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Category name *'),
-                    initialValue: _categoryName,
-                    onChanged: (value) => _categoryName = value,
-                    validator: (value) => value!.isEmpty ? 'Enter a name' : null,
-                  ),
-                  if (_categoryType == CategoryType.EXPENSE) TextFormField(
-                    decoration: InputDecoration(labelText: 'Monthly Budget'),
-                    initialValue: _monthThreshold != null ? "$_monthThreshold" : "",
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: false
+        child: SafeArea(
+          child: Scaffold(
+            appBar: AppBar(title: widget.isNew! ? const Text("Create new category") : const Text("Edit category")),
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Category symbol', hintText: 'Emoji strongly suggested'),
+                      initialValue: _icon,
+                      onChanged: (value) => _icon = value,
+                      validator: (value) => value != null && value.length > 4 ? 'Symbol must be 1 emoji or max 2 characters' : null,
                     ),
-                    onChanged: (value) => _monthThreshold = double.tryParse(value),
-                  ),
-                  if (_showAnnualBudget && _categoryType == CategoryType.EXPENSE) TextFormField(
-                    decoration: InputDecoration(labelText: 'Annual Budget'),
-                    initialValue: _yearThreshold != null ? "$_yearThreshold" : "",
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: false
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Category name *'),
+                      initialValue: _categoryName,
+                      onChanged: (value) => _categoryName = value,
+                      validator: (value) => value!.isEmpty ? 'Enter a name' : null,
                     ),
-                    onChanged: (value) => _yearThreshold = double.tryParse(value),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _saveCategory();
-                      }
-                    },
-                    child: Text('Save'),
-                  ),
-                ],
+                    if (_categoryType == CategoryType.EXPENSE) TextFormField(
+                      decoration: InputDecoration(labelText: 'Monthly Budget'),
+                      initialValue: _monthThreshold != null ? "$_monthThreshold" : "",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: false
+                      ),
+                      onChanged: (value) => _monthThreshold = double.tryParse(value),
+                    ),
+                    if (_showAnnualBudget && _categoryType == CategoryType.EXPENSE) TextFormField(
+                      decoration: InputDecoration(labelText: 'Annual Budget'),
+                      initialValue: _yearThreshold != null ? "$_yearThreshold" : "",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: false
+                      ),
+                      onChanged: (value) => _yearThreshold = double.tryParse(value),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _saveCategory();
+                        }
+                      },
+                      child: Text('Save'),
+                    ),
+                  ],
+                ),
               ),
-            )
-          )
-        )
+            ),
+          ),
+        ),
       ),
     );
   }

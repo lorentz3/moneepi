@@ -62,49 +62,51 @@ class _CategorySortPageState extends State<CategorySortPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Sort categories'),
-          actions: [],
-        ),
-        body: ReorderableListView.builder(
-          itemCount: _categories.length,
-          onReorder: _onReorder,
-          itemBuilder: (context, index) {
-            final category = _categories[index];
-            return Card(
-              key: ValueKey(category.id),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                height: 40,
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: category.icon != null ? Text(
-                        category.icon!,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ) : const Text(" - "),
-                    ),
-                    Expanded(
-                      flex: 10,
-                      child: Text(
-                        category.name,
-                        textAlign: TextAlign.left,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Sort categories'),
+            actions: [],
+          ),
+          body: ReorderableListView.builder(
+            itemCount: _categories.length,
+            onReorder: _onReorder,
+            itemBuilder: (context, index) {
+              final category = _categories[index];
+              return Card(
+                key: ValueKey(category.id),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  height: 40,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: category.icon != null ? Text(
+                          category.icon!,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ) : const Text(" - "),
                       ),
-                    ),
-                    ReorderableDragStartListener(
-                      index: index,
-                      child: const Icon(Icons.unfold_more),
-                    ),
-                  ],
+                      Expanded(
+                        flex: 10,
+                        child: Text(
+                          category.name,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: const Icon(Icons.unfold_more),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

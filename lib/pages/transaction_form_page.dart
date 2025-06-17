@@ -46,9 +46,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
   bool _isLoading = true;
   final Color? _selectedButtonColor = Colors.deepPurple[200]; // Selected
   final Color? _notSelectedButtonColor = Colors.grey[50];
-  bool _showTime = true; // TODO config
-  bool _showDropdownMenus = false; // TODO config
-  bool _showTiles = true; // TODO config
+  final bool _showTime = true; // TODO config
+  final bool _showDropdownMenus = false; // TODO config
+  final bool _showTiles = true; // TODO config
   bool _multipleAccounts = false;
   bool _multipleCategories = false;
 
@@ -140,29 +140,31 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.opaque, // molto importante per rilevare i tap ovunque
-      child: Scaffold(
-        appBar: _buildAppBar(),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildDateTimeRow(context),
-                  _buildSourceAccountSelector(),
-                  _buildTargetAccountSelector(),
-                  _buildCategorySelector(),
-                  SizedBox(height: 20),
-                  _buildAmountField(),
-                  _buildNotesField(),
-                  SizedBox(height: 20),
-                ],
+      child: SafeArea(
+        child: Scaffold(
+          appBar: _buildAppBar(),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildDateTimeRow(context),
+                    _buildSourceAccountSelector(),
+                    _buildTargetAccountSelector(),
+                    _buildCategorySelector(),
+                    SizedBox(height: 20),
+                    _buildAmountField(),
+                    _buildNotesField(),
+                    SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
           ),
+          bottomNavigationBar: _buildSaveButton(),
         ),
-        bottomNavigationBar: _buildSaveButton(),
       ),
     );
   }

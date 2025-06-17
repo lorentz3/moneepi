@@ -62,24 +62,26 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Accounts summary")),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SectionDivider(text: "Current balances"),
-            _buildCurrentBalances(),
-            SectionDivider(text: "Expenses"),
-            _buildBalanceChart(TransactionType.EXPENSE),
-            SectionDivider(text: "Incomes"),
-            _buildBalanceChart(TransactionType.INCOME),
-            SectionDivider(text: "Cumulative"),
-            _buildCumulativeBalanceChart(),
-            MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center, enableFutureArrow: false,),
-            SectionDivider(text: "Current month totals"),
-            _buildMonthlySummary(),
-            SizedBox(height: 100),
-          ],
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: Text("Accounts summary")),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              SectionDivider(text: "Current balances"),
+              _buildCurrentBalances(),
+              SectionDivider(text: "Expenses"),
+              _buildBalanceChart(TransactionType.EXPENSE),
+              SectionDivider(text: "Incomes"),
+              _buildBalanceChart(TransactionType.INCOME),
+              SectionDivider(text: "Cumulative"),
+              _buildCumulativeBalanceChart(),
+              MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center, enableFutureArrow: false,),
+              SectionDivider(text: "Current month totals"),
+              _buildMonthlySummary(),
+              SizedBox(height: 100),
+            ],
+          ),
         ),
       ),
     );

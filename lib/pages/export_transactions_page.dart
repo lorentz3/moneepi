@@ -28,107 +28,109 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
   DateTime? _fromDate;
   DateTime? _toDate;
   bool _exportAll = false;
-  bool _exportCategories = true;
-  bool _exportAccounts = true;
+  final bool _exportCategories = true;
+  final bool _exportAccounts = true;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('XLSX Export')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            CheckboxListTile(
-              value: _exportAll,
-              title: Text(
-                'Export all transactions',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: Text('XLSX Export')),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              CheckboxListTile(
+                value: _exportAll,
+                title: Text(
+                  'Export all transactions',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16
+                  ),
                 ),
+                onChanged: (val) => setState(() => _exportAll = val ?? false),
               ),
-              onChanged: (val) => setState(() => _exportAll = val ?? false),
-            ),
-            if (!_exportAll) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(width: 30,),
-                  Text(
-                    'From: ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16
+              if (!_exportAll) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(width: 30,),
+                    Text(
+                      'From: ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 10,),
-                  _fromDate != null ? Text(
-                    '${MyDateUtils.formatDate(_fromDate)}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16
+                    SizedBox(width: 10,),
+                    _fromDate != null ? Text(
+                      '${MyDateUtils.formatDate(_fromDate)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16
+                      ),
+                    ) : SizedBox(),
+                    SizedBox(width: 10,),
+                    _fromDate != null ? Expanded(child: SizedBox()) : SizedBox(),
+                    SimpleTextButton(
+                      text: "Select date",
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1950),
+                          lastDate: DateTime(2200),
+                        );
+                        if (picked != null) setState(() => _fromDate = picked);
+                      },
                     ),
-                  ) : SizedBox(),
-                  SizedBox(width: 10,),
-                  _fromDate != null ? Expanded(child: SizedBox()) : SizedBox(),
-                  SimpleTextButton(
-                    text: "Select date",
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(1950),
-                        lastDate: DateTime(2200),
-                      );
-                      if (picked != null) setState(() => _fromDate = picked);
-                    },
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(width: 30,),
-                  Text(
-                    'To:     ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(width: 30,),
+                    Text(
+                      'To:     ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 10,),
-                  _toDate != null ? Text(
-                    '${MyDateUtils.formatDate(_toDate)}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16
+                    SizedBox(width: 10,),
+                    _toDate != null ? Text(
+                      '${MyDateUtils.formatDate(_toDate)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16
+                      ),
+                    ) : SizedBox(),
+                    SizedBox(width: 10,),
+                    _toDate != null ? Expanded(child: SizedBox()) : SizedBox(),
+                    SimpleTextButton(
+                      text: "Select date",
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1950),
+                          lastDate: DateTime(2200),
+                        );
+                        if (picked != null) setState(() => _toDate = picked);
+                      },
                     ),
-                  ) : SizedBox(),
-                  SizedBox(width: 10,),
-                  _toDate != null ? Expanded(child: SizedBox()) : SizedBox(),
-                  SimpleTextButton(
-                    text: "Select date",
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(1950),
-                        lastDate: DateTime(2200),
-                      );
-                      if (picked != null) setState(() => _toDate = picked);
-                    },
-                  ),
-                ],
+                  ],
+                ),
+              ],
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () => _export(),
+                icon: Icon(Icons.download),
+                label: Text('Export'),
               ),
             ],
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: () => _export(),
-              icon: Icon(Icons.download),
-              label: Text('Export'),
-            ),
-          ],
+          ),
         ),
       ),
     );

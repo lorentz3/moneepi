@@ -117,148 +117,150 @@ class ImportXlsPageState extends State<ImportXlsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("XLSX Import settings")),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: _isExtractingAccountsAndCategories
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: Text("XLSX Import settings")),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _isExtractingAccountsAndCategories
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 10),
+                      Text("Importing accounts and categories..."),
+                    ],
+                  ),
+                )
+              : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InfoLabel(
+                  text: "For the best import, the excel file should not have expense categories with the same name of income categories.",
+                  fontSize: 12,
+                ),
+                SimpleTextButton(
+                  onPressed: pickFile,
+                  text: _filePath == null ? "Select XLSX file" : "Select another XLSX file",
+                ),
+                SizedBox(height: 2),
+                if (_filePath != null) Text("Selected file: ${_filePath!.split('/').last}", style: TextStyle(fontWeight: FontWeight.bold),),
+                SizedBox(height: 2),
+                Row(
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 10),
-                    Text("Importing accounts and categories..."),
+                    Checkbox(
+                      value: _importingFromMoneePi,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          _importingFromMoneePi = value ?? true;
+                        });
+                      },
+                    ),
+                    Text("I'm importing data from MoneePi export"),
                   ],
                 ),
-              )
-            : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              InfoLabel(
-                text: "For the best import, the excel file should not have expense categories with the same name of income categories.",
-                fontSize: 12,
-              ),
-              SimpleTextButton(
-                onPressed: pickFile,
-                text: _filePath == null ? "Select XLSX file" : "Select another XLSX file",
-              ),
-              SizedBox(height: 2),
-              if (_filePath != null) Text("Selected file: ${_filePath!.split('/').last}", style: TextStyle(fontWeight: FontWeight.bold),),
-              SizedBox(height: 2),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _importingFromMoneePi,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _importingFromMoneePi = value ?? true;
-                      });
-                    },
-                  ),
-                  Text("I'm importing data from MoneePi export"),
-                ],
-              ),
-              if (!_importingFromMoneePi) Row(
-                children: [
-                  Checkbox(
-                    value: _hasHeaderRow,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _hasHeaderRow = value ?? true;
-                      });
-                    },
-                  ),
-                  Text("The file contains a header row")
-                ],
-              ),
-              if (!_importingFromMoneePi) InfoLabel(
-                text: "Configure column index (0 = 'A', 1 = 'B', ...). If you are importing a file exported from this app, you can leave default indexes and go ahead.",
-                fontSize: 12,
-              ),
-              if (!_importingFromMoneePi)
-              SizedBox(height: 10),
-              if (!_importingFromMoneePi)
-              ..._columnControllers.entries.map((entry) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Column(
-                      children: [
-                        if (entry.key == 'Date') InfoLabel(
-                          text: "'Date' column must be a date cell type, or a date in 'dd/MM/yyyy HH:mm:ss' format",
-                          fontSize: 12,
-                        ),
-                        if (entry.key == 'Date') SizedBox(height: 8),
-                        if (entry.key == 'Type') InfoLabel(
-                          text: "'Type' column must contain 'EXPENSE', 'INCOME' or 'TRANSFER', in order to distinguish the types of transactions. You can leave it empty, transaction type will be deducted by the target category type and the source account presence.",
-                          fontSize: 12,
-                        ),
-                        if (entry.key == 'Type') SizedBox(height: 8),
-                        if (entry.key == 'Source Account') InfoLabel(
-                          text: "You need 'Source Account' column only if you are interested in importing TRANSFERs (movements from a Source Account to another Account)",
-                          fontSize: 12,
-                        ),
-                        if (entry.key == 'Source Account') SizedBox(height: 8),
-                        if (entry.key == 'SubCategory') InfoLabel(
-                          text: "You need 'Sub Categories' column only if you are importing an xlsx file from some app that uses also Sub Categories.",
-                          fontSize: 12,
-                        ),
-                        if (entry.key == 'SubCategory') SizedBox(height: 8),
-                        TextField(
-                          controller: entry.value,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: "${entry.key} column index${isMandatory(entry.key) ? " (*) " : ""}: ",
-                            border: OutlineInputBorder(),
+                if (!_importingFromMoneePi) Row(
+                  children: [
+                    Checkbox(
+                      value: _hasHeaderRow,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          _hasHeaderRow = value ?? true;
+                        });
+                      },
+                    ),
+                    Text("The file contains a header row")
+                  ],
+                ),
+                if (!_importingFromMoneePi) InfoLabel(
+                  text: "Configure column index (0 = 'A', 1 = 'B', ...). If you are importing a file exported from this app, you can leave default indexes and go ahead.",
+                  fontSize: 12,
+                ),
+                if (!_importingFromMoneePi)
+                SizedBox(height: 10),
+                if (!_importingFromMoneePi)
+                ..._columnControllers.entries.map((entry) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Column(
+                        children: [
+                          if (entry.key == 'Date') InfoLabel(
+                            text: "'Date' column must be a date cell type, or a date in 'dd/MM/yyyy HH:mm:ss' format",
+                            fontSize: 12,
+                          ),
+                          if (entry.key == 'Date') SizedBox(height: 8),
+                          if (entry.key == 'Type') InfoLabel(
+                            text: "'Type' column must contain 'EXPENSE', 'INCOME' or 'TRANSFER', in order to distinguish the types of transactions. You can leave it empty, transaction type will be deducted by the target category type and the source account presence.",
+                            fontSize: 12,
+                          ),
+                          if (entry.key == 'Type') SizedBox(height: 8),
+                          if (entry.key == 'Source Account') InfoLabel(
+                            text: "You need 'Source Account' column only if you are interested in importing TRANSFERs (movements from a Source Account to another Account)",
+                            fontSize: 12,
+                          ),
+                          if (entry.key == 'Source Account') SizedBox(height: 8),
+                          if (entry.key == 'SubCategory') InfoLabel(
+                            text: "You need 'Sub Categories' column only if you are importing an xlsx file from some app that uses also Sub Categories.",
+                            fontSize: 12,
+                          ),
+                          if (entry.key == 'SubCategory') SizedBox(height: 8),
+                          TextField(
+                            controller: entry.value,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: "${entry.key} column index${isMandatory(entry.key) ? " (*) " : ""}: ",
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ]
+                      )
+                    )),
+                SizedBox(height: 20),
+                if (!_importingFromMoneePi && !_isExtractingAccountsAndCategories && _distinctAccounts.isEmpty) ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isExtractingAccountsAndCategories = true;
+                    });
+                  _parseFile();
+                  },
+                  child: Text("Step 1: Extract Accounts and Categories"),
+                ),
+                if (!_importingFromMoneePi && _distinctAccounts.isNotEmpty)
+                  ...[
+                    Text("Accounts found:", style: TextStyle(fontWeight: FontWeight.bold),),
+                    ..._distinctAccounts.map((e) => Text(e)),
+                  ],
+                if (!_importingFromMoneePi && _distinctCategories.isNotEmpty)
+                  ...[
+                    Text("Categories found:", style: TextStyle(fontWeight: FontWeight.bold),),
+                    ..._distinctCategories.map((e) => Text(e)),
+                  ],
+                SizedBox(height: 20),
+                if (_filePath != null && (_importingFromMoneePi || _distinctAccounts.isNotEmpty || _distinctCategories.isNotEmpty))
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ImportXlsMapPage(
+                            filePath: _filePath!,
+                            distinctAccounts: _distinctAccounts,
+                            distinctCategories: _distinctCategories,
+                            hasSubCategories: int.tryParse(_columnControllers['SubCategory']!.text) != null,
+                            hasHeaderRow: _hasHeaderRow,
+                            importingFromMoneePi: _importingFromMoneePi,
+                            mapColumnIndexes: _getMapColumnIndexes(),
                           ),
                         ),
-                      ]
-                    )
-                  )),
-              SizedBox(height: 20),
-              if (!_importingFromMoneePi && !_isExtractingAccountsAndCategories && _distinctAccounts.isEmpty) ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _isExtractingAccountsAndCategories = true;
-                  });
-                 _parseFile();
-                },
-                child: Text("Step 1: Extract Accounts and Categories"),
-              ),
-              if (!_importingFromMoneePi && _distinctAccounts.isNotEmpty)
-                ...[
-                  Text("Accounts found:", style: TextStyle(fontWeight: FontWeight.bold),),
-                  ..._distinctAccounts.map((e) => Text(e)),
+                      );
+                    },
+                    child: _importingFromMoneePi ? 
+                      Text("Next step") : 
+                      Text("Step 2: Map imported items"),
+                  ),
                 ],
-              if (!_importingFromMoneePi && _distinctCategories.isNotEmpty)
-                ...[
-                  Text("Categories found:", style: TextStyle(fontWeight: FontWeight.bold),),
-                  ..._distinctCategories.map((e) => Text(e)),
-                ],
-              SizedBox(height: 20),
-              if (_filePath != null && (_importingFromMoneePi || _distinctAccounts.isNotEmpty || _distinctCategories.isNotEmpty))
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ImportXlsMapPage(
-                          filePath: _filePath!,
-                          distinctAccounts: _distinctAccounts,
-                          distinctCategories: _distinctCategories,
-                          hasSubCategories: int.tryParse(_columnControllers['SubCategory']!.text) != null,
-                          hasHeaderRow: _hasHeaderRow,
-                          importingFromMoneePi: _importingFromMoneePi,
-                          mapColumnIndexes: _getMapColumnIndexes(),
-                        ),
-                      ),
-                    );
-                  },
-                  child: _importingFromMoneePi ? 
-                    Text("Next step") : 
-                    Text("Step 2: Map imported items"),
-                ),
-              ],
+            ),
           ),
         ),
       ),

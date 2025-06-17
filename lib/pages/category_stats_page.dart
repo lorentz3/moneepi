@@ -59,93 +59,95 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
   Widget build(BuildContext context) {
     final Color groupBgColor = Colors.blueGrey.shade100;
     final Color groupBgColor2 = Colors.blueGrey.shade200;
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: SizedBox(),
-            ),
-            Expanded(
-              flex: 10,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              Expanded(
+                flex: 1,
+                child: SizedBox(),
               ),
-            ),
-          ],
+              Expanded(
+                flex: 10,
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: YearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              color: groupBgColor,
-              padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-              child: Row(
-                children: [ 
-                  Text(
-                    "${_category.icon ?? ""} ${_category.name} ",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ],
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                color: groupBgColor,
+                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                child: Row(
+                  children: [ 
+                    Text(
+                      "${_category.icon ?? ""} ${_category.name} ",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            _buildBalanceChart(),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: _categoryStats.length,
-              itemBuilder: (context, index) {
-                CategorySummaryDto category = _categoryStats[index + 1]!; //month 1 -> 12
-                Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                return _getCategoryWidget(context, category, rowColor, index + 1);
-              },
-            ),
-            SizedBox(height: 10,),
-            Container(
-              color: groupBgColor,
-              padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-              child: Row(
-                children: [ 
-                  Text(
-                    "    Total: ",
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  Text(
-                    "${_total.toStringAsFixed(2)} $_currencySymbol",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              _buildBalanceChart(),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: _categoryStats.length,
+                itemBuilder: (context, index) {
+                  CategorySummaryDto category = _categoryStats[index + 1]!; //month 1 -> 12
+                  Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                  return _getCategoryWidget(context, category, rowColor, index + 1);
+                },
               ),
-            ),
-            Container(
-              color: groupBgColor2,
-              padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-              child: Row(
-                children: [ 
-                  Text(
-                    "    Average: ",
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  Text(
-                    " ${_monthlyAverage().toStringAsFixed(2)} $_currencySymbol",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (_category.monthThreshold != null) Text(
-                    " / ${_category.monthThreshold!.toStringAsFixed(2)} $_currencySymbol",
-                    style: TextStyle(fontSize: 12,),
-                  ),
-                ],
+              SizedBox(height: 10,),
+              Container(
+                color: groupBgColor,
+                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                child: Row(
+                  children: [ 
+                    Text(
+                      "    Total: ",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    Text(
+                      "${_total.toStringAsFixed(2)} $_currencySymbol",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              Container(
+                color: groupBgColor2,
+                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                child: Row(
+                  children: [ 
+                    Text(
+                      "    Average: ",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    Text(
+                      " ${_monthlyAverage().toStringAsFixed(2)} $_currencySymbol",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (_category.monthThreshold != null) Text(
+                      " / ${_category.monthThreshold!.toStringAsFixed(2)} $_currencySymbol",
+                      style: TextStyle(fontSize: 12,),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

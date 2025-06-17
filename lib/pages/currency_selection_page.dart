@@ -66,46 +66,48 @@ class _CurrencySelectionPageState extends State<CurrencySelectionPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Choose your currency:')),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  labelText: 'Search currency',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(title: const Text('Choose your currency:')),
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    labelText: 'Search currency',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _filteredCurrencies.length,
-                itemBuilder: (context, index) {
-                  final currency = _filteredCurrencies[index];
-                  final isSelected = currency.code == _selectedCurrencyCode;
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _filteredCurrencies.length,
+                  itemBuilder: (context, index) {
+                    final currency = _filteredCurrencies[index];
+                    final isSelected = currency.code == _selectedCurrencyCode;
 
-                  return ListTile(
-                    leading: Text(currency.symbol, style: const TextStyle(fontSize: 20)),
-                    title: Text('${currency.name} (${currency.code})'),
-                    trailing: isSelected
-                        ? const Icon(Icons.check, color: Colors.green)
-                        : null,
-                    onTap: () async {
-                      await ConfigurationEntityService.updateCurrency(currency.code);
-                      _updateSelection();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Currency updated!")),
-                      );
-                    },
-                  );
-                },
+                    return ListTile(
+                      leading: Text(currency.symbol, style: const TextStyle(fontSize: 20)),
+                      title: Text('${currency.name} (${currency.code})'),
+                      trailing: isSelected
+                          ? const Icon(Icons.check, color: Colors.green)
+                          : null,
+                      onTap: () async {
+                        await ConfigurationEntityService.updateCurrency(currency.code);
+                        _updateSelection();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Currency updated!")),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

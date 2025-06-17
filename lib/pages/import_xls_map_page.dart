@@ -95,80 +95,82 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Map Imported Items")),
-      body: Column(
-        children: [
-          // Non-scrollable header
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                SimpleTextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AccountsPage(),
-                      ),
-                    ).then((_) => {
-                      setState(() {
-                        _loadData();
-                      }),
-                    });
-                  },
-                  text: "Manage Accounts",
-                ),
-                SimpleTextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CategoriesPage(type: CategoryType.EXPENSE,),
-                      ),
-                    ).then((_) => {
-                      setState(() {
-                        _loadData();
-                      }),
-                    });
-                  },
-                  text: "Manage Categories",
-                ),
-              ],
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: Text("Map Imported Items")),
+        body: Column(
+          children: [
+            // Non-scrollable header
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  SimpleTextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AccountsPage(),
+                        ),
+                      ).then((_) => {
+                        setState(() {
+                          _loadData();
+                        }),
+                      });
+                    },
+                    text: "Manage Accounts",
+                  ),
+                  SimpleTextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CategoriesPage(type: CategoryType.EXPENSE,),
+                        ),
+                      ).then((_) => {
+                        setState(() {
+                          _loadData();
+                        }),
+                      });
+                    },
+                    text: "Manage Categories",
+                  ),
+                ],
+              ),
             ),
-          ),
-          
-          // Scrollable content
-          if (!_importingFromMoneePi)
-          Expanded(
-            child: ListView(
-              children: [
-                ...widget.distinctAccounts.map((account) => _buildAccountDropdownRow(account, _accountMapping)),
-                SizedBox(height: 15,),
-                ...widget.distinctCategories.map((category) => category.isNotEmpty? _buildCategoryDropdownRow(category, _categoryMapping) : SizedBox()),
-              ],
+            
+            // Scrollable content
+            if (!_importingFromMoneePi)
+            Expanded(
+              child: ListView(
+                children: [
+                  ...widget.distinctAccounts.map((account) => _buildAccountDropdownRow(account, _accountMapping)),
+                  SizedBox(height: 15,),
+                  ...widget.distinctCategories.map((category) => category.isNotEmpty? _buildCategoryDropdownRow(category, _categoryMapping) : SizedBox()),
+                ],
+              ),
             ),
-          ),
-          
-          // Fixed footer
-          _isImporting ? CircularProgressIndicator() : Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _isImporting = true;
-                });
-                _importingFromMoneePi ? 
-                  _startImportFromMoneePi(false) :
-                  _startImport(false);
-              },
-              child: _importingFromMoneePi ? 
-                Text("Check imported file") : 
-                Text("Step 3: Check errors before the real import"),
+            
+            // Fixed footer
+            _isImporting ? CircularProgressIndicator() : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isImporting = true;
+                  });
+                  _importingFromMoneePi ? 
+                    _startImportFromMoneePi(false) :
+                    _startImport(false);
+                },
+                child: _importingFromMoneePi ? 
+                  Text("Check imported file") : 
+                  Text("Step 3: Check errors before the real import"),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

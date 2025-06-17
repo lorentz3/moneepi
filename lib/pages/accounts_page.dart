@@ -27,106 +27,108 @@ class AccountsPageState extends State<AccountsPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Accounts"),
-          actions: [
-            IconButton(
-              onPressed: () async {
-                _dataChanged = await Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (context) => AccountFormPage(
-                    account: Account(id: 0, name: "", initialBalance: 0, sort: 0),
-                    isNew: true,
-                  ))
-                );
-                if (_dataChanged == true) {
-                  setState(() {});
-                }
-              },
-              tooltip: 'Add category',
-              icon: const Icon(Icons.add),
-            ),
-          ],
-        ),
-        body: FutureBuilder<List<Account>>(
-          future: _getAccounts(), 
-          builder: (BuildContext context, AsyncSnapshot<List<Account>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text(snapshot.error.toString()));
-            } else if (snapshot.hasData) {
-              if (snapshot.data != null) {
-                List<Account> elements = snapshot.data!;
-                _listSize = elements.length;
-                if (_listSize == 0) {
-                  return const Text("  No accounts configured: tap '+', or add defaults");
-                }
-                return ListView.builder(
-                  itemCount: elements.length,
-                  itemBuilder: (context, index) => Container(
-                    width: width,
-                    margin: const EdgeInsets.all(10),
-                    height: 30,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: elements[index].icon != null ? Text(
-                            elements[index].icon!,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ) : const Text(" - "),
-                        ),
-                        Expanded(
-                          flex: 10,
-                          child: Text(
-                            elements[index].name,
-                            textAlign: TextAlign.left,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text("Accounts"),
+            actions: [
+              IconButton(
+                onPressed: () async {
+                  _dataChanged = await Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (context) => AccountFormPage(
+                      account: Account(id: 0, name: "", initialBalance: 0, sort: 0),
+                      isNew: true,
+                    ))
+                  );
+                  if (_dataChanged == true) {
+                    setState(() {});
+                  }
+                },
+                tooltip: 'Add category',
+                icon: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          body: FutureBuilder<List<Account>>(
+            future: _getAccounts(), 
+            builder: (BuildContext context, AsyncSnapshot<List<Account>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text(snapshot.error.toString()));
+              } else if (snapshot.hasData) {
+                if (snapshot.data != null) {
+                  List<Account> elements = snapshot.data!;
+                  _listSize = elements.length;
+                  if (_listSize == 0) {
+                    return const Text("  No accounts configured: tap '+', or add defaults");
+                  }
+                  return ListView.builder(
+                    itemCount: elements.length,
+                    itemBuilder: (context, index) => Container(
+                      width: width,
+                      margin: const EdgeInsets.all(10),
+                      height: 30,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: elements[index].icon != null ? Text(
+                              elements[index].icon!,
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ) : const Text(" - "),
                           ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () async {
-                              _dataChanged = await Navigator.push(
-                                context, 
-                                MaterialPageRoute(builder: (context) => AccountFormPage(
-                                  account: elements[index],
-                                  isNew: false,
+                          Expanded(
+                            flex: 10,
+                            child: Text(
+                              elements[index].name,
+                              textAlign: TextAlign.left,
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () async {
+                                _dataChanged = await Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(builder: (context) => AccountFormPage(
+                                    account: elements[index],
+                                    isNew: false,
+                                    )
                                   )
-                                )
-                              );
-                              if (_dataChanged == true) {
-                                setState(() {});
-                              }
-                            },
+                                );
+                                if (_dataChanged == true) {
+                                  setState(() {});
+                                }
+                              },
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              _showDeleteDialog(elements[index]);
-                            },
+                          Expanded(
+                            flex: 2,
+                            child: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                _showDeleteDialog(elements[index]);
+                              },
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      )
                     )
-                  )
-                );
+                  );
+                }
+                return const Text("No accounts");
               }
               return const Text("No accounts");
             }
-            return const Text("No accounts");
-          }
+          ),
         ),
-      )
+      ),
     );
   }
 

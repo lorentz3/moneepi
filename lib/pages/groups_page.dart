@@ -54,62 +54,64 @@ class _GroupListPageState extends State<GroupListPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Groups"),
-          actions: [
-            IconButton(
-              onPressed: () {
-                _navigateToEditGroup(GroupDto(name: "", sort: 1, categories: []));
-              },
-              icon: const Icon(Icons.add),
-            ),
-          ],
-        ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _groups.isEmpty ? Center(child: Text("No group configured")) : SizedBox(),
-            ..._groups.map((group) {
-              return InkWell(
-                onTap: () => _navigateToEditGroup(group),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header con data raggruppata
-                    Container(
-                      color: groupBgColor,
-                      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            "${group.icon ?? ""} ${group.name}",
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(width: 10,),
-                          if (group.monthThreshold != null) Text(
-                            "(Monthly budget: ${group.monthThreshold!.toStringAsFixed(2)} $_currencySymbol)",
-                            style: TextStyle(fontSize: 16,),
-                          ),
-                        ],
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text("Groups"),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  _navigateToEditGroup(GroupDto(name: "", sort: 1, categories: []));
+                },
+                icon: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _groups.isEmpty ? Center(child: Text("No group configured")) : SizedBox(),
+              ..._groups.map((group) {
+                return InkWell(
+                  onTap: () => _navigateToEditGroup(group),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header con data raggruppata
+                      Container(
+                        color: groupBgColor,
+                        padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                        child: Row(
+                          children: [
+                            Text(
+                              "${group.icon ?? ""} ${group.name}",
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(width: 10,),
+                            if (group.monthThreshold != null) Text(
+                              "(Monthly budget: ${group.monthThreshold!.toStringAsFixed(2)} $_currencySymbol)",
+                              style: TextStyle(fontSize: 16,),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
 
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: group.categories.length,
-                      itemBuilder: (context, index) {
-                        Category category = group.categories[index];
-                        Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                        return _getCategoryWidget(context, category, rowColor);
-                      },
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ]
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: group.categories.length,
+                        itemBuilder: (context, index) {
+                          Category category = group.categories[index];
+                          Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                          return _getCategoryWidget(context, category, rowColor);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ]
+          ),
         ),
       ),
     );

@@ -60,115 +60,117 @@ class _StatsPageState extends State<StatsPage> {
   @override
   Widget build(BuildContext context) {
     final Color groupBgColor = Colors.blueGrey.shade100;
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Flexible(
-              fit: FlexFit.loose,
-              child: _getPeriodSelector(),
-            ),
-            PeriodDropdownButton(
-              onChanged: (selectedOption) {
-                if (selectedOption != _periodOption) {
-                  setState(() {
-                    _periodOption = selectedOption;
-                    _loadStats();
-                  });
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            MonthTotals(
-              currencySymbol: _currencySymbol,
-              selectedDate: _selectedDate, 
-              totalExpense: _monthTotalDto.totalExpense, 
-              totalIncome: _monthTotalDto.totalIncome,
-              showMonth: _periodOption == PeriodOption.monthly,
-            ),
-            SizedBox(height: 5,),
-            ..._groupStats.map((group) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Header con gruppo
-                  Container(
-                    color: groupBgColor,
-                    padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                    child: Row(
-                      children: [
-                        Text(
-                          "${group.icon ?? ""} ${group.name}",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(width: 10,),
-                        Text(
-                          "Total: ${(group.totalExpense ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
-                          style: TextStyle(fontSize: 16,),
-                        ),
-                        if (_periodOption == PeriodOption.monthly && group.monthThreshold != null) Text(
-                          " / ${group.monthThreshold!.toStringAsFixed(2)} $_currencySymbol",
-                          style: TextStyle(fontSize: 12,),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: group.categories.length,
-                    itemBuilder: (context, index) {
-                      CategorySummaryDto category = group.categories[index];
-                      Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                      return _getCategoryWidget(context, category, rowColor);
-                    },
-                  ),
-                ],
-              );
-            }),
-            // Lista senza raggruppamenti
-            if (_categoryStats.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_groupExists) Container(
-                    color: groupBgColor,
-                    padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-                    child: Row(
-                      children: [ 
-                        Text(
-                          "Other categories",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(width: 10,),
-                        Text(
-                          "Total: ${_otherCategoriesTotal.toStringAsFixed(2)} $_currencySymbol",
-                          style: TextStyle(fontSize: 14,),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: _categoryStats.length,
-                    itemBuilder: (context, index) {
-                      CategorySummaryDto category = _categoryStats[index];
-                      Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
-                      return _getCategoryWidget(context, category, rowColor);
-                    },
-                  ),
-                ],
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Flexible(
+                fit: FlexFit.loose,
+                child: _getPeriodSelector(),
               ),
-          ]
+              PeriodDropdownButton(
+                onChanged: (selectedOption) {
+                  if (selectedOption != _periodOption) {
+                    setState(() {
+                      _periodOption = selectedOption;
+                      _loadStats();
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              MonthTotals(
+                currencySymbol: _currencySymbol,
+                selectedDate: _selectedDate, 
+                totalExpense: _monthTotalDto.totalExpense, 
+                totalIncome: _monthTotalDto.totalIncome,
+                showMonth: _periodOption == PeriodOption.monthly,
+              ),
+              SizedBox(height: 5,),
+              ..._groupStats.map((group) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header con gruppo
+                    Container(
+                      color: groupBgColor,
+                      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            "${group.icon ?? ""} ${group.name}",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 10,),
+                          Text(
+                            "Total: ${(group.totalExpense ?? 0.0).toStringAsFixed(2)} $_currencySymbol",
+                            style: TextStyle(fontSize: 16,),
+                          ),
+                          if (_periodOption == PeriodOption.monthly && group.monthThreshold != null) Text(
+                            " / ${group.monthThreshold!.toStringAsFixed(2)} $_currencySymbol",
+                            style: TextStyle(fontSize: 12,),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: group.categories.length,
+                      itemBuilder: (context, index) {
+                        CategorySummaryDto category = group.categories[index];
+                        Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                        return _getCategoryWidget(context, category, rowColor);
+                      },
+                    ),
+                  ],
+                );
+              }),
+              // Lista senza raggruppamenti
+              if (_categoryStats.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_groupExists) Container(
+                      color: groupBgColor,
+                      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+                      child: Row(
+                        children: [ 
+                          Text(
+                            "Other categories",
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 10,),
+                          Text(
+                            "Total: ${_otherCategoriesTotal.toStringAsFixed(2)} $_currencySymbol",
+                            style: TextStyle(fontSize: 14,),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: _categoryStats.length,
+                      itemBuilder: (context, index) {
+                        CategorySummaryDto category = _categoryStats[index];
+                        Color rowColor = index % 2 == 0 ? Colors.white : Colors.grey[200]!;
+                        return _getCategoryWidget(context, category, rowColor);
+                      },
+                    ),
+                  ],
+                ),
+            ]
+          ),
         ),
       ),
     );

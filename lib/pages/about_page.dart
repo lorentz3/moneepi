@@ -24,32 +24,34 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('About this app')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            const Text(
-              'MoneePi',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text('Version: 1.0.0'),
-            const SizedBox(height: 16),
-            const Text('Maintainer: Lorentz'),
-            GestureDetector(
-              onTap: () => _launchURL(appUrl),
-              child: Text(
-                appUrl,
-                style: TextStyle(color: Colors.blue[800]),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('About this app')),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ListView(
+            children: [
+              const Text(
+                'MoneePi',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              "This app is developed for personal use. It's offline, no data is shared with third parties.",
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
+              Text('Version: 1.0.0'),
+              const SizedBox(height: 16),
+              const Text('Maintainer: Lorentz'),
+              GestureDetector(
+                onTap: () => _launchURL(appUrl),
+                child: Text(
+                  appUrl,
+                  style: TextStyle(color: Colors.blue[800]),
+                ),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                "This app is developed for personal use. It's offline, no data is shared with third parties.",
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -54,7 +54,7 @@ class EmojiButton extends StatelessWidget {
                 ),
                 Positioned(
                   bottom: constraints.maxHeight * 0.05, // Sovrappone leggermente l'icona
-                  child: Container(
+                  child: SizedBox(
                     width: constraints.maxWidth * 0.9,
                     child: Text(
                       label,
