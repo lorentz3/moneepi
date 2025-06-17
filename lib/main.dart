@@ -264,10 +264,9 @@ class _HomePageState extends State<HomePage> {
         ),
         body: _getMainBody(),
         bottomNavigationBar: Container(
-          height: 70,
           color: backgroundGrey(),
           child: Padding(
-            padding: const EdgeInsets.only(top: 2, left: 6, right: 6, bottom: 14),
+            padding: const EdgeInsets.only(top: 6, left: 6, right: 6, bottom: 6),
             child: Row(
               children: [
                 FooterButton(

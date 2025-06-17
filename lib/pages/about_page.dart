@@ -35,7 +35,7 @@ class _AboutPageState extends State<AboutPage> {
                 'MoneePi',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              Text('Version: 1.0.0'),
+              Text('Version: 1.0.4'),
               const SizedBox(height: 16),
               const Text('Maintainer: Lorentz'),
               GestureDetector(

@@ -201,6 +201,37 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
 
   void _saveThresholds() async {
     for (Category category in _categories) {
+      final text = _controllers[category.id]?.text ?? "";
+      final value = double.tryParse(text);
+      if (value != null && value < 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Negative values are not allowed."),
+              backgroundColor: red(),
+            ),
+          );
+        }
+        return;
+      }
+    }
+    for (Group group in _groups) {
+      final text = _groupControllers[group.id]?.text ?? "";
+      final value = double.tryParse(text);
+      if (value != null && value < 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Negative values are not allowed."),
+              backgroundColor: red(),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    for (Category category in _categories) {
       String actualValue = _controllers[category.id]?.text ?? "";
       if (actualValue != _initialValues[category.id]){
         category.monthThreshold = double.tryParse(_controllers[category.id]?.text ?? "");
