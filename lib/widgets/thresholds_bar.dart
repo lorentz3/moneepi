@@ -91,7 +91,7 @@ class _ThresholdBarState extends State<ThresholdBar> {
 
     double spentPercent = (widget.threshold > 0)
         ? (100 * widget.spent / widget.threshold).clamp(0.0, 999.0)
-        : 0.0;
+        : (widget.spent > 0 ? 999.0 : 0.0);
 
     Color progressColor;
     if (widget.showTodayBar) {
