@@ -129,8 +129,7 @@ class BudgetingPageState extends State<BudgetingPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
           appBar: AppBar(
             title: Row(
               children: [
@@ -148,7 +147,7 @@ class BudgetingPageState extends State<BudgetingPage> {
               ],
             ),
           ),
-          body: SingleChildScrollView(
+          body: SafeArea(child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

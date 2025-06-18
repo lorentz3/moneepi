@@ -117,10 +117,9 @@ class ImportXlsPageState extends State<ImportXlsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text("XLSX Import settings")),
-        body: SingleChildScrollView(
+        body: SafeArea(child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: _isExtractingAccountsAndCategories

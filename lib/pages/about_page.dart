@@ -24,10 +24,10 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(title: const Text('About this app')),
-        body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: const Text('About this app')),
+      body: SafeArea(
+        child: Padding(
           padding: const EdgeInsets.all(16),
           child: ListView(
             children: [

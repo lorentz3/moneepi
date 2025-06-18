@@ -73,10 +73,9 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
         onTap: () {
           FocusScope.of(context).unfocus(); // Nasconde la tastiera quando si clicca fuori dai TextField
         },
-        child: SafeArea(
-          child: Scaffold(
+        child: Scaffold(
             appBar: AppBar(title: Text("Budgeting")),
-            body: Padding(
+            body: SafeArea(child: Padding(
               padding: const EdgeInsets.all(0),
               child: Column(
                 children: [
@@ -175,10 +174,10 @@ class MonthlyThresholdsPageState extends State<MonthlyThresholdsPage> {
                 ],
               ),
             ),
+            ),
             bottomNavigationBar: _buildSaveButton(),
           ),
         ),
-      ),
     );
   }
   

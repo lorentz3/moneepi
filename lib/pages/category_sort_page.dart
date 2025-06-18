@@ -62,13 +62,12 @@ class _CategorySortPageState extends State<CategorySortPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
           appBar: AppBar(
             title: const Text('Sort categories'),
             actions: [],
           ),
-          body: ReorderableListView.builder(
+          body: SafeArea(child: ReorderableListView.builder(
             itemCount: _categories.length,
             onReorder: _onReorder,
             itemBuilder: (context, index) {

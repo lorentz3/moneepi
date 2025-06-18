@@ -27,8 +27,7 @@ class AccountsPageState extends State<AccountsPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
           appBar: AppBar(
             title: const Text("Accounts"),
             actions: [
@@ -50,7 +49,7 @@ class AccountsPageState extends State<AccountsPage> {
               ),
             ],
           ),
-          body: FutureBuilder<List<Account>>(
+          body: SafeArea(child: FutureBuilder<List<Account>>(
             future: _getAccounts(), 
             builder: (BuildContext context, AsyncSnapshot<List<Account>> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {

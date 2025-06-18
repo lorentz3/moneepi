@@ -32,8 +32,7 @@ class CategoriesPageState extends State<CategoriesPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
           appBar: AppBar(
             title: Text(_getTitle(widget.type)),
             actions: [
@@ -70,7 +69,7 @@ class CategoriesPageState extends State<CategoriesPage> {
               ),
             ],
           ),
-          body: FutureBuilder<List<Category>>(
+          body: SafeArea(child: FutureBuilder<List<Category>>(
             future: _getCategories(), 
             builder: (BuildContext context, AsyncSnapshot<List<Category>> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {

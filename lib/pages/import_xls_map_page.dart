@@ -95,10 +95,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text("Map Imported Items")),
-        body: Column(
+        body: SafeArea(child: Column(
           children: [
             // Non-scrollable header
             Padding(

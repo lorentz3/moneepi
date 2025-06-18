@@ -62,10 +62,9 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text("Accounts summary")),
-        body: SingleChildScrollView(
+        body: SafeArea(child: SingleChildScrollView(
           child: Column(
             children: [
               SectionDivider(text: "Current balances"),

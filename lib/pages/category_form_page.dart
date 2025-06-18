@@ -50,10 +50,9 @@ class CategoryFormPageState extends State<CategoryFormPage> {
             currentFocus.unfocus();
           }
         },
-        child: SafeArea(
-          child: Scaffold(
+        child: Scaffold(
             appBar: AppBar(title: widget.isNew! ? const Text("Create new category") : const Text("Edit category")),
-            body: Padding(
+            body: SafeArea(child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
                 key: _formKey,

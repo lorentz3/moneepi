@@ -66,10 +66,9 @@ class _CurrencySelectionPageState extends State<CurrencySelectionPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
           appBar: AppBar(title: const Text('Choose your currency:')),
-          body: Column(
+          body: SafeArea(child: Column(
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),

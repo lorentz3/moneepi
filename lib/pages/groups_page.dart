@@ -54,8 +54,7 @@ class _GroupListPageState extends State<GroupListPage> {
           Navigator.pop(context, _dataChanged);
         }
       },
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
           appBar: AppBar(
             title: const Text("Groups"),
             actions: [
@@ -67,7 +66,7 @@ class _GroupListPageState extends State<GroupListPage> {
               ),
             ],
           ),
-          body: Column(
+          body: SafeArea(child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _groups.isEmpty ? Center(child: Text("No group configured")) : SizedBox(),

@@ -59,8 +59,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
   Widget build(BuildContext context) {
     final Color groupBgColor = Colors.blueGrey.shade100;
     final Color groupBgColor2 = Colors.blueGrey.shade200;
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: Row(
             children: [
@@ -78,7 +77,7 @@ class _CategoryStatsPageState extends State<CategoryStatsPage> {
             ],
           ),
         ),
-        body: SingleChildScrollView(
+        body: SafeArea(child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

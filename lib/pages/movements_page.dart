@@ -91,8 +91,7 @@ class MovementsPageState extends State<MovementsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: Text("Movements"),
           actions: [
@@ -112,7 +111,7 @@ class MovementsPageState extends State<MovementsPage> {
             ),
           ],
         ),
-        body: _getMainBody(),
+        body: SafeArea(child: _getMainBody(),
       ),
     );
   }

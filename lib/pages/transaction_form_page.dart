@@ -140,10 +140,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.opaque, // molto importante per rilevare i tap ovunque
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
           appBar: _buildAppBar(),
-          body: Padding(
+          body: SafeArea(child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
               key: _formKey,
@@ -163,9 +162,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
               ),
             ),
           ),
+          ),
           bottomNavigationBar: _buildSaveButton(),
         ),
-      ),
     );
   }
 

@@ -62,8 +62,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
           Navigator.pop(context, false);
         }
       },
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
           appBar: AppBar(
             title: _isNew ? const Text("Create new group") : const Text("Edit group"),
             actions: [
@@ -75,7 +74,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
               ),
             ],
           ),
-          body: SingleChildScrollView(
+          body: SafeArea(child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(

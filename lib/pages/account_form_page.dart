@@ -46,10 +46,10 @@ class AccountFormPageState extends State<AccountFormPage> {
             currentFocus.unfocus();
           }
         },
-        child: SafeArea(
-          child: Scaffold(
-            appBar: AppBar(title: widget.isNew! ? const Text("Create new account") : const Text("Edit account")),
-            body: Padding(
+        child: Scaffold(
+          appBar: AppBar(title: widget.isNew! ? const Text("Create new account") : const Text("Edit account")),
+          body: SafeArea(
+            child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
                 key: _formKey,
@@ -91,7 +91,7 @@ class AccountFormPageState extends State<AccountFormPage> {
               ),
             ),
           ),
-        )
+        ),
       ),
     );
   }

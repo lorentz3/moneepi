@@ -60,8 +60,7 @@ class _StatsPageState extends State<StatsPage> {
   @override
   Widget build(BuildContext context) {
     final Color groupBgColor = Colors.blueGrey.shade100;
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: Row(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -83,7 +82,7 @@ class _StatsPageState extends State<StatsPage> {
             ],
           ),
         ),
-        body: SingleChildScrollView(
+        body: SafeArea(child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -39,10 +39,9 @@ class MonthlySavingSettingsPageState extends State<MonthlySavingSettingsPage> {
             currentFocus.unfocus();
           }
         },
-        child: SafeArea(
-          child: Scaffold(
+        child: Scaffold(
             appBar: AppBar(title: const Text("Settings")),
-            body: Padding(
+            body: SafeArea(child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
                 key: _formKey,
