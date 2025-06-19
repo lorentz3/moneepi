@@ -33,6 +33,10 @@ Color blueGrey() {
   return Colors.blueGrey[700]!;
 }
 
+Color grey() {
+  return Colors.grey[700]!;
+}
+
 Color magenta() {
   return Colors.pink[900]!;
 }

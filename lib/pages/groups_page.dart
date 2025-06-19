@@ -55,18 +55,19 @@ class _GroupListPageState extends State<GroupListPage> {
         }
       },
       child: Scaffold(
-          appBar: AppBar(
-            title: const Text("Groups"),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  _navigateToEditGroup(GroupDto(name: "", sort: 1, categories: []));
-                },
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          body: SafeArea(child: Column(
+        appBar: AppBar(
+          title: const Text("Groups"),
+          actions: [
+            IconButton(
+              onPressed: () {
+                _navigateToEditGroup(GroupDto(name: "", sort: 1, categories: []));
+              },
+              icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _groups.isEmpty ? Center(child: Text("No group configured")) : SizedBox(),

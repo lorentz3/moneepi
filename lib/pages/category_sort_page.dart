@@ -63,11 +63,12 @@ class _CategorySortPageState extends State<CategorySortPage> {
         }
       },
       child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Sort categories'),
-            actions: [],
-          ),
-          body: SafeArea(child: ReorderableListView.builder(
+        appBar: AppBar(
+          title: const Text('Sort categories'),
+          actions: [],
+        ),
+        body: SafeArea(
+          child: ReorderableListView.builder(
             itemCount: _categories.length,
             onReorder: _onReorder,
             itemBuilder: (context, index) {

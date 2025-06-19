@@ -33,43 +33,44 @@ class CategoriesPageState extends State<CategoriesPage> {
         }
       },
       child: Scaffold(
-          appBar: AppBar(
-            title: Text(_getTitle(widget.type)),
-            actions: [
-              IconButton(
-                onPressed: () async {
-                  _dataChanged = await Navigator.push(
-                    context, 
-                    MaterialPageRoute(builder: (context) => CategoryFormPage(
-                      category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
-                      isNew: true,
-                    ))
-                  );
-                  if (_dataChanged == true) {
-                    setState(() {});
-                  }
-                },
-                tooltip: 'Add category',
-                icon: const Icon(Icons.add),
-              ),
-              IconButton(
-                onPressed: () async {
-                  _dataChanged = await Navigator.push(
-                    context, 
-                    MaterialPageRoute(builder: (context) => CategorySortPage(
-                      categoryType: widget.type,
-                    ))
-                  );
-                  if (_dataChanged == true) {
-                    setState(() {});
-                  }
-                },
-                tooltip: 'Sort categories',
-                icon: const Icon(Icons.sort),
-              ),
-            ],
-          ),
-          body: SafeArea(child: FutureBuilder<List<Category>>(
+        appBar: AppBar(
+          title: Text(_getTitle(widget.type)),
+          actions: [
+            IconButton(
+              onPressed: () async {
+                _dataChanged = await Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => CategoryFormPage(
+                    category: Category(id: 0, name: "", type: widget.type, sort: _listSize! + 1),
+                    isNew: true,
+                  ))
+                );
+                if (_dataChanged == true) {
+                  setState(() {});
+                }
+              },
+              tooltip: 'Add category',
+              icon: const Icon(Icons.add),
+            ),
+            IconButton(
+              onPressed: () async {
+                _dataChanged = await Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => CategorySortPage(
+                    categoryType: widget.type,
+                  ))
+                );
+                if (_dataChanged == true) {
+                  setState(() {});
+                }
+              },
+              tooltip: 'Sort categories',
+              icon: const Icon(Icons.sort),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: FutureBuilder<List<Category>>(
             future: _getCategories(), 
             builder: (BuildContext context, AsyncSnapshot<List<Category>> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {

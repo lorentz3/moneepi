@@ -34,8 +34,9 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text('XLSX Export')),
-        body: SafeArea(child: Padding(
+      appBar: AppBar(title: Text('XLSX Export')),
+      body: SafeArea(
+        child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [

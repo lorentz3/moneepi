@@ -261,33 +261,40 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.start,),
       ),
-      body: SafeArea(
-        child: _getMainBody(),
-      ),
-      bottomNavigationBar: Container(
-        color: backgroundGrey(),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 6, left: 6, right: 6, bottom: 6),
-          child: Row(
-            children: [
-              FooterButton(
-                text: "Income",
-                onPressed: () => _navigateToTransactionPage(TransactionType.INCOME), 
-                color: green()
-              ),
-              SizedBox(width: 6,),
-              if (_accountsAreMoreThanOne) FooterButton(
-                text: "Transfer", 
-                onPressed: () => _navigateToTransactionPage(TransactionType.TRANSFER),
-                color: blue()
-              ),
-              if (_accountsAreMoreThanOne) SizedBox(width: 6,),
-              FooterButton(
-                text: "Expense",
-                onPressed: () => _navigateToTransactionPage(TransactionType.EXPENSE), 
-                color: red()
-              ),
-            ],
+      body: _getMainBody(),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          color: backgroundGrey(),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 6, left: 6, right: 6, bottom: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FooterButton(
+                    text: "Income",
+                    onPressed: () => _navigateToTransactionPage(TransactionType.INCOME), 
+                    color: green()
+                  ),
+                ),
+                SizedBox(width: 6,),
+                if (_accountsAreMoreThanOne) 
+                  Expanded(
+                    child: FooterButton(
+                      text: "Transfer", 
+                      onPressed: () => _navigateToTransactionPage(TransactionType.TRANSFER),
+                      color: blue()
+                    ),
+                  ),
+                if (_accountsAreMoreThanOne) SizedBox(width: 6,),
+                Expanded(
+                  child: FooterButton(
+                    text: "Expense",
+                    onPressed: () => _navigateToTransactionPage(TransactionType.EXPENSE), 
+                    color: red()
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

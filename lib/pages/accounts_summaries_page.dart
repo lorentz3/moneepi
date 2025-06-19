@@ -63,24 +63,23 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text("Accounts summary")),
-        body: SafeArea(child: SingleChildScrollView(
-          child: Column(
-            children: [
-              SectionDivider(text: "Current balances"),
-              _buildCurrentBalances(),
-              SectionDivider(text: "Expenses"),
-              _buildBalanceChart(TransactionType.EXPENSE),
-              SectionDivider(text: "Incomes"),
-              _buildBalanceChart(TransactionType.INCOME),
-              SectionDivider(text: "Cumulative"),
-              _buildCumulativeBalanceChart(),
-              MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center, enableFutureArrow: false,),
-              SectionDivider(text: "Current month totals"),
-              _buildMonthlySummary(),
-              SizedBox(height: 100),
-            ],
-          ),
+      appBar: AppBar(title: Text("Accounts summary")),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SectionDivider(text: "Current balances"),
+            _buildCurrentBalances(),
+            SectionDivider(text: "Expenses"),
+            _buildBalanceChart(TransactionType.EXPENSE),
+            SectionDivider(text: "Incomes"),
+            _buildBalanceChart(TransactionType.INCOME),
+            SectionDivider(text: "Cumulative"),
+            _buildCumulativeBalanceChart(),
+            MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.center, enableFutureArrow: false,),
+            SectionDivider(text: "Current month totals"),
+            _buildMonthlySummary(),
+            SizedBox(height: 100),
+          ],
         ),
       ),
     );
@@ -298,13 +297,15 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
       }
     }
 
-    return accountData.entries.map((entry) {
+    return accountData.entries.toList().asMap().entries.map((entry) {
+      int colorIndex = entry.key; // 0, 1, 2, ...
+      var accountEntry = entry.value;
       return LineChartBarData(
-        spots: entry.value,
+        spots: accountEntry.value,
         isCurved: false,
         barWidth: 3,
         isStrokeCapRound: true,
-        color: getLightColor(entry.key - 1),
+        color: getLightColor(colorIndex),
         belowBarData: BarAreaData(show: false),
       );
     }).toList();
@@ -410,13 +411,16 @@ class AccountSummaryPageState extends State<AccountSummaryPage> {
       }
     }
 
-    return accountData.entries.map((entry) {
+    return accountData.entries.toList().asMap().entries.map((entry) {
+      int colorIndex = entry.key; // 0, 1, 2, ...
+      var accountEntry = entry.value;
+
       return LineChartBarData(
-        spots: entry.value,
+        spots: accountEntry.value,
         isCurved: false,
         barWidth: 3,
         isStrokeCapRound: true,
-        color: getLightColor(entry.key - 1),
+        color: getLightColor(colorIndex),
         belowBarData: BarAreaData(show: false),
       );
     }).toList();

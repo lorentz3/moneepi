@@ -59,7 +59,6 @@ class MovementsPageState extends State<MovementsPage> {
   }
 
   void _updateStartDate(DateTime newDate) {
-    debugPrint("update start date $newDate");
     setState(() {
       _startDate = newDate;
     });
@@ -67,7 +66,6 @@ class MovementsPageState extends State<MovementsPage> {
   }
 
   void _updateEndDate(DateTime newDate) {
-    debugPrint("update end date $newDate");
     setState(() {
       _endDate = newDate;
     });

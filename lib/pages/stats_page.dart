@@ -61,28 +61,29 @@ class _StatsPageState extends State<StatsPage> {
   Widget build(BuildContext context) {
     final Color groupBgColor = Colors.blueGrey.shade100;
     return Scaffold(
-        appBar: AppBar(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Flexible(
-                fit: FlexFit.loose,
-                child: _getPeriodSelector(),
-              ),
-              PeriodDropdownButton(
-                onChanged: (selectedOption) {
-                  if (selectedOption != _periodOption) {
-                    setState(() {
-                      _periodOption = selectedOption;
-                      _loadStats();
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Flexible(
+              fit: FlexFit.loose,
+              child: _getPeriodSelector(),
+            ),
+            PeriodDropdownButton(
+              onChanged: (selectedOption) {
+                if (selectedOption != _periodOption) {
+                  setState(() {
+                    _periodOption = selectedOption;
+                    _loadStats();
+                  });
+                }
+              },
+            ),
+          ],
         ),
-        body: SafeArea(child: SingleChildScrollView(
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

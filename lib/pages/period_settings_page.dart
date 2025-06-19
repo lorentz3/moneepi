@@ -43,8 +43,9 @@ class PeriodSettingsPageState extends State<PeriodSettingsPage> {
           }
         },
         child: Scaffold(
-            appBar: AppBar(title: const Text("Settings")),
-            body: SafeArea(child: Padding(
+          appBar: AppBar(title: const Text("Settings")),
+          body: SafeArea(
+            child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
                 key: _formKey,

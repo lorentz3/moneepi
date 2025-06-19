@@ -7,9 +7,11 @@ import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
+import 'package:myfinance2/utils/color_identity.dart';
 import 'package:myfinance2/utils/date_utils.dart';
 import 'package:myfinance2/widgets/amount_input_field.dart';
 import 'package:myfinance2/widgets/emoji_button.dart';
+import 'package:myfinance2/widgets/footer_button.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
 
 class TransactionFormPage extends StatefulWidget {
@@ -141,30 +143,50 @@ class TransactionFormPageState extends State<TransactionFormPage> {
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.opaque, // molto importante per rilevare i tap ovunque
       child: Scaffold(
-          appBar: _buildAppBar(),
-          body: SafeArea(child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildDateTimeRow(context),
-                    _buildSourceAccountSelector(),
-                    _buildTargetAccountSelector(),
-                    _buildCategorySelector(),
-                    SizedBox(height: 20),
-                    _buildAmountField(),
-                    _buildNotesField(),
-                    SizedBox(height: 20),
-                  ],
-                ),
+        appBar: _buildAppBar(),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildDateTimeRow(context),
+                  _buildSourceAccountSelector(),
+                  _buildTargetAccountSelector(),
+                  _buildCategorySelector(),
+                  SizedBox(height: 20),
+                  _buildAmountField(),
+                  _buildNotesField(),
+                  SizedBox(height: 20),
+                ],
               ),
             ),
           ),
-          ),
-          bottomNavigationBar: _buildSaveButton(),
         ),
+        bottomNavigationBar: SafeArea(
+          child: _buildSaveButton(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    bool isSaveEnabled = _selectedType == TransactionType.TRANSFER 
+      ? _selectedAccount != null && _selectedSourceAccount != null
+      : _selectedAccount != null && _selectedCategory != null;
+    return Container(
+      color: backgroundGrey(),
+      padding: EdgeInsets.only(left: 80, right: 80, bottom: 6, top: 6),
+      child: FooterButton(
+        text: "Save",
+        onPressed: isSaveEnabled
+            ? () {
+                if (_formKey.currentState!.validate()) _saveTransaction();
+              }
+            : null, // disabilita il bottone 
+        color: isSaveEnabled ? deepPurple() : backgroundGrey()
+      ),
     );
   }
 
@@ -384,31 +406,6 @@ class TransactionFormPageState extends State<TransactionFormPage> {
       decoration: InputDecoration(labelText: 'Notes'),
       onChanged: (value) => _notes = value,
       initialValue: _notes,
-    );
-  }
-
-  Widget _buildSaveButton() {
-    bool isSaveEnabled = _selectedType == TransactionType.TRANSFER 
-      ? _selectedAccount != null && _selectedSourceAccount != null
-      : _selectedAccount != null && _selectedCategory != null;
-    return Padding(
-      padding: EdgeInsets.only(left: 60, right: 60, bottom: 30, top: 5),
-      child: ElevatedButton(
-        onPressed: isSaveEnabled
-            ? () {
-                if (_formKey.currentState!.validate()) _saveTransaction();
-              }
-            : null, // disabilita il bottone
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isSaveEnabled ? null : Colors.grey.shade400, // opzionale
-        ),
-        child: Text(
-          'Save',
-          style: TextStyle(
-            fontSize: 20,
-          ),
-        ),
-      ),
     );
   }
 

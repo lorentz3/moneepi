@@ -96,8 +96,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text("Map Imported Items")),
-        body: SafeArea(child: Column(
+      appBar: AppBar(title: Text("Map Imported Items")),
+      body: SafeArea(
+        child: Column(
           children: [
             // Non-scrollable header
             Padding(
@@ -248,6 +249,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
 
   //import transaction on first sheet
   void _startImport(bool realImport) async {
+    setState(() {
+      _isImporting = true;
+    });
     //init report vars
     _importErrors[_missingAccountOrCategory] = [];
     _importErrors[_dateTimeError] = [];
@@ -355,6 +359,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   
 
   void _startImportFromMoneePi(bool realImport) async {
+    setState(() {
+      _isImporting = true;
+    });
     //init report vars
     _newExpenseCategories = [];
     _newIncomeCategories = [];
@@ -448,7 +455,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
               id: insertedCategoryId,
               icon: importedIcon,
               name: importedName, 
-              type: CategoryType.EXPENSE, 
+              type: CategoryType.INCOME, 
               sort: int.tryParse(importedOrder) ?? 0,
             );
             _existingCategories.add(withId);
