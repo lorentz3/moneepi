@@ -1,11 +1,48 @@
-import 'package:chessjourney/dto/move_dto.dart';
-import 'package:chessjourney/services/move_service.dart';
 import 'package:flutter/foundation.dart' as f;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:myfinance2/dto/group_summary_dto.dart';
+import 'package:myfinance2/dto/month_total_dto.dart';
+import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
+import 'package:myfinance2/model/category.dart';
+import 'package:myfinance2/model/category_type.dart';
+import 'package:myfinance2/model/transaction.dart';
+import 'package:myfinance2/dto/movement_dto.dart';
+import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/pages/about_page.dart';
+import 'package:myfinance2/pages/accounts_page.dart';
+import 'package:myfinance2/pages/accounts_summaries_page.dart';
+import 'package:myfinance2/pages/budgeting_page.dart';
+import 'package:myfinance2/pages/categories_page.dart';
+import 'package:myfinance2/pages/currency_selection_page.dart';
+import 'package:myfinance2/pages/export_transactions_page.dart';
+import 'package:myfinance2/pages/period_settings_page.dart';
+import 'package:myfinance2/pages/groups_page.dart';
+import 'package:myfinance2/pages/import_xls_page.dart';
+import 'package:myfinance2/pages/monthly_saving_settings_page.dart';
+import 'package:myfinance2/pages/monthly_threshold_page.dart';
+import 'package:myfinance2/pages/stats_page.dart';
+import 'package:myfinance2/pages/transaction_form_page.dart';
+import 'package:myfinance2/pages/movements_page.dart';
+import 'package:myfinance2/services/account_entity_service.dart';
+import 'package:myfinance2/services/app_config.dart';
+import 'package:myfinance2/services/category_entity_service.dart';
+import 'package:myfinance2/services/group_entity_service.dart';
+import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
+import 'package:myfinance2/services/transaction_entity_service.dart';
+import 'package:month_year_picker/month_year_picker.dart';
+import 'package:myfinance2/utils/color_identity.dart';
+import 'package:myfinance2/widgets/categories_pie_chart.dart';
+import 'package:myfinance2/widgets/footer_button.dart';
+import 'package:myfinance2/widgets/left_to_spend.dart';
+import 'package:myfinance2/widgets/month_year_selector.dart';
+import 'package:myfinance2/widgets/month_totals.dart';
+import 'package:myfinance2/widgets/section_divider.dart';
+import 'package:myfinance2/widgets/square_button.dart';
+import 'package:myfinance2/widgets/thresholds_bar.dart';
+import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
-import 'package:chessjourney/widgets/square_button.dart';
-import 'package:flutter_chess_board/flutter_chess_board.dart';
 
 void main() {
   if (!f.kIsWeb && (f.defaultTargetPlatform == TargetPlatform.windows || f.defaultTargetPlatform == TargetPlatform.linux || f.defaultTargetPlatform == TargetPlatform.macOS)) {
@@ -13,20 +50,23 @@ void main() {
     sqflite.databaseFactory = ffi.databaseFactoryFfi;
   }
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ChessJourneyApp());
+  runApp(const FinanceApp());
 }
 
-class ChessJourneyApp extends StatelessWidget {
-  const ChessJourneyApp({super.key});
+class FinanceApp extends StatelessWidget {
+  const FinanceApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ChessJourney',
+      title: 'MoneePi',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      localizationsDelegates: [
+        MonthYearPickerLocalizations.delegate,
+      ],
       home: const HomePage(),
     );
   }
@@ -40,311 +80,474 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Future<List<MoveDto>>? _rootMovesFuture;
-  bool _isWhiteToPlay = true; // Track which player should play
-  late ChessBoardController _chessController;
+  late DateTime _selectedDate;
+  List<TransactionDto> transactions = [];
+  List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
+  List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummaryBars = [];
+  List<GroupSummaryDto> _groupSummaries = [];
+  bool _isSummaryLoading = true;
+  bool _accountsAreMoreThanOne = false;
+  MonthTotalDto _monthTotalDto = MonthTotalDto(totalExpense: 0, totalIncome: 0);
+  String? _currencySymbol;
+  double? _monthlySaving;
+  int? _periodStartingDay;
 
   @override
   void initState() {
     super.initState();
-    _chessController = ChessBoardController();
-    _rootMovesFuture = _loadRootMoves();
+    _selectedDate = DateTime.now();
+    _loadAllData();
+    _setCurrency();
   }
 
-  Future<List<MoveDto>> _loadRootMoves() async {
-    final rows = await MoveService.getRootMoves();
-    return rows.map((e) => MoveDto.fromJson(e)).toList();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ricarico solo se la schermata è tornata visibile
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      _setCurrency();
+    }
+  }
+
+  _setCurrency() async {
+    final c = await AppConfig.instance.getCurrencySymbol();
+    setState(() {
+      _currencySymbol = c;
+    });
+  }
+
+  _loadAllData() {
+    _loadTransactions();
+    _loadSummary();
+    _loadFlags();
+    _loadConfigs();
+  }
+
+  _loadConfigs() async {
+    _monthlySaving = await AppConfig.instance.getMonthlySaving();
+    _periodStartingDay = await AppConfig.instance.getPeriodStartingDay();
+    debugPrint("reloaded configs: _monthlySaving=$_monthlySaving, _periodStartingDay=$_periodStartingDay");
+    setState(() {});
+  }
+
+  Future<void> _loadTransactions() async {
+    transactions = await TransactionEntityService.getMonthTransactions(_selectedDate.month, _selectedDate.year);
+    _monthTotalDto = await TransactionEntityService.getMonthTotalDto(_selectedDate.month, _selectedDate.year);
+    setState(() {});
+  }
+
+  Future<void> _loadFlags() async {
+    _accountsAreMoreThanOne = await AccountEntityService.multipleAccountExist();
+    setState(() {});
+  }
+
+  Future<void> _loadSummary() async {
+    debugPrint("_loadSummary");
+    setState(() {
+      _isSummaryLoading = true;
+    });
+    _groupSummaries = await GroupEntityService.getGroupWithThresholdSummaries(_selectedDate.month, _selectedDate.year);
+    List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(CategoryType.EXPENSE);
+    monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(_selectedDate.month, _selectedDate.year);
+    for (Category c in categoriesWithThreshold) {
+      if (!monthCategoriesSummary.any((element) => element.categoryId == c.id)) {
+        monthCategoriesSummary.add(MonthlyCategoryTransactionSummaryDto(
+          categoryId: c.id!, 
+          categoryIcon: c.icon,
+          categoryName: c.name, 
+          month: _selectedDate.month, 
+          year: _selectedDate.year,
+          monthThreshold: c.monthThreshold,
+          sort: c.sort
+        ));
+      }
+    }
+    monthCategoriesSummaryBars = [...monthCategoriesSummary];
+    monthCategoriesSummaryBars.sort((a, b) => a.sort.compareTo(b.sort));
+    setState(() {
+      _isSummaryLoading = false;
+    });
+  }
+
+ void _updateDate(DateTime newDate) {
+    setState(() {
+      _selectedDate = newDate;
+    });
+    _loadAllData();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ChessJourney'),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.attach_money),
+              title: const Text('Change currency'),
+              onTap: () => _navigateTo(Pages.currencies),
+            ),
+            Divider(),
+            ListTile(
+              leading: const Icon(Icons.category_outlined),
+              title: const Text('Expense Categories setup'),
+              onTap: () => _navigateTo(Pages.expenseCategories),
+            ),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Income Categories setup'),
+              onTap: () => _navigateTo(Pages.incomeCategories),
+            ),
+            ListTile(
+              leading: const Icon(Icons.account_balance),
+              title: const Text('Accounts setup'),
+              onTap: () => _navigateTo(Pages.accounts),
+            ),
+            ListTile(
+              leading: const Icon(Icons.data_thresholding_outlined),
+              title: const Text('Category Budgets'),
+              onTap: () => _navigateTo(Pages.categoryBudgets),
+            ),
+            ListTile(
+              leading: const Icon(Icons.group_work_outlined),
+              title: const Text('Groups setup'),
+              onTap: () => _navigateTo(Pages.groups),
+            ),
+            Divider(),
+            ListTile(
+              leading: const Icon(Icons.savings),
+              title: const Text('Monthly saving settings'),
+              onTap: () => _navigateTo(Pages.monthlySavingsSettings),
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_month),
+              title: const Text('Period settings'),
+              onTap: () => _navigateTo(Pages.periodSettings),
+            ),
+            Divider(),
+            ListTile(
+              leading: const Icon(Icons.dataset_outlined),
+              title: const Text('XLSX Import'),
+              onTap: () => _navigateTo(Pages.xlsxImport),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dataset_rounded),
+              title: const Text('XLSX Export'),
+              onTap: () => _navigateTo(Pages.xlsxExport),
+            ),
+            Divider(),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('Info'),
+              onTap: () => _navigateTo(Pages.about),
+            ),
+            SizedBox(height: 50,),
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          // Header section
-          Padding(
-            padding: const EdgeInsets.all(12.0),
+      appBar: AppBar(
+        title: MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.start,),
+      ),
+      body: _getMainBody(),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          color: backgroundGrey(),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 6, left: 6, right: 6, bottom: 6),
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    '1.  ${_isWhiteToPlay ? 'White' : 'Black'} to move',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  child: FooterButton(
+                    text: "Income",
+                    onPressed: () => _navigateToTransactionPage(TransactionType.INCOME), 
+                    color: green()
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: 'Add move',
-                  onPressed: _openAddMoveDialog,
+                SizedBox(width: 6,),
+                if (_accountsAreMoreThanOne) 
+                  Expanded(
+                    child: FooterButton(
+                      text: "Transfer", 
+                      onPressed: () => _navigateToTransactionPage(TransactionType.TRANSFER),
+                      color: blue()
+                    ),
+                  ),
+                if (_accountsAreMoreThanOne) SizedBox(width: 6,),
+                Expanded(
+                  child: FooterButton(
+                    text: "Expense",
+                    onPressed: () => _navigateToTransactionPage(TransactionType.EXPENSE), 
+                    color: red()
+                  ),
                 ),
               ],
             ),
           ),
-          // Scrollable moves list
-          Expanded(
-            child: FutureBuilder<List<MoveDto>>(
-              future: _rootMovesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                final moves = snapshot.data ?? [];
-                if (moves.isEmpty) {
-                  return const Center(child: Text('No moves yet.'));
-                }
-                return ListView.builder(
-                  itemCount: moves.length,
-                  itemBuilder: (context, index) {
-                    final m = moves[index];
-                    final label = '${m.destCol}${m.destRow}';
-                    return ListTile(
-                      leading: SquareButton(
-                        label: label,
-                        imagePath: _getImagePathForPiece(m.piece),
-                        size: 64,
-                        onPressed: () => _onMoveClicked(m),
-                      ),
-                      title: Text(m.title ?? ''),
-                      subtitle: m.description != null && m.description!.isNotEmpty ? Text(m.description!) : null,
-                    );
-                  },
-                );
-              },
+        ),
+      ),
+    );
+  }
+
+  _navigateToTransactionPage(TransactionType type) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => TransactionFormPage(
+              transaction: Transaction(
+                type: type,
+                timestamp: DateTime.now(),
+              ),
+              isNew: true,
             ),
+      ),
+    ).then((_) {
+      _loadAllData(); 
+    });
+  }
+
+  _getMainBody() {
+    final monthString = DateFormat('MMMM').format(_selectedDate);
+    return SingleChildScrollView(
+      child: Column (
+        children: [
+          _getPieChartAndButtons(),
+          SizedBox(height: 5,),
+          MonthTotals(
+            currencySymbol: _currencySymbol ?? '', 
+            selectedDate: _selectedDate, 
+            totalExpense: _monthTotalDto.totalExpense, 
+            totalIncome: _monthTotalDto.totalIncome,
+            showMonth: false,
           ),
-          // Fixed chessboard at bottom
-          Container(
-            height: 300, // Fixed height for chessboard
-            child: ChessBoard(
-              controller: _chessController,
-              boardColor: BoardColor.brown,
-              boardOrientation: PlayerColor.white,
-              enableUserMoves: false, // Disable user moves, only show moves from list
-            ),
+          if ((_monthlySaving ?? 0.0) > 0) LeftToSpendRow(
+            wantToSave: _monthlySaving!, 
+            currencySymbol: _currencySymbol ?? '', 
+            leftToSpend: _monthTotalDto.totalIncome - _monthTotalDto.totalExpense - _monthlySaving!,
           ),
+          SizedBox(height: 5,),
+          _getGroupThresholdBars(),
+          _getMonthThresholdBars(),
+          SectionDivider(text: "$monthString transactions"),
+          TransactionsListGroupedByDate(
+            transactions: transactions,
+            currencySymbol: _currencySymbol ?? '',
+            onTransactionUpdated: () {
+              _loadAllData();
+            },
+          ),
+          SizedBox(height: 20,),
         ],
       ),
     );
   }
 
-  String? _getImagePathForPiece(String piece) {
-    final pieceType = piece.toUpperCase();
-    final color = _isWhiteToPlay ? 'white' : 'black';
-    
-    switch (pieceType) {
-      case 'P':
-        return 'assets/chesspieces/pawn-$color.png';
-      case 'N':
-        // For now, return null since we only have pawn images
-        return null;
-      case 'B':
-        // For now, return null since we only have pawn images
-        return null;
-      case 'R':
-        // For now, return null since we only have pawn images
-        return null;
-      case 'Q':
-        // For now, return null since we only have pawn images
-        return null;
-      case 'K':
-        // For now, return null since we only have pawn images
-        return null;
-      default:
-        return null;
-    }
-  }
-
-  void _onMoveClicked(MoveDto move) {
-    // Convert our move to chess notation and update the board
-    final moveData = _convertToChessMove(move);
-    if (moveData != null) {
-      _chessController.makeMove(
-        from: moveData['from']!,
-        to: moveData['to']!,
-      );
-    }
-  }
-
-  Map<String, String>? _convertToChessMove(MoveDto move) {
-    // Convert our move data to chess board coordinates
-    // For now, we'll create a simple move from a starting position to destination
-    // This is a simplified implementation - in a real chess app, you'd need proper move logic
-    
-    final piece = move.piece.toUpperCase();
-    final dest = '${move.destCol}${move.destRow}';
-    
-    // For demonstration, we'll assume pieces start from common positions
-    // In a real implementation, you'd track the actual piece positions
-    String from;
-    
-    switch (piece) {
-      case 'P':
-        // Pawns start from row 2 (white) or 7 (black)
-        final startRow = _isWhiteToPlay ? '2' : '7';
-        from = '${move.destCol}$startRow';
-        break;
-      case 'N':
-        // Knights typically start from b1/g1 (white) or b8/g8 (black)
-        from = _isWhiteToPlay ? 'b1' : 'b8';
-        break;
-      case 'B':
-        // Bishops start from c1/f1 (white) or c8/f8 (black)
-        from = _isWhiteToPlay ? 'c1' : 'c8';
-        break;
-      case 'R':
-        // Rooks start from a1/h1 (white) or a8/h8 (black)
-        from = _isWhiteToPlay ? 'a1' : 'a8';
-        break;
-      case 'Q':
-        // Queen starts from d1 (white) or d8 (black)
-        from = _isWhiteToPlay ? 'd1' : 'd8';
-        break;
-      case 'K':
-        // King starts from e1 (white) or e8 (black)
-        from = _isWhiteToPlay ? 'e1' : 'e8';
-        break;
-      default:
-        return null;
-    }
-    
-    return {
-      'from': from,
-      'to': dest,
-    };
-  }
-
-  void _openAddMoveDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String? selectedPiece;
-        String? selectedCol;
-        int? selectedRow;
-        int step = 0; // 0: piece, 1: col, 2: row
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Widget _buildSelectionSummary() {
-              final parts = <String>[];
-              if (selectedPiece != null) parts.add(selectedPiece!);
-              if (selectedCol != null) parts.add(selectedCol!);
-              if (selectedRow != null) parts.add(selectedRow!.toString());
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  parts.isEmpty ? 'Select a piece' : parts.join('  '),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              );
-            }
-
-            Widget _buildGrid(List<String> items, void Function(String) onTap) {
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 2.2,
-                ),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final value = items[index];
-                  return ElevatedButton(
-                    onPressed: () => onTap(value),
-                    child: Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  );
-                },
-              );
-            }
-
-            Widget _buildContent() {
-              if (step == 0) {
-                final pieces = ['P', 'N', 'B', 'R', 'Q', 'K'];
-                return _buildGrid(pieces, (p) {
-                  setState(() {
-                    selectedPiece = p;
-                    step = 1;
-                  });
-                });
-              }
-              if (step == 1) {
-                final cols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-                return _buildGrid(cols, (c) {
-                  setState(() {
-                    selectedCol = c;
-                    step = 2;
-                  });
-                });
-              }
-              final rows = List<String>.generate(8, (i) => '${i + 1}');
-              return _buildGrid(rows, (r) {
-                setState(() {
-                  selectedRow = int.tryParse(r);
-                });
-                Navigator.of(context).pop({
-                  'piece': selectedPiece,
-                  'destCol': selectedCol,
-                  'destRow': selectedRow,
-                });
-              });
-            }
-
-            return AlertDialog(
-              title: const Text('Add move'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSelectionSummary(),
-                    _buildContent(),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                if (step > 0)
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        // go back a step
-                        if (step == 2) {
-                          selectedRow = null;
-                          step = 1;
-                        } else if (step == 1) {
-                          selectedCol = null;
-                          step = 0;
-                        }
-                      });
-                    },
-                    child: const Text('Back'),
-                  ),
+  _getPieChartAndButtons() { 
+    double pieHeight = 180;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 3,
+          child: SizedBox(
+            height: pieHeight,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SquareButton(
+                  label: "Movements",
+                  size: 75,
+                  icon: Icons.compare_arrows,
+                  onPressed: () => _navigateToTransactionsPage(context)),
+                SizedBox(height: 10),
+                SquareButton(
+                  label: "Budgeting",
+                  size: 75,
+                  icon: Icons.monetization_on_outlined,
+                  onPressed: () => _navigateToBudgetingPage()),
               ],
-            );
-          },
-        );
-      },
-    ).then((result) {
-      // result is a map with piece, destCol, destRow. Integrate save later.
-      if (result is Map) {
-        // Toggle player turn after adding a move
-        setState(() {
-          _isWhiteToPlay = !_isWhiteToPlay;
-        });
-        // For now, simply refresh list or log; keeping it no-op.
-      }
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 6,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: CategoriesPieChart(monthCategoriesSummary: monthCategoriesSummary, pieHeight: pieHeight,),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: SizedBox(
+            height: pieHeight,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SquareButton(
+                  label: "Expenses Stats",
+                  size: 75,
+                  icon: Icons.query_stats,
+                  onPressed: () => _navigateToStatsPage()),
+                SizedBox(height: 10),
+                SquareButton(
+                  label: "Accounts Summary",
+                  size: 75, 
+                  icon: Icons.account_balance_wallet_outlined, 
+                  onPressed: () => _navigateToAccountsSummariesPage()),
+              ],
+            ),
+          ),
+        ),
+      ]
+    );
+  }
+
+  _getGroupThresholdBars() {
+    return _isSummaryLoading
+      ? SizedBox()
+      : Padding(
+      padding: EdgeInsets.symmetric(horizontal: 5),
+      child: Column(
+        children: _groupSummaries
+            .where((groupSummary) => groupSummary.monthThreshold != null) 
+            .map((groupSummary) => ThresholdBar(
+              name: groupSummary.name,
+              spent: groupSummary.totalExpense ?? 0.0,
+              threshold: groupSummary.monthThreshold ?? 0.0,
+              icon: groupSummary.icon,
+              nameColor: Color.fromARGB(255, 0, 3, 136),
+              currencySymbol: _currencySymbol ?? '',
+              showTodayBar: _selectedDate.month == DateTime.now().month && _selectedDate.year == DateTime.now().year,
+              categories: groupSummary.categories,
+              )
+            )
+            .toList(),
+        ),
+    );
+  }
+
+  _getMonthThresholdBars() {
+    return _isSummaryLoading
+      ? Center(child: CircularProgressIndicator())
+      : Padding(
+      padding: EdgeInsets.symmetric(horizontal: 5),
+      child: Column(
+        children: monthCategoriesSummaryBars
+            .where((t) => t.monthThreshold != null) 
+            .map((t) => ThresholdBar(
+              name: t.categoryName,
+              spent: t.amount ?? 0.0,
+              threshold: t.monthThreshold ?? 0.0,
+              icon: t.categoryIcon,
+              nameColor: Colors.black, 
+              currencySymbol: _currencySymbol ?? '',
+              showTodayBar: _selectedDate.month == DateTime.now().month && _selectedDate.year == DateTime.now().year,
+            ))
+            .toList(),
+        ),
+    );
+  }
+
+  void _navigateToTransactionsPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MovementsPage(
+        startDate: _selectedDate,
+        endDate: DateTime(_selectedDate.year, _selectedDate.month + 1, _selectedDate.day),
+      )),
+    ).then((_) {
+      _loadAllData(); // TODO only if something changed
     });
   }
 
+  void _navigateToAccountsSummariesPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AccountSummaryPage()),
+    );
+  }
+  
+  _navigateToBudgetingPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BudgetingPage(currencySymbol: _currencySymbol ?? '',)),
+    ).then((_) {
+      _loadAllData(); // TODO only if something changed
+    });
+  }
+  
+  _navigateToStatsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => StatsPage(currencySymbol: _currencySymbol ?? '',)),
+    );
+  }
+
+  void _navigateTo(Pages page) async {
+    Navigator.pop(context); // closes the drawer
+    final bool? dataChanged = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => _getPage(page)),
+    );
+    if (dataChanged != null && dataChanged) {
+      debugPrint("Data changed! Reload data");
+      _loadAllData();
+      _setCurrency();
+    }
+  }
+
+_getPage(Pages page) {
+  switch(page) {
+    case Pages.accounts:
+      return AccountsPage();
+    case Pages.currencies:
+      return CurrencySelectionPage();
+    case Pages.expenseCategories:
+      return CategoriesPage(type: CategoryType.EXPENSE,);
+    case Pages.incomeCategories:
+      return CategoriesPage(type: CategoryType.INCOME,);
+    case Pages.categoryBudgets:
+      return MonthlyThresholdsPage(currencySymbol: _currencySymbol ?? '');
+    case Pages.groups:
+      return GroupListPage(currencySymbol: _currencySymbol ?? '');
+    case Pages.xlsxImport:
+      return ImportXlsPage();
+    case Pages.xlsxExport:
+      return ExportTransactionsPage();
+    case Pages.monthlySavingsSettings:
+      return MonthlySavingSettingsPage(monthlySaving: _monthlySaving ?? 0.0);
+    case Pages.periodSettings:
+      return PeriodSettingsPage(periodStartingDay: _periodStartingDay ?? 1,);
+    case Pages.about:
+      return AboutPage();
+  }
+}
+}
+
+enum Pages {
+  currencies,
+  accounts,
+  expenseCategories,
+  incomeCategories,
+  categoryBudgets,
+  groups,
+  xlsxImport,
+  xlsxExport,
+  monthlySavingsSettings,
+  periodSettings,
+  about,
 }

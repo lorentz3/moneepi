@@ -5,7 +5,7 @@ import 'database_migrations.dart';
 
 class DatabaseHelper {
   static final int _version = migrationScripts.length;
-  static const String _dbName = "myChessJourney.db";
+  static const String _dbName = "myFinance.db";
 
   static Future<Database> getDb() async {
     return openDatabase(join(await getDatabasesPath(), _dbName),
