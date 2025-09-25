@@ -1,4 +1,4 @@
-# ChessJourney
+# MoneePi
 
 
 ## Getting started

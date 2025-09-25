@@ -1,5 +1,5 @@
-import 'package:chessjourney/utils/color_identity.dart';
 import 'package:flutter/material.dart';
+import 'package:myfinance2/utils/color_identity.dart';
 
 class InfoLabel extends StatelessWidget {
   final String text;

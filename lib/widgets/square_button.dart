@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:chessjourney/utils/color_identity.dart';
 
 class SquareButton extends StatelessWidget {
     final String label;
-    final String? imagePath;
+    final IconData icon;
     final double size;
     final bool? highlight;
     final String? highlightText;
@@ -12,7 +11,7 @@ class SquareButton extends StatelessWidget {
   const SquareButton({
     super.key,
     required this.label,
-    this.imagePath,
+    required this.icon,
     required this.size,
     this.highlight,
     this.highlightText,
@@ -32,25 +31,15 @@ class SquareButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: highlight ?? false 
-                  ? BorderSide(color: Colors.deepPurple, width: 2) 
-                  : BorderSide(color: Colors.black, width: 1),
+                side: highlight ?? false ? BorderSide(color: Colors.deepPurple, width: 2) : BorderSide.none,
               ),
-              backgroundColor: backgroundLightBlue(),
+              backgroundColor: Colors.deepPurple[100],
               padding: EdgeInsets.symmetric(vertical: 2),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (imagePath != null)
-                  Image.asset(
-                    imagePath!,
-                    width: size/2,
-                    height: size/2,
-                    fit: BoxFit.contain,
-                  )
-                else
-                  Icon(Icons.help_outline, size: size/2, color: Colors.black54),
+                Icon(icon, size: size/2, color: Colors.black54),
                 SizedBox(height: 1),
                 if (label != "") Text(
                   label,

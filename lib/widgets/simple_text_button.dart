@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:chessjourney/utils/color_identity.dart';
-import 'package:chessjourney/widgets/icon_text_button.dart';
+import 'package:myfinance2/utils/color_identity.dart';
+import 'package:myfinance2/widgets/icon_text_button.dart';
 
 class SimpleTextButton extends StatelessWidget {
   final VoidCallback onPressed;
