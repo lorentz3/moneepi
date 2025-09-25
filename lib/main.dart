@@ -118,16 +118,14 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          // Large chessboard taking most of the screen
-          Expanded(
-            child: Container(
-              margin: EdgeInsets.all(10), // 10px margin all around
-              child: ChessBoard(
-                controller: _chessController,
-                boardColor: BoardColor.brown,
-                boardOrientation: PlayerColor.white,
-                enableUserMoves: false, // Disable user moves, only show moves from list
-              ),
+          // Fixed chessboard at bottom
+          Container(
+            height: 300, // Fixed height for chessboard
+            child: ChessBoard(
+              controller: _chessController,
+              boardColor: BoardColor.brown,
+              boardOrientation: PlayerColor.white,
+              enableUserMoves: false, // Disable user moves, only show moves from list
             ),
           ),
         ],
