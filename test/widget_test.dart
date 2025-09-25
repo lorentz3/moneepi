@@ -8,12 +8,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:myfinance2/main.dart';
+import 'package:chessjourney/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const FinanceApp());
+    await tester.pumpWidget(const ChessJourneyApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

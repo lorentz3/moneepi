@@ -1,6 +1,6 @@
 {
-    "name": "myfinance2",
-    "short_name": "myfinance2",
+    "name": "ChessJourney",
+    "short_name": "ChessJourney",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

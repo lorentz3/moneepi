@@ -1,4 +1,4 @@
-package com.lorentz.seaeyes.moneepi
+package com.lorentz.seaeyes.chessjourney
 
 import io.flutter.embedding.android.FlutterActivity
 

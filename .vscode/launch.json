@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "myfinance2",
+            "name": "chessjourney",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "myfinance2 (profile mode)",
+            "name": "chessjourney (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "myfinance2 (release mode)",
+            "name": "chessjourney (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
