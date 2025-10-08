@@ -14,6 +14,7 @@ class MonthlyCategoryTransactionEntityService {
   static const String _tableName = "MonthlyCategoryTransactionSummaries";
 
   static Future<void> recalculateAllMonthlyCategorySummaries() async {
+    //TODO verify
     final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     debugPrint("recalculate all monthly category summaries for new starting day: $startingDay");
     final List<Category> expenseCategories = await CategoryEntityService.getAllCategories(CategoryType.EXPENSE);
@@ -39,15 +40,32 @@ class MonthlyCategoryTransactionEntityService {
       debugPrint("Start recalc category summaries: categoryId=$categoryId, caregoryName=${category.name}, from $transactionYear/$transactionMonth to $lastYear/$lastMonth");
       while (MyDateUtils.isBeforeOrEqual(transactionMonth, transactionYear, lastMonth, lastYear)) {
         debugPrint("update summary for categoryId=$categoryId $transactionYear/$transactionMonth");
-        await updateMonthlyCategoryTransactionSummary(categoryId, transactionMonth, transactionYear);
+        await updateMonthlyCategoryTransactionSummary(categoryId, transaction.timestamp);
         transactionYear = MyDateUtils.getNextYear(transactionMonth, transactionYear);
         transactionMonth = MyDateUtils.getNextMonth(transactionMonth);
       }
     }
   }
 
-  static Future<void> updateMonthlyCategoryTransactionSummary(int categoryId, int month, int year) async {
-    List<Transaction>? transactions = await TransactionEntityService.getAllByCategoryIdAndMonthAndYear(categoryId, month, year);
+  static Future<void> updateMonthlyCategoryTransactionSummary(int categoryId, DateTime transactionTimestamp) async {
+    int month = transactionTimestamp.month;
+    int year = transactionTimestamp.year;
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    if (transactionTimestamp.day < startingDay) {
+      month = month - 1;
+    }
+    // Handle case where previous month is in the previous year
+    if (month <= 0) {
+      month = 12;
+      year = year - 1;
+    }
+    
+    DateTime start = DateTime(year, month, startingDay);
+    DateTime end = DateTime(year, month + 1, startingDay);
+    final int startTimestamp = start.millisecondsSinceEpoch;
+    final int endTimestamp = end.millisecondsSinceEpoch;
+
+    List<Transaction>? transactions = await TransactionEntityService.getAllByCategoryIdAndTimestampRange(categoryId, startTimestamp, endTimestamp);
     double sum = 0;
     if (transactions != null && transactions.isNotEmpty) {
       sum = transactions.fold(0.0, (acc, obj) => acc + obj.amount!);
@@ -112,6 +130,7 @@ class MonthlyCategoryTransactionEntityService {
   }
 
   static Future<List<MonthlyCategoryTransactionSummaryDto>> getAllMonthCategoriesSummaries(int month, int year) async {
+    debugPrint("getAllMonthCategoriesSummaries $month/$year");
     final db = await DatabaseHelper.getDb();
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
       SELECT c.id AS categoryId, c.icon AS categoryIcon, c.name AS categoryName, t.amount, t.month, t.year, c.monthThreshold, c.sort
@@ -121,6 +140,7 @@ class MonthlyCategoryTransactionEntityService {
       ORDER BY t.amount DESC
     """
     );
+    debugPrint("getAllMonthCategoriesSummaries = $maps");
     return List.generate(maps.length, (index) => MonthlyCategoryTransactionSummaryDto.fromJson(maps[index]));
   }
 

@@ -41,6 +41,7 @@ import 'package:myfinance2/widgets/section_divider.dart';
 import 'package:myfinance2/widgets/square_button.dart';
 import 'package:myfinance2/widgets/thresholds_bar.dart';
 import 'package:myfinance2/widgets/transaction_list_grouped_by_date.dart';
+import 'package:myfinance2/widgets/app_drawer.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as ffi;
 
@@ -81,9 +82,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late DateTime _selectedDate;
-  List<TransactionDto> transactions = [];
-  List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary = [];
-  List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummaryBars = [];
+  List<TransactionDto> _transactions = [];
+  List<MonthlyCategoryTransactionSummaryDto> _monthCategoriesSummary = [];
+  List<MonthlyCategoryTransactionSummaryDto> _monthCategoriesSummaryBars = [];
   List<GroupSummaryDto> _groupSummaries = [];
   bool _isSummaryLoading = true;
   bool _accountsAreMoreThanOne = false;
@@ -91,6 +92,8 @@ class _HomePageState extends State<HomePage> {
   String? _currencySymbol;
   double? _monthlySaving;
   int? _periodStartingDay;
+  bool _isPeriodStartingDayNotTheFirst = false;
+  bool _isCurrentDayBeforePeriodStartingDay = false;
 
   @override
   void initState() {
@@ -117,22 +120,46 @@ class _HomePageState extends State<HomePage> {
   }
 
   _loadAllData() {
-    _loadTransactions();
-    _loadSummary();
-    _loadFlags();
     _loadConfigs();
+    _loadFlags();
   }
 
   _loadConfigs() async {
     _monthlySaving = await AppConfig.instance.getMonthlySaving();
     _periodStartingDay = await AppConfig.instance.getPeriodStartingDay();
     debugPrint("reloaded configs: _monthlySaving=$_monthlySaving, _periodStartingDay=$_periodStartingDay");
+    await _loadTransactions();
+    await _loadSummary();
     setState(() {});
+  }
+  
+  void _updateDate(DateTime newDate) {
+    setState(() {
+      _selectedDate = newDate;
+      debugPrint("new _selectedDate=$_selectedDate");
+    });
+    _loadAllData();
   }
 
   Future<void> _loadTransactions() async {
-    transactions = await TransactionEntityService.getMonthTransactions(_selectedDate.month, _selectedDate.year);
-    _monthTotalDto = await TransactionEntityService.getMonthTotalDto(_selectedDate.month, _selectedDate.year);
+    // calc start / end period
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    int month = _isCurrentDayBeforePeriodStartingDay ? _selectedDate.month - 1 : _selectedDate.month;
+    int year = _selectedDate.year;
+    
+    // Handle case where previous month is in the previous year
+    if (month <= 0) {
+      month = 12;
+      year = _selectedDate.year - 1;
+    }
+    DateTime start = DateTime(year, month, startingDay);
+    DateTime end = DateTime(year, month + 1, startingDay);
+    debugPrint("getting Month Transactions and totals from $start to $end");
+    final int startTimestamp = start.millisecondsSinceEpoch;
+    final int endTimestamp = end.millisecondsSinceEpoch;
+
+    _transactions = await TransactionEntityService.getMonthTransactions(startTimestamp, endTimestamp);
+    _monthTotalDto = await TransactionEntityService.getMonthTotalDto(startTimestamp, endTimestamp);
     setState(() {});
   }
 
@@ -142,124 +169,53 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadSummary() async {
-    debugPrint("_loadSummary");
     setState(() {
       _isSummaryLoading = true;
     });
-    _groupSummaries = await GroupEntityService.getGroupWithThresholdSummaries(_selectedDate.month, _selectedDate.year);
+    // calc month / year for summaries
+    int month = _isCurrentDayBeforePeriodStartingDay ? _selectedDate.month - 1 : _selectedDate.month;
+    int year = _selectedDate.year;
+    
+    // Handle case where previous month is in the previous year
+    if (month <= 0) {
+      month = 12;
+      year = _selectedDate.year - 1;
+    }
+    
+    _groupSummaries = await GroupEntityService.getGroupWithThresholdSummaries(month, year);
     List<Category> categoriesWithThreshold = await CategoryEntityService.getAllCategoriesWithMonthlyThreshold(CategoryType.EXPENSE);
-    monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(_selectedDate.month, _selectedDate.year);
+    _monthCategoriesSummary = await MonthlyCategoryTransactionEntityService.getAllMonthCategoriesSummaries(month, year);
     for (Category c in categoriesWithThreshold) {
-      if (!monthCategoriesSummary.any((element) => element.categoryId == c.id)) {
-        monthCategoriesSummary.add(MonthlyCategoryTransactionSummaryDto(
+      if (!_monthCategoriesSummary.any((element) => element.categoryId == c.id)) {
+        _monthCategoriesSummary.add(MonthlyCategoryTransactionSummaryDto(
           categoryId: c.id!, 
           categoryIcon: c.icon,
           categoryName: c.name, 
-          month: _selectedDate.month, 
-          year: _selectedDate.year,
+          month: month, 
+          year: year,
           monthThreshold: c.monthThreshold,
           sort: c.sort
         ));
       }
     }
-    monthCategoriesSummaryBars = [...monthCategoriesSummary];
-    monthCategoriesSummaryBars.sort((a, b) => a.sort.compareTo(b.sort));
+    _monthCategoriesSummaryBars = [..._monthCategoriesSummary];
+    _monthCategoriesSummaryBars.sort((a, b) => a.sort.compareTo(b.sort));
     setState(() {
       _isSummaryLoading = false;
     });
   }
 
- void _updateDate(DateTime newDate) {
-    setState(() {
-      _selectedDate = newDate;
-    });
-    _loadAllData();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.deepPurple,
-              ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.attach_money),
-              title: const Text('Change currency'),
-              onTap: () => _navigateTo(Pages.currencies),
-            ),
-            Divider(),
-            ListTile(
-              leading: const Icon(Icons.category_outlined),
-              title: const Text('Expense Categories setup'),
-              onTap: () => _navigateTo(Pages.expenseCategories),
-            ),
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Income Categories setup'),
-              onTap: () => _navigateTo(Pages.incomeCategories),
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_balance),
-              title: const Text('Accounts setup'),
-              onTap: () => _navigateTo(Pages.accounts),
-            ),
-            ListTile(
-              leading: const Icon(Icons.data_thresholding_outlined),
-              title: const Text('Category Budgets'),
-              onTap: () => _navigateTo(Pages.categoryBudgets),
-            ),
-            ListTile(
-              leading: const Icon(Icons.group_work_outlined),
-              title: const Text('Groups setup'),
-              onTap: () => _navigateTo(Pages.groups),
-            ),
-            Divider(),
-            ListTile(
-              leading: const Icon(Icons.savings),
-              title: const Text('Monthly saving settings'),
-              onTap: () => _navigateTo(Pages.monthlySavingsSettings),
-            ),
-            ListTile(
-              leading: const Icon(Icons.calendar_month),
-              title: const Text('Period settings'),
-              onTap: () => _navigateTo(Pages.periodSettings),
-            ),
-            Divider(),
-            ListTile(
-              leading: const Icon(Icons.dataset_outlined),
-              title: const Text('XLSX Import'),
-              onTap: () => _navigateTo(Pages.xlsxImport),
-            ),
-            ListTile(
-              leading: const Icon(Icons.dataset_rounded),
-              title: const Text('XLSX Export'),
-              onTap: () => _navigateTo(Pages.xlsxExport),
-            ),
-            Divider(),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('Info'),
-              onTap: () => _navigateTo(Pages.about),
-            ),
-            SizedBox(height: 50,),
-          ],
-        ),
-      ),
+      drawer: AppDrawer(onNavigate: _navigateTo),
       appBar: AppBar(
-        title: MonthYearSelector(selectedDate: _selectedDate, onDateChanged: _updateDate, alignment: MainAxisAlignment.start,),
+        title: MonthYearSelector(
+          selectedDate: _selectedDate, 
+          onDateChanged: _updateDate, 
+          alignment: MainAxisAlignment.start,
+          showPreviousMonth: _isPeriodStartingDayNotTheFirst,
+        ),
       ),
       body: _getMainBody(),
       bottomNavigationBar: SafeArea(
@@ -343,7 +299,7 @@ class _HomePageState extends State<HomePage> {
           _getMonthThresholdBars(),
           SectionDivider(text: "$monthString transactions"),
           TransactionsListGroupedByDate(
-            transactions: transactions,
+            transactions: _transactions,
             currencySymbol: _currencySymbol ?? '',
             onTransactionUpdated: () {
               _loadAllData();
@@ -387,7 +343,7 @@ class _HomePageState extends State<HomePage> {
           flex: 6,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: CategoriesPieChart(monthCategoriesSummary: monthCategoriesSummary, pieHeight: pieHeight,),
+            child: CategoriesPieChart(monthCategoriesSummary: _monthCategoriesSummary, pieHeight: pieHeight,),
           ),
         ),
         Expanded(
@@ -446,7 +402,7 @@ class _HomePageState extends State<HomePage> {
       : Padding(
       padding: EdgeInsets.symmetric(horizontal: 5),
       child: Column(
-        children: monthCategoriesSummaryBars
+        children: _monthCategoriesSummaryBars
             .where((t) => t.monthThreshold != null) 
             .map((t) => ThresholdBar(
               name: t.categoryName,
@@ -536,18 +492,4 @@ _getPage(Pages page) {
       return AboutPage();
   }
 }
-}
-
-enum Pages {
-  currencies,
-  accounts,
-  expenseCategories,
-  incomeCategories,
-  categoryBudgets,
-  groups,
-  xlsxImport,
-  xlsxExport,
-  monthlySavingsSettings,
-  periodSettings,
-  about,
 }

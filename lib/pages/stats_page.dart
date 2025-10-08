@@ -42,7 +42,7 @@ class _StatsPageState extends State<StatsPage> {
 
   Future<void> _loadStats() async {
     await CleanService.cleanTablesFromDeletedObjects();
-    _monthTotalDto = await TransactionEntityService.getMonthTotalDto(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
+    _monthTotalDto = await TransactionEntityService.getPeriodTotalDto(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _groupStats = await GroupEntityService.getGroupStats(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);
     _groupExists = _groupStats.isNotEmpty;
     _categoryStats = await CategoryEntityService.getCategoriesWithoutGroup(_periodOption == PeriodOption.monthly ? _selectedDate.month : null, _selectedDate.year);

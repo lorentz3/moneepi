@@ -17,11 +17,21 @@ import 'package:myfinance2/utils/date_utils.dart';
 class TransactionEntityService {
   static const String _tableName = "Transactions";
   
-  static Future<List<TransactionDto>> getMonthTransactions(int month, int year) async {
-    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
-    final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
+  static Future<List<TransactionDto>> getMonthTransactions(int startTimestamp, int endTimestamp) async {
     return _getTransactionsBetween(startTimestamp, endTimestamp, null, null, null, null);
+  }
+  
+  static Future<List<Transaction>?> getAllByCategoryIdAndTimestampRange(int categoryId, int startTimestamp, int endTimestamp) async {
+    final db = await DatabaseHelper.getDb();
+    final List<Map<String, dynamic>> maps =  await db.query(
+      _tableName,
+      where: 'timestamp >= ? AND timestamp < ? AND categoryId = ?',
+      whereArgs: [startTimestamp, endTimestamp, categoryId],
+    );
+    if(maps.isEmpty){
+      return null;
+    }
+    return List.generate(maps.length, (index) => Transaction.fromJson(maps[index]));
   }
 
   static Future<List<TransactionDto>> getTransactionsWithFilters(DateTime startDate, DateTime endDate, int? accountId, int? sourceAccountId, int? categoryId, TransactionType? type) async {
@@ -86,7 +96,8 @@ class TransactionEntityService {
     }
   }
 
-  static Future<MonthTotalDto> getMonthTotalDto(int? month, int year) async {
+  static Future<MonthTotalDto> getPeriodTotalDto(int? month, int year) async {
+    //TODO verify
     final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     final db = await DatabaseHelper.getDb();
     final int startTimestamp = DateTime(year, month ?? 1, startingDay).millisecondsSinceEpoch;
@@ -104,44 +115,22 @@ class TransactionEntityService {
       return MonthTotalDto(totalExpense: 0, totalIncome: 0);
     }
   }
-  
-  /*static Future<List<MonthTotalDto>> getMonthTotals(int year) async {
-    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+
+  static Future<MonthTotalDto> getMonthTotalDto(int startTimestamp, int endTimestamp) async {
     final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, 1, startingDay).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year + 1, 1, startingDay).millisecondsSinceEpoch;
-    
     final List<Map<String, dynamic>> totals = await db.rawQuery('''
       SELECT 
-        strftime('%m', datetime(timestamp / 1000, 'unixepoch')) AS month,
-        SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END) AS total_expense,
-        SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END) AS total_income
+          SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END) AS total_expense,
+          SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0.0 END) AS total_income
       FROM $_tableName
       WHERE timestamp >= $startTimestamp AND timestamp < $endTimestamp
-      GROUP BY month
-      ORDER BY month
     ''');
-
-    // Creiamo una lista con tutti i mesi (anche se non ci sono dati per alcuni mesi)
-    List<MonthTotalDto> monthTotals = List.generate(12, (index) {
-      return MonthTotalDto(
-        month: index + 1, // gennaio = 1
-        totalExpense: 0.0,
-        totalIncome: 0.0,
-      );
-    });
-
-    for (var row in totals) {
-      int month = int.parse(row['month']);
-      monthTotals[month - 1] = MonthTotalDto(
-        month: month,
-        totalExpense: (row['total_expense'] as double?) ?? 0.0,
-        totalIncome: (row['total_income'] as double?) ?? 0.0,
-      );
+    if (totals.isNotEmpty) {
+      return MonthTotalDto(totalExpense: (totals.first['total_expense'] as double?) ?? 0.0, totalIncome: (totals.first['total_income'] as double?) ?? 0.0);
+    } else {
+      return MonthTotalDto(totalExpense: 0, totalIncome: 0);
     }
-
-    return monthTotals;
-  }*/
+  }
 
   static Future<List<MonthTotalDto>> getMonthTotals(int year) async {
     final int startingDay = await AppConfig.instance.getPeriodStartingDay();
@@ -234,14 +223,28 @@ class TransactionEntityService {
     //update old referenced summaries
     int monthToUpdate = oldTimestamp.month;
     int yearToUpdate = oldTimestamp.year;
+
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    if (oldTimestamp.day < startingDay) {
+      monthToUpdate = monthToUpdate -1;
+    }
+    // Handle case where previous month is in the previous year
+    if (monthToUpdate <= 0) {
+      monthToUpdate = 12;
+      yearToUpdate = yearToUpdate - 1;
+    }
+
+    //TODO cambiare logica: confronto solo su mese e anno non bastano più
     if (oldCategoryId != null && (transaction.categoryId != oldCategoryId || !MyDateUtils.areMonthYearEquals(transaction.timestamp, oldTimestamp))) {
-      debugPrint("updateMonthlyCategoryTransactionSummary $oldCategoryId");
-      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategoryId, monthToUpdate, yearToUpdate);
+      debugPrint("updateMonthlyCategoryTransactionSummary oldCategoryId=$oldCategoryId");
+      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategoryId, transaction.timestamp);
     }
     if (transaction.accountId != oldAccountId) {
+      debugPrint("updateMonthlyAccountSummaries oldAccountId=$oldAccountId");
       await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldAccountId, monthToUpdate, yearToUpdate);
     }
     if (oldSourceAccountId != null && transaction.sourceAccountId != oldSourceAccountId) {
+      debugPrint("updateMonthlyAccountSummaries oldSourceAccountId=$oldSourceAccountId");
       await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldSourceAccountId, monthToUpdate, yearToUpdate);
     }
   }
@@ -265,7 +268,7 @@ class TransactionEntityService {
 
   static Future<void> onTransactionChange(Transaction transaction) async {
     if (transaction.type != TransactionType.TRANSFER) {
-      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp.month, transaction.timestamp.year);
+      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp);
       await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
     } else {
       await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);

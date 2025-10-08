@@ -9,6 +9,7 @@ class MonthYearSelector extends StatefulWidget {
   final MainAxisAlignment? alignment;
   final bool? enableFutureArrow;
   final bool? showYear;
+  final bool? showPreviousMonth;
 
   const MonthYearSelector({
     super.key,
@@ -17,6 +18,7 @@ class MonthYearSelector extends StatefulWidget {
     this.alignment,
     this.enableFutureArrow,
     this.showYear,
+    this.showPreviousMonth,
   });
 
   @override
@@ -28,6 +30,7 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
   MainAxisAlignment _alignment = MainAxisAlignment.center;
   bool _enableFutureArrow = false;
   bool _showYear = true;
+  bool _showPreviousMonth = false;
 
   @override
   void initState() {
@@ -38,11 +41,33 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
     }
     _enableFutureArrow = widget.enableFutureArrow ?? true;
     _showYear = widget.showYear ?? true;
+    _showPreviousMonth = widget.showPreviousMonth ?? false;
+  }
+
+  @override
+  void didUpdateWidget(MonthYearSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update local state when widget properties change
+    if (widget.selectedDate != oldWidget.selectedDate) {
+      _currentDate = widget.selectedDate;
+    }
+    if (widget.alignment != oldWidget.alignment) {
+      _alignment = widget.alignment ?? MainAxisAlignment.center;
+    }
+    if (widget.enableFutureArrow != oldWidget.enableFutureArrow) {
+      _enableFutureArrow = widget.enableFutureArrow ?? true;
+    }
+    if (widget.showYear != oldWidget.showYear) {
+      _showYear = widget.showYear ?? true;
+    }
+    if (widget.showPreviousMonth != oldWidget.showPreviousMonth) {
+      _showPreviousMonth = widget.showPreviousMonth ?? false;
+    }
   }
 
   void _changeMonth(int offset) {
     setState(() {
-      _currentDate = DateTime(_currentDate.year, _currentDate.month + offset, 1);
+      _currentDate = DateTime(_currentDate.year, _currentDate.month + offset, _currentDate.day);
     });
     widget.onDateChanged(_currentDate);
   }
@@ -60,10 +85,31 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
         if (!_enableFutureArrow && MyDateUtils.isFutureMonth(picked.month, picked.year)) {
           _currentDate = DateTime.now();
         } else {
-          _currentDate = DateTime(picked.year, picked.month, 1);
+          _currentDate = DateTime(picked.year, picked.month, _currentDate.day);
         }
       });
       widget.onDateChanged(_currentDate);
+    }
+  }
+
+  String _getDisplayText() {
+    if (!_showPreviousMonth) {
+      return DateFormat(_showYear ? 'MMM yyyy' : 'MMM').format(_currentDate);
+    }
+    
+    // Calculate previous month
+    DateTime previousMonth = DateTime(_currentDate.year, _currentDate.month - 1, _currentDate.day);
+    if (_showYear) {
+      // Check if both months are in the same year
+      if (previousMonth.year == _currentDate.year) {
+        return '${DateFormat('MMM').format(previousMonth)}-${DateFormat('MMM yyyy').format(_currentDate)}';
+      } else {
+        // Different years
+        return '${DateFormat('MMM yyyy').format(previousMonth)} - ${DateFormat('MMM yyyy').format(_currentDate)}';
+      }
+    } else {
+      // Show only months without year
+      return '${DateFormat('MMM').format(previousMonth)}-${DateFormat('MMM').format(_currentDate)}';
     }
   }
 
@@ -83,7 +129,7 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
             GestureDetector(
               onTap: _pickMonthYear,
               child: Text(
-                DateFormat(_showYear ? 'MMM yyyy' : 'MMM').format(_currentDate),
+                _getDisplayText(),
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
