@@ -12,7 +12,6 @@ import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
-import 'package:myfinance2/utils/date_utils.dart';
 
 class TransactionEntityService {
   static const String _tableName = "Transactions";
@@ -97,7 +96,6 @@ class TransactionEntityService {
   }
 
   static Future<MonthTotalDto> getPeriodTotalDto(int? month, int year) async {
-    //TODO verify
     final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     final db = await DatabaseHelper.getDb();
     final int startTimestamp = DateTime(year, month ?? 1, startingDay).millisecondsSinceEpoch;
@@ -221,31 +219,17 @@ class TransactionEntityService {
     await onTransactionChange(transaction);
 
     //update old referenced summaries
-    int monthToUpdate = oldTimestamp.month;
-    int yearToUpdate = oldTimestamp.year;
-
-    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
-    if (oldTimestamp.day < startingDay) {
-      monthToUpdate = monthToUpdate -1;
-    }
-    // Handle case where previous month is in the previous year
-    if (monthToUpdate <= 0) {
-      monthToUpdate = 12;
-      yearToUpdate = yearToUpdate - 1;
-    }
-
-    //TODO cambiare logica: confronto solo su mese e anno non bastano più
-    if (oldCategoryId != null && (transaction.categoryId != oldCategoryId || !MyDateUtils.areMonthYearEquals(transaction.timestamp, oldTimestamp))) {
+    if (oldCategoryId != null && (transaction.categoryId != oldCategoryId || transaction.timestamp != oldTimestamp)) {
       debugPrint("updateMonthlyCategoryTransactionSummary oldCategoryId=$oldCategoryId");
-      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategoryId, transaction.timestamp);
+      await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(oldCategoryId, oldTimestamp);
     }
     if (transaction.accountId != oldAccountId) {
       debugPrint("updateMonthlyAccountSummaries oldAccountId=$oldAccountId");
-      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldAccountId, monthToUpdate, yearToUpdate);
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldAccountId, oldTimestamp);
     }
     if (oldSourceAccountId != null && transaction.sourceAccountId != oldSourceAccountId) {
       debugPrint("updateMonthlyAccountSummaries oldSourceAccountId=$oldSourceAccountId");
-      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldSourceAccountId, monthToUpdate, yearToUpdate);
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(oldSourceAccountId, oldTimestamp);
     }
   }
 
@@ -269,10 +253,10 @@ class TransactionEntityService {
   static Future<void> onTransactionChange(Transaction transaction) async {
     if (transaction.type != TransactionType.TRANSFER) {
       await MonthlyCategoryTransactionEntityService.updateMonthlyCategoryTransactionSummary(transaction.categoryId!, transaction.timestamp);
-      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp);
     } else {
-      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp.month, transaction.timestamp.year);
-      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.sourceAccountId!, transaction.timestamp.month, transaction.timestamp.year);
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.accountId!, transaction.timestamp);
+      await MonthlyAccountEntityService.updateMonthlyAccountSummaries(transaction.sourceAccountId!, transaction.timestamp);
     }
   }
   

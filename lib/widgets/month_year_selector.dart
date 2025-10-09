@@ -9,7 +9,7 @@ class MonthYearSelector extends StatefulWidget {
   final MainAxisAlignment? alignment;
   final bool? enableFutureArrow;
   final bool? showYear;
-  final bool? showPreviousMonth;
+  final int? periodStartingDay;
 
   const MonthYearSelector({
     super.key,
@@ -18,7 +18,7 @@ class MonthYearSelector extends StatefulWidget {
     this.alignment,
     this.enableFutureArrow,
     this.showYear,
-    this.showPreviousMonth,
+    this.periodStartingDay,
   });
 
   @override
@@ -30,7 +30,7 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
   MainAxisAlignment _alignment = MainAxisAlignment.center;
   bool _enableFutureArrow = false;
   bool _showYear = true;
-  bool _showPreviousMonth = false;
+  int _periodStartingDay = 1;
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
     }
     _enableFutureArrow = widget.enableFutureArrow ?? true;
     _showYear = widget.showYear ?? true;
-    _showPreviousMonth = widget.showPreviousMonth ?? false;
+    _periodStartingDay = widget.periodStartingDay ?? 1;
   }
 
   @override
@@ -60,8 +60,8 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
     if (widget.showYear != oldWidget.showYear) {
       _showYear = widget.showYear ?? true;
     }
-    if (widget.showPreviousMonth != oldWidget.showPreviousMonth) {
-      _showPreviousMonth = widget.showPreviousMonth ?? false;
+    if (widget.periodStartingDay != oldWidget.periodStartingDay) {
+      _periodStartingDay = widget.periodStartingDay ?? 1;
     }
   }
 
@@ -93,24 +93,14 @@ class MonthYearSelectorState extends State<MonthYearSelector> {
   }
 
   String _getDisplayText() {
-    if (!_showPreviousMonth) {
+    if (_periodStartingDay == 1) {
       return DateFormat(_showYear ? 'MMM yyyy' : 'MMM').format(_currentDate);
     }
-    
-    // Calculate previous month
-    DateTime previousMonth = DateTime(_currentDate.year, _currentDate.month - 1, _currentDate.day);
-    if (_showYear) {
-      // Check if both months are in the same year
-      if (previousMonth.year == _currentDate.year) {
-        return '${DateFormat('MMM').format(previousMonth)}-${DateFormat('MMM yyyy').format(_currentDate)}';
-      } else {
-        // Different years
-        return '${DateFormat('MMM yyyy').format(previousMonth)} - ${DateFormat('MMM yyyy').format(_currentDate)}';
-      }
-    } else {
-      // Show only months without year
-      return '${DateFormat('MMM').format(previousMonth)}-${DateFormat('MMM').format(_currentDate)}';
+    if (_currentDate.day < _periodStartingDay) {
+      DateTime tmp = DateTime(_currentDate.year, _currentDate.month - 1, _currentDate.day);
+      return DateFormat(_showYear ? 'MMM yyyy' : 'MMM').format(tmp);
     }
+    return DateFormat(_showYear ? 'MMM yyyy' : 'MMM').format(_currentDate);
   }
 
   @override

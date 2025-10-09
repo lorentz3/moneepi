@@ -92,8 +92,6 @@ class _HomePageState extends State<HomePage> {
   String? _currencySymbol;
   double? _monthlySaving;
   int? _periodStartingDay;
-  bool _isPeriodStartingDayNotTheFirst = false;
-  bool _isCurrentDayBeforePeriodStartingDay = false;
 
   @override
   void initState() {
@@ -144,7 +142,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadTransactions() async {
     // calc start / end period
     final int startingDay = await AppConfig.instance.getPeriodStartingDay();
-    int month = _isCurrentDayBeforePeriodStartingDay ? _selectedDate.month - 1 : _selectedDate.month;
+    int month = _selectedDate.day < startingDay ? _selectedDate.month - 1 : _selectedDate.month;
     int year = _selectedDate.year;
     
     // Handle case where previous month is in the previous year
@@ -173,7 +171,8 @@ class _HomePageState extends State<HomePage> {
       _isSummaryLoading = true;
     });
     // calc month / year for summaries
-    int month = _isCurrentDayBeforePeriodStartingDay ? _selectedDate.month - 1 : _selectedDate.month;
+    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    int month = _selectedDate.day < startingDay ? _selectedDate.month - 1 : _selectedDate.month;
     int year = _selectedDate.year;
     
     // Handle case where previous month is in the previous year
@@ -214,7 +213,7 @@ class _HomePageState extends State<HomePage> {
           selectedDate: _selectedDate, 
           onDateChanged: _updateDate, 
           alignment: MainAxisAlignment.start,
-          showPreviousMonth: _isPeriodStartingDayNotTheFirst,
+          periodStartingDay: _periodStartingDay,
         ),
       ),
       body: _getMainBody(),
@@ -276,7 +275,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   _getMainBody() {
-    final monthString = DateFormat('MMMM').format(_selectedDate);
+    String monthString = DateFormat('MMMM').format(_selectedDate);
+    if (_selectedDate.day < (_periodStartingDay ?? 1)) {
+      DateTime tmp = DateTime(_selectedDate.year, _selectedDate.month - 1, _selectedDate.day);
+      monthString = DateFormat('MMMM').format(tmp);
+    }
+    
     return SingleChildScrollView(
       child: Column (
         children: [

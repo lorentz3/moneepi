@@ -14,7 +14,6 @@ class MonthlyCategoryTransactionEntityService {
   static const String _tableName = "MonthlyCategoryTransactionSummaries";
 
   static Future<void> recalculateAllMonthlyCategorySummaries() async {
-    //TODO verify
     final int startingDay = await AppConfig.instance.getPeriodStartingDay();
     debugPrint("recalculate all monthly category summaries for new starting day: $startingDay");
     final List<Category> expenseCategories = await CategoryEntityService.getAllCategories(CategoryType.EXPENSE);
@@ -27,20 +26,19 @@ class MonthlyCategoryTransactionEntityService {
       int transactionDay = transaction.timestamp.day;
       int transactionMonth = transaction.timestamp.month;
       int transactionYear = transaction.timestamp.year;
-      if (transactionDay < startingDay) {
-        transactionYear = MyDateUtils.getPreviousYear(transactionMonth, transactionYear);
-        transactionMonth = MyDateUtils.getPreviousMonth(transactionMonth);
-      } 
       Transaction? lastTransaction = await TransactionEntityService.findLastTransactionByCategoryId(categoryId);
       if (lastTransaction == null) {
         return;
       }
       int lastMonth = lastTransaction.timestamp.month;
       int lastYear = lastTransaction.timestamp.year;
+      if (transactionDay < startingDay) {
+        lastYear = MyDateUtils.getNextYear(lastMonth, lastYear);
+        lastMonth = MyDateUtils.getNextMonth(lastMonth);
+      }
       debugPrint("Start recalc category summaries: categoryId=$categoryId, caregoryName=${category.name}, from $transactionYear/$transactionMonth to $lastYear/$lastMonth");
       while (MyDateUtils.isBeforeOrEqual(transactionMonth, transactionYear, lastMonth, lastYear)) {
-        debugPrint("update summary for categoryId=$categoryId $transactionYear/$transactionMonth");
-        await updateMonthlyCategoryTransactionSummary(categoryId, transaction.timestamp);
+        await updateMonthlyCategoryTransactionSummary(categoryId, DateTime(transactionYear, transactionMonth));
         transactionYear = MyDateUtils.getNextYear(transactionMonth, transactionYear);
         transactionMonth = MyDateUtils.getNextMonth(transactionMonth);
       }
@@ -140,7 +138,6 @@ class MonthlyCategoryTransactionEntityService {
       ORDER BY t.amount DESC
     """
     );
-    debugPrint("getAllMonthCategoriesSummaries = $maps");
     return List.generate(maps.length, (index) => MonthlyCategoryTransactionSummaryDto.fromJson(maps[index]));
   }
 

@@ -14,8 +14,7 @@ class MonthlyAccountEntityService {
   static const String _tableName = "MonthlyAccountSummaries";
 
   static Future<void> recalculateAllMonthlyAccountSummaries() async {
-    final int startingDay = await AppConfig.instance.getPeriodStartingDay();
-    debugPrint("recalculate all monthly account summaries for new starting day: $startingDay");
+    debugPrint("recalculate all monthly account summaries for new starting day");
     final List<Account> accounts = await AccountEntityService.getAllAccounts();
     for (Account account in accounts) {
       int accountId = account.id!;
@@ -23,15 +22,8 @@ class MonthlyAccountEntityService {
       if (transaction == null) {
         continue;
       }
-      int transactionDay = transaction.timestamp.day;
-      int transactionMonth = transaction.timestamp.month;
-      int transactionYear = transaction.timestamp.year;
-      if (transactionDay < startingDay) {
-        transactionYear = MyDateUtils.getPreviousYear(transactionMonth, transactionYear);
-        transactionMonth = MyDateUtils.getPreviousMonth(transactionMonth);
-      }
-      debugPrint("Start recalc account summaries: accountId=$accountId, accountName=${account.name}, from $transactionYear/$transactionMonth");
-      await updateMonthlyAccountSummaries(accountId, transactionMonth, transactionYear);
+      debugPrint("Start recalc account summaries: accountId=$accountId, accountName=${account.name}, from ${transaction.timestamp}");
+      await updateMonthlyAccountSummaries(accountId, transaction.timestamp);
     }
   }
 
@@ -58,12 +50,26 @@ class MonthlyAccountEntityService {
         AND timestamp < ?
     ''';
 
-  static Future<void> updateMonthlyAccountSummaries(int accountId, int month, int year) async {
-    debugPrint("Updating account summary: accountId=$accountId, $month/$year");
+  static Future<void> updateMonthlyAccountSummaries(int accountId, DateTime transactionTimestamp) async {
+    int month = transactionTimestamp.month;
+    int year = transactionTimestamp.year;
     final int startingDay = await AppConfig.instance.getPeriodStartingDay();
+    if (transactionTimestamp.day < startingDay) {
+      month = month - 1;
+    }
+    // Handle case where previous month is in the previous year
+    if (month <= 0) {
+      month = 12;
+      year = year - 1;
+    }
+    
+    DateTime start = DateTime(year, month, startingDay);
+    DateTime end = DateTime(year, month + 1, startingDay);
+    final int startTimestamp = start.millisecondsSinceEpoch;
+    final int endTimestamp = end.millisecondsSinceEpoch;
+
+    debugPrint("Updating account summary: accountId=$accountId, $month/$year");
     final db = await DatabaseHelper.getDb();
-    final int startTimestamp = DateTime(year, month, startingDay).millisecondsSinceEpoch;
-    final int endTimestamp = DateTime(year, month + 1, startingDay).millisecondsSinceEpoch;
 
     // Calcoliamo direttamente i totali dal database
     final result = await db.rawQuery(_totalsQuery, [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
@@ -264,7 +270,8 @@ class MonthlyAccountEntityService {
   static Future<void> updateAllCumulativeBalances(int accountId) async {
     MonthlyAccountSummary? oldest = await getOldestMonthlySummary(accountId);
     if (oldest != null) {
-      updateMonthlyAccountSummaries(accountId, oldest.month, oldest.year);
+      DateTime timestamp = DateTime(oldest.year, oldest.month, 1);
+      updateMonthlyAccountSummaries(accountId, timestamp);
     }
   }
 
