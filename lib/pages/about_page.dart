@@ -35,7 +35,7 @@ class _AboutPageState extends State<AboutPage> {
                 'MoneePi',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              Text('Version: 1.0.6'),
+              Text('Version: 1.0.7'),
               const SizedBox(height: 16),
               const Text('Maintainer: Lorentz'),
               GestureDetector(
@@ -47,7 +47,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
               const SizedBox(height: 32),
               const Text(
-                "This app is developed for personal use. It's offline, no data is shared with third parties.",
+                "This app is developed for personal use. It's offline, no data is shared with third parties. Don't forget to export your data from time to time. Uninstalling the app will permanently delete all your stored data.",
                 style: TextStyle(fontSize: 12),
               ),
             ],

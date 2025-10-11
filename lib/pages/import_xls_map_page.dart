@@ -13,6 +13,8 @@ import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:excel/excel.dart';
 import 'package:myfinance2/services/configuration_entity_service.dart';
+import 'package:myfinance2/services/monthly_account_entity_service.dart';
+import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'dart:io';
 
@@ -317,7 +319,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
             categoryId: categoryId,
             amount: double.tryParse(importedAmount) ?? 0.0,
             notes: importedNote,
-          ));
+          ), false);
         }
         continue;
       }
@@ -340,6 +342,11 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       }
     }
 
+    //recalc all summaries for all categories and accounts
+    if (realImport) {
+      await MonthlyCategoryTransactionEntityService.recalculateAllMonthlyCategorySummaries();
+      await MonthlyAccountEntityService.recalculateAllMonthlyAccountSummaries();
+    }
     setState(() {
       _isImporting = false;
     });
@@ -685,7 +692,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       sourceAccountId: sourceAccountId,
       amount: double.tryParse(importedAmount) ?? 0.0,
       notes: importedNote,
-    ));
+    ), false);
   }
 
   DateTime? parseExcelDate(CellValue? cell) {

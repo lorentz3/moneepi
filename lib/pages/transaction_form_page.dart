@@ -425,7 +425,7 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     _transaction.amount = _amount;
     _transaction.notes = _notes;
     if(_isNew){
-      await TransactionEntityService.insertTransaction(_transaction);
+      await TransactionEntityService.insertTransaction(_transaction, true);
     } else {
       await TransactionEntityService.updateTransaction(_transaction, _oldAccountId!, _oldCategoryId, _oldTimestamp!, _oldSourceAccountId);
     }

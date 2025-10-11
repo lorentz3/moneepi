@@ -14,7 +14,7 @@ class MonthlyAccountEntityService {
   static const String _tableName = "MonthlyAccountSummaries";
 
   static Future<void> recalculateAllMonthlyAccountSummaries() async {
-    debugPrint("recalculate all monthly account summaries for new starting day");
+    debugPrint("recalculate all monthly account summaries");
     final List<Account> accounts = await AccountEntityService.getAllAccounts();
     for (Account account in accounts) {
       int accountId = account.id!;

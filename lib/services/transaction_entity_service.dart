@@ -233,12 +233,14 @@ class TransactionEntityService {
     }
   }
 
-  static Future<void> insertTransaction(Transaction transaction) async {
+  static Future<void> insertTransaction(Transaction transaction, bool triggerRecalc) async {
     final db = await DatabaseHelper.getDb();
     await db.insert(_tableName, 
       transaction.toMapCreate()
     );
-    await onTransactionChange(transaction);
+    if (triggerRecalc) {
+      await onTransactionChange(transaction);
+    }
   }
 
   static Future<void> deleteTransaction(Transaction transaction) async {
@@ -453,7 +455,7 @@ class TransactionEntityService {
         accountId: randomAccount.id,
         categoryId: randomCategory.id,
         amount: randomAmount,
-      ));
+      ), true);
     }
   }
 }
