@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/dto/group_summary_dto.dart';
 import 'package:myfinance2/utils/color_identity.dart';
+import 'package:myfinance2/utils/date_utils.dart';
 
 class ThresholdBar extends StatefulWidget {
   final double spent;
@@ -11,6 +12,7 @@ class ThresholdBar extends StatefulWidget {
   final String currencySymbol;
   final bool showTodayBar;
   final List<GroupCategorySummaryDto>? categories;
+  final int? periodStartingDay;
 
   const ThresholdBar({super.key, 
     required this.spent, 
@@ -21,6 +23,7 @@ class ThresholdBar extends StatefulWidget {
     required this.currencySymbol,
     required this.showTodayBar,
     this.categories,
+    this.periodStartingDay,
   });
   
   @override
@@ -83,10 +86,21 @@ class _ThresholdBarState extends State<ThresholdBar> {
 
   @override
   Widget build(BuildContext context) {
-
+    int startingDay = widget.periodStartingDay ?? 1;
     DateTime now = DateTime.now();
     int currentDay = now.day;
     int totalDays = DateUtils.getDaysInMonth(now.year, now.month);
+    if (currentDay < startingDay) {
+      totalDays = DateUtils.getDaysInMonth(MyDateUtils.getPreviousYear(now.month, now.year), MyDateUtils.getPreviousMonth(now.month));
+    }
+    if (startingDay != 1) {
+      //currentDay is referred to the period slice (if month starts on 10th, then the todayBar should be on the left side on the 10th and on the right side on the 9th)
+      currentDay -= startingDay - 1;
+      if (currentDay <= 0) {
+        currentDay += totalDays;
+      }
+    }
+    debugPrint("currentDay = $currentDay");
     double dayProgress = (100 * currentDay / totalDays).clamp(0.0, 100.0);
 
     double spentPercent = (widget.threshold > 0)

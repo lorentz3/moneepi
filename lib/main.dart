@@ -393,6 +393,7 @@ class _HomePageState extends State<HomePage> {
               currencySymbol: _currencySymbol ?? '',
               showTodayBar: _selectedDate.month == DateTime.now().month && _selectedDate.year == DateTime.now().year,
               categories: groupSummary.categories,
+              periodStartingDay: _periodStartingDay,
               )
             )
             .toList(),
@@ -416,6 +417,7 @@ class _HomePageState extends State<HomePage> {
               nameColor: Colors.black, 
               currencySymbol: _currencySymbol ?? '',
               showTodayBar: _selectedDate.month == DateTime.now().month && _selectedDate.year == DateTime.now().year,
+              periodStartingDay: _periodStartingDay,
             ))
             .toList(),
         ),
