@@ -125,7 +125,11 @@ class MovementsPageState extends State<MovementsPage> {
             totalIncome: _monthTotalDto.totalIncome,
             showMonth: false,
           ),
-          _transactions.isEmpty ? Center(child: const Text("Still no movements"),) : TransactionsListGroupedByDate(transactions: _transactions, currencySymbol: _currency ?? '',)
+          _transactions.isEmpty ? Center(child: const Text("Still no movements"),) : TransactionsListGroupedByDate(
+            transactions: _transactions, 
+            currencySymbol: _currency ?? '',
+            onTransactionUpdated: _loadTransactions,
+          )
         ],
       ),
     );
