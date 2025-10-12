@@ -19,26 +19,29 @@ class MonthlyCategoryTransactionEntityService {
     final List<Category> expenseCategories = await CategoryEntityService.getAllCategories(CategoryType.EXPENSE);
     for (Category category in expenseCategories) {
       int categoryId = category.id!;
-      Transaction? transaction = await TransactionEntityService.findFirstTransactionByCategoryId(categoryId);
-      if (transaction == null) {
+      Transaction? firstTransaction = await TransactionEntityService.findFirstTransactionByCategoryId(categoryId);
+      if (firstTransaction == null) {
         continue;
       }
-      int transactionDay = transaction.timestamp.day;
-      int transactionMonth = transaction.timestamp.month;
-      int transactionYear = transaction.timestamp.year;
+      int transactionMonth = firstTransaction.timestamp.month;
+      int transactionYear = firstTransaction.timestamp.year;
+      
       Transaction? lastTransaction = await TransactionEntityService.findLastTransactionByCategoryId(categoryId);
       if (lastTransaction == null) {
         return;
       }
       int lastMonth = lastTransaction.timestamp.month;
       int lastYear = lastTransaction.timestamp.year;
-      if (transactionDay < startingDay) {
-        lastYear = MyDateUtils.getNextYear(lastMonth, lastYear);
-        lastMonth = MyDateUtils.getNextMonth(lastMonth);
-      }
+
+      // security margin: I calc summaries also for the month before the first and after the last
+      transactionYear = MyDateUtils.getPreviousYear(transactionMonth, transactionYear);
+      transactionMonth = MyDateUtils.getPreviousMonth(transactionMonth);
+      lastYear = MyDateUtils.getNextYear(lastMonth, lastYear);
+      lastMonth = MyDateUtils.getNextMonth(lastMonth);
+
       debugPrint("Start recalc category summaries: categoryId=$categoryId, caregoryName=${category.name}, from $transactionYear/$transactionMonth to $lastYear/$lastMonth");
       while (MyDateUtils.isBeforeOrEqual(transactionMonth, transactionYear, lastMonth, lastYear)) {
-        await updateMonthlyCategoryTransactionSummary(categoryId, DateTime(transactionYear, transactionMonth));
+        await updateMonthlyCategoryTransactionSummary(categoryId, DateTime(transactionYear, transactionMonth, startingDay));
         transactionYear = MyDateUtils.getNextYear(transactionMonth, transactionYear);
         transactionMonth = MyDateUtils.getNextMonth(transactionMonth);
       }
@@ -68,6 +71,7 @@ class MonthlyCategoryTransactionEntityService {
     if (transactions != null && transactions.isNotEmpty) {
       sum = transactions.fold(0.0, (acc, obj) => acc + obj.amount!);
     }
+    debugPrint("transactions from $start to $end: categoryId=$categoryId, sum=$sum");
     MonthlyCategoryTransactionSummary? summary = await getMonthlyCategoryTransactionSummary(categoryId, month, year);
     if (summary == null) {
       debugPrint("Inserting monthly category summary: categoryId=$categoryId, $month/$year, sum=$sum");

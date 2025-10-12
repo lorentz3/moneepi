@@ -68,15 +68,13 @@ class MonthlyAccountEntityService {
     final int startTimestamp = start.millisecondsSinceEpoch;
     final int endTimestamp = end.millisecondsSinceEpoch;
 
-    debugPrint("Updating account summary: accountId=$accountId, $month/$year");
     final db = await DatabaseHelper.getDb();
-
     // Calcoliamo direttamente i totali dal database
     final result = await db.rawQuery(_totalsQuery, [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
 
-    double expenseAmount = (result.first['totalExpenses'] as double?) ?? 0;
-    double incomeAmount = (result.first['totalIncome'] as double?) ?? 0;
-    debugPrint("total MonthlyAccountSummary $accountId: $month/$year, +$incomeAmount -$expenseAmount");
+    double expenseAmount = double.parse(((result.first['totalExpenses'] as double?) ?? 0).toStringAsFixed(2));
+    double incomeAmount = double.parse(((result.first['totalIncome'] as double?) ?? 0).toStringAsFixed(2));
+    debugPrint("transactions from $start to $end: accountId=$accountId, $month/$year, +$incomeAmount -$expenseAmount");
 
     // Recuperiamo il saldo cumulativo del mese precedente
     final previousBalanceResult = await db.rawQuery('''
@@ -91,7 +89,7 @@ class MonthlyAccountEntityService {
       previousBalance = await AccountEntityService.getAccountInitialBalanceById(accountId) ?? 0;
     }
 
-    double cumulativeBalance = previousBalance + incomeAmount - expenseAmount;
+    double cumulativeBalance = double.parse((previousBalance + incomeAmount - expenseAmount).toStringAsFixed(2));
     await insertOrUpdateMonthlyAccountSummary(accountId, month, year, previousBalance, cumulativeBalance, expenseAmount, incomeAmount);
 
     Transaction? lastTransaction = await TransactionEntityService.findLastTransactionByAccountId(accountId);
@@ -138,9 +136,9 @@ class MonthlyAccountEntityService {
       // Calcoliamo le transazioni del mese corrente
       final result = await db.rawQuery(_totalsQuery, [accountId, accountId, accountId, accountId, startTimestamp, endTimestamp]);
 
-      double expenseAmount = (result.first['totalExpenses'] as double?) ?? 0;
-      double incomeAmount = (result.first['totalIncome'] as double?) ?? 0;
-      double cumulativeBalance = previousBalance + incomeAmount - expenseAmount;
+      double expenseAmount = double.parse(((result.first['totalExpenses'] as double?) ?? 0).toStringAsFixed(2));
+      double incomeAmount = double.parse(((result.first['totalIncome'] as double?) ?? 0).toStringAsFixed(2));
+      double cumulativeBalance = double.parse((previousBalance + incomeAmount - expenseAmount).toStringAsFixed(2));
 
       // Aggiorniamo il mese corrente
       await insertOrUpdateMonthlyAccountSummary(accountId, month, year, previousBalance, cumulativeBalance, expenseAmount, incomeAmount);
@@ -261,6 +259,7 @@ class MonthlyAccountEntityService {
       // Usa il saldo calcolato o 0.0 se non trovato
       double balance = balanceMap[account.id] ?? 0.0;
       balance += account.initialBalance;
+      balance = double.parse(balance.toStringAsFixed(2));
       return AccountDto.fromAccount(account, balance);
     }).toList();
     
