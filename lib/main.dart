@@ -274,6 +274,25 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _navigateToExpenseForCategory(int categoryId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionFormPage(
+          transaction: Transaction(
+            type: TransactionType.EXPENSE,
+            timestamp: DateTime.now(),
+            categoryId: categoryId,
+          ),
+          dateTime: DateTime.now(),
+          isNew: true,
+        ),
+      ),
+    ).then((_) {
+      _loadAllData();
+    });
+  }
+
   _getMainBody() {
     String monthString = DateFormat('MMMM').format(_selectedDate);
     if (_selectedDate.day < (_periodStartingDay ?? 1)) {
@@ -347,7 +366,11 @@ class _HomePageState extends State<HomePage> {
           flex: 6,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: CategoriesPieChart(monthCategoriesSummary: _monthCategoriesSummary, pieHeight: pieHeight,),
+            child: CategoriesPieChart(
+              monthCategoriesSummary: _monthCategoriesSummary,
+              pieHeight: pieHeight,
+              onCategoryTap: (category) => _navigateToExpenseForCategory(category.categoryId),
+            ),
           ),
         ),
         Expanded(

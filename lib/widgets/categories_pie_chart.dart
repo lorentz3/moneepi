@@ -5,18 +5,37 @@ import 'package:myfinance2/utils/color_identity.dart';
 
 class CategoriesPieChart extends StatelessWidget {
   final List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary; 
-    final double pieHeight;
+  final double pieHeight;
+  final ValueChanged<MonthlyCategoryTransactionSummaryDto>? onCategoryTap;
 
-  const CategoriesPieChart({super.key, required this.monthCategoriesSummary, required this.pieHeight});
+  const CategoriesPieChart({
+    super.key,
+    required this.monthCategoriesSummary,
+    required this.pieHeight,
+    this.onCategoryTap,
+  });
 
 
   @override
   Widget build(BuildContext context) {
+    final filteredSummary = monthCategoriesSummary.where((e) => (e.amount ?? 0) > 0).toList();
     return SizedBox(
       height: pieHeight,
       child: PieChart(
         PieChartData(
-          sections: _generatePieSections(monthCategoriesSummary),
+          sections: _generatePieSections(filteredSummary),
+          pieTouchData: PieTouchData(
+            touchCallback: (event, response) {
+              // Only respond to tap up events to avoid double navigation
+              if (event is! FlTapUpEvent) return;
+              if (filteredSummary.isEmpty) return;
+              final touchedSection = response?.touchedSection;
+              if (touchedSection == null) return;
+              final index = touchedSection.touchedSectionIndex;
+              if (index < 0 || index >= filteredSummary.length) return;
+              onCategoryTap?.call(filteredSummary[index]);
+            },
+          ),
           centerSpaceRadius: 0,
           sectionsSpace: 1,
           startDegreeOffset: -90
@@ -25,8 +44,7 @@ class CategoriesPieChart extends StatelessWidget {
     );
   }
   
-  List<PieChartSectionData> _generatePieSections(List<MonthlyCategoryTransactionSummaryDto> monthCategoriesSummary) {
-    final filteredSummary = monthCategoriesSummary.where((e) => (e.amount ?? 0) > 0).toList();
+  List<PieChartSectionData> _generatePieSections(List<MonthlyCategoryTransactionSummaryDto> filteredSummary) {
     final totalAmount = filteredSummary.fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
     if (totalAmount == 0) {
       return [

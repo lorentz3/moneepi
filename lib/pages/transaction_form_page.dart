@@ -61,7 +61,9 @@ class TransactionFormPageState extends State<TransactionFormPage> {
     if (_isNew) {
       _transaction = widget.transaction!;
       _selectedDate = widget.dateTime ?? DateTime.now();
+      _selectedTime = TimeOfDay.fromDateTime(_selectedDate);
       _selectedType = widget.transaction!.type;
+      _selectedCategory = widget.transaction!.categoryId;
     } else {
       _transactionId = widget.transactionId!;
       _loadTransaction();
