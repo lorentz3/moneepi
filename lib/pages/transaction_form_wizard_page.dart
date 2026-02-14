@@ -480,27 +480,6 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
     );
   }
 
-  Widget _buildDropdown({
-    required String label,
-    required int? value,
-    required List<dynamic> items,
-    required Function(int?) onChanged,
-  }) {
-    return DropdownButtonFormField<int>(
-      decoration: InputDecoration(labelText: label),
-      value: value,
-      items: items.map((item) {
-        String title = item.icon != null ? "${item.icon!} ${item.name}" : item.name;
-        return DropdownMenuItem<int>(
-          value: item.id,
-          child: Text(title),
-        );
-      }).toList(),
-      onChanged: onChanged,
-      validator: (value) => value == null ? 'Choose ${label.toLowerCase()}' : null,
-    );
-  }
-
   Widget _buildEmojiGrid({
     required List<dynamic> items,
     required int? selectedId,
