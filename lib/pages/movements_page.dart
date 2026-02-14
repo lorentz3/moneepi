@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myfinance2/dto/month_total_dto.dart';
-import 'package:myfinance2/dto/movement_dto.dart';
+import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction_type.dart';
@@ -128,6 +128,7 @@ class MovementsPageState extends State<MovementsPage> {
           _transactions.isEmpty ? Center(child: const Text("Still no movements"),) : TransactionsListGroupedByDate(
             transactions: _transactions, 
             currencySymbol: _currency ?? '',
+            showAccountColumn: _multipleAccounts,
             onTransactionUpdated: _loadTransactions,
           )
         ],

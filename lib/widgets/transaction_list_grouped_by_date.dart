@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:myfinance2/dto/movement_dto.dart';
+import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/model/transaction_type.dart';
-import 'package:myfinance2/pages/transaction_form_page.dart';
+import 'package:myfinance2/pages/transaction_form_wizard_page.dart';
 
 class TransactionsListGroupedByDate extends StatelessWidget {
   final List<TransactionDto> transactions;
   final String currencySymbol;
   final VoidCallback? onTransactionUpdated;
+  final bool showAccountColumn;
 
-  const TransactionsListGroupedByDate({super.key, required this.transactions, required this.currencySymbol, this.onTransactionUpdated});
+  const TransactionsListGroupedByDate({super.key, required this.transactions, required this.currencySymbol, this.onTransactionUpdated, this.showAccountColumn = true});
 
   Map<DaySummaryDto, List<TransactionDto>> _groupTransactionsByDate() {
     Map<DaySummaryDto, List<TransactionDto>> groupedTransactions = {};
@@ -48,13 +49,18 @@ class TransactionsListGroupedByDate extends StatelessWidget {
             // Header con data raggruppata
             InkWell(
               onTap: () {
+                final dateTime = DateTime.parse(entry.key.dt);
+                final transaction = Transaction(
+                  type: TransactionType.EXPENSE,
+                  timestamp: dateTime,
+                );
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TransactionFormPage(
-                      dateTime: DateTime.parse(entry.key.dt),
-                      transaction: Transaction(type: TransactionType.EXPENSE, timestamp: DateTime.parse(entry.key.dt)),
+                    builder: (context) => TransactionFormWizardPage(
+                      transaction: transaction,
                       isNew: true,
+                      initialDate: dateTime,
                     ),
                   ),
                 ).then((_) {
@@ -106,28 +112,39 @@ class TransactionsListGroupedByDate extends StatelessWidget {
   Widget _getTransactionWidget(BuildContext context, TransactionDto movement, Color rowColor) {
     String categoryTitle = movement.categoryIcon != null ? "${movement.categoryIcon!} ${movement.categoryName}" : movement.categoryName ?? "";
     String accountTitle = movement.accountIcon != null ? movement.accountIcon! : movement.accountName[0];
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TransactionFormPage(
-              transactionId: movement.id,
-              isNew: false,
+    
+    void _navigateToEdit({required bool startOnAmountPage}) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TransactionFormWizardPage(
+            transactionId: movement.id,
+            transaction: Transaction(
+              id: movement.id,
+              type: movement.type,
+              timestamp: movement.timestamp,
+              accountId: movement.accountId,
+              categoryId: movement.categoryId,
             ),
+            isNew: false,
+            startOnAmountPage: startOnAmountPage,
           ),
-        ).then((_) {
-          onTransactionUpdated?.call();
-        });
-      },
-      child: Container(
-        color: rowColor,
-        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              flex: 15,
+        ),
+      ).then((_) {
+        onTransactionUpdated?.call();
+      });
+    }
+    
+    return Container(
+      color: rowColor,
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 15,
+            child: InkWell(
+              onTap: () => _navigateToEdit(startOnAmountPage: false),
               child: Text(
                 categoryTitle,
                 textAlign: TextAlign.left,
@@ -139,8 +156,11 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                 maxLines: 1,
               ),
             ),
-            Expanded(
-              flex: 10,
+          ),
+          Expanded(
+            flex: 10,
+            child: InkWell(
+              onTap: () => _navigateToEdit(startOnAmountPage: true),
               child: Text(
                 movement.type == TransactionType.EXPENSE
                     ? ' - ${movement.amount.toStringAsFixed(2)} $currencySymbol'
@@ -155,8 +175,11 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(
-              flex: 3,
+          ),
+          if (showAccountColumn) Expanded(
+            flex: 3,
+            child: InkWell(
+              onTap: () => _navigateToEdit(startOnAmountPage: false),
               child: Text(
                 accountTitle,
                 textAlign: TextAlign.center,
@@ -166,8 +189,8 @@ class TransactionsListGroupedByDate extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -182,8 +205,15 @@ class TransactionsListGroupedByDate extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TransactionFormPage(
+            builder: (context) => TransactionFormWizardPage(
               transactionId: movement.id,
+              transaction: Transaction(
+                id: movement.id,
+                type: movement.type,
+                timestamp: movement.timestamp,
+                accountId: movement.accountId,
+                sourceAccountId: movement.sourceAccountId,
+              ),
               isNew: false,
             ),
           ),

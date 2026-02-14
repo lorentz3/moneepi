@@ -81,7 +81,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double padHorizontalPadding = screenWidth / 8;
+    final double padHorizontalPadding = 10;
     final double buttonSize = (screenWidth - (2 * padHorizontalPadding) - 50) / 4;
     debugPrint("screenWidth: $screenWidth, padHorizontalPadding: $padHorizontalPadding, buttonSize: $buttonSize");
     return Column(
@@ -136,6 +136,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
 
   List<Row> _buildKeypadRows(double buttonSize) {
     List<Row> rows = [];
+    final double height = buttonSize * 0.7;
 
     for (int i = 0; i < keys.length; i += 4) {
       rows.add(
@@ -147,7 +148,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
                 padding: const EdgeInsets.all(2),
                 child: SizedBox(
                   width: buttonSize,
-                  height: 40,
+                  height: height,
                   child: ElevatedButton(
                     onPressed: () => _onKeypadPressed(keys[j]),
                     style: keys[j] != '' ? ElevatedButton.styleFrom(
@@ -163,7 +164,7 @@ class _AmountInputFieldState extends State<AmountInputField> {
                     ) ,
                     child: Text(
                       keys[j],
-                      style: const TextStyle(fontSize: 22),
+                      style: TextStyle(fontSize: height * 0.4, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

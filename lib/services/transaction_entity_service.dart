@@ -7,7 +7,7 @@ import 'package:myfinance2/dto/transaction_export_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction.dart';
-import 'package:myfinance2/dto/movement_dto.dart';
+import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
@@ -50,9 +50,9 @@ class TransactionEntityService {
     String andType = type != null ? "AND t.type = '${type.toString().split('.').last}'" : "";
     final List<Map<String, dynamic>> maps = await db.rawQuery("""
       SELECT t.id, t.type, t.timestamp, 
-        a.icon AS accountIcon, a.name AS accountName, 
-        c.icon AS categoryIcon, c.name AS categoryName, 
-        sourceAccounts.icon AS sourceAccountIcon, sourceAccounts.name AS sourceAccountName,
+        t.accountId, a.icon AS accountIcon, a.name AS accountName, 
+        t.categoryId, c.icon AS categoryIcon, c.name AS categoryName, 
+        t.sourceAccountId, sourceAccounts.icon AS sourceAccountIcon, sourceAccounts.name AS sourceAccountName,
         t.amount
       FROM $_tableName t 
       LEFT JOIN Accounts a ON t.accountId = a.id

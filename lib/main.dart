@@ -7,7 +7,7 @@ import 'package:myfinance2/dto/monthly_category_transaction_summary_dto.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/transaction.dart';
-import 'package:myfinance2/dto/movement_dto.dart';
+import 'package:myfinance2/dto/transaction_dto.dart';
 import 'package:myfinance2/model/transaction_type.dart';
 import 'package:myfinance2/pages/about_page.dart';
 import 'package:myfinance2/pages/accounts_page.dart';
@@ -22,7 +22,7 @@ import 'package:myfinance2/pages/import_xls_page.dart';
 import 'package:myfinance2/pages/monthly_saving_settings_page.dart';
 import 'package:myfinance2/pages/monthly_threshold_page.dart';
 import 'package:myfinance2/pages/stats_page.dart';
-import 'package:myfinance2/pages/transaction_form_page.dart';
+import 'package:myfinance2/pages/transaction_form_wizard_page.dart';
 import 'package:myfinance2/pages/movements_page.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/app_config.dart';
@@ -257,35 +257,40 @@ class _HomePageState extends State<HomePage> {
   }
 
   _navigateToTransactionPage(TransactionType type) {
+    final transaction = Transaction(
+      type: type,
+      timestamp: DateTime.now(),
+    );
+    
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => TransactionFormPage(
-              transaction: Transaction(
-                type: type,
-                timestamp: DateTime.now(),
-              ),
-              isNew: true,
-            ),
+        builder: (context) => TransactionFormWizardPage(
+          transaction: transaction,
+          isNew: true,
+          initialDate: DateTime.now(),
+        ),
       ),
     ).then((_) {
-      _loadAllData(); 
+      _loadAllData();
     });
   }
 
   void _navigateToExpenseForCategory(int categoryId) {
+    final transaction = Transaction(
+      type: TransactionType.EXPENSE,
+      timestamp: DateTime.now(),
+      categoryId: categoryId,
+    );
+    
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TransactionFormPage(
-          transaction: Transaction(
-            type: TransactionType.EXPENSE,
-            timestamp: DateTime.now(),
-            categoryId: categoryId,
-          ),
-          dateTime: DateTime.now(),
+        builder: (context) => TransactionFormWizardPage(
+          transaction: transaction,
           isNew: true,
+          initialDate: DateTime.now(),
+          initialCategory: categoryId,
         ),
       ),
     ).then((_) {
@@ -324,6 +329,7 @@ class _HomePageState extends State<HomePage> {
           TransactionsListGroupedByDate(
             transactions: _transactions,
             currencySymbol: _currencySymbol ?? '',
+            showAccountColumn: _accountsAreMoreThanOne,
             onTransactionUpdated: () {
               _loadAllData();
             },
