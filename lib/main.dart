@@ -291,6 +291,7 @@ class _HomePageState extends State<HomePage> {
           isNew: true,
           initialDate: DateTime.now(),
           initialCategory: categoryId,
+          startOnAmountPage: true,
         ),
       ),
     ).then((_) {

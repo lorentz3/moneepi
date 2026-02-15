@@ -4,6 +4,7 @@ import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myfinance2/dto/transaction_export_dto.dart';
+import 'package:myfinance2/dto/group_dto.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
@@ -11,6 +12,7 @@ import 'package:myfinance2/model/configuration.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/configuration_entity_service.dart';
+import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/utils/date_utils.dart';
 import 'package:myfinance2/widgets/simple_text_button.dart';
@@ -30,6 +32,7 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
   bool _exportAll = false;
   final bool _exportCategories = true;
   final bool _exportAccounts = true;
+  final bool _exportGroups = true;
 
   @override
   Widget build(BuildContext context) {
@@ -225,6 +228,34 @@ class _ExportTransactionsPageState extends State<ExportTransactionsPage> {
           TextCellValue("${a.sort}"),
           TextCellValue("${a.initialBalance}"),
         ]);
+      }
+    }
+
+    if (_exportGroups) {
+  	  final groupsSheet = excel['Groups'];
+      groupsSheet.appendRow([TextCellValue('Icon'), TextCellValue('Name'), TextCellValue('Order'), TextCellValue('Month Threshold'), TextCellValue('Year Threshold')]);
+
+      List<GroupDto> groups = await GroupEntityService.getGroupsWithCategories(false);
+      for (var g in groups) {
+        groupsSheet.appendRow([
+          TextCellValue(g.icon ?? ''),
+          TextCellValue(g.name),
+          TextCellValue("${g.sort}"),
+          TextCellValue("${g.monthThreshold ?? ''}"),
+          TextCellValue("${g.yearThreshold ?? ''}"),
+        ]);
+      }
+
+      final groupsCategoriesSheet = excel['Groups_Categories'];
+      groupsCategoriesSheet.appendRow([TextCellValue('Group Name'), TextCellValue('Category Name')]);
+
+      for (var g in groups) {
+        for (var c in g.categories) {
+          groupsCategoriesSheet.appendRow([
+            TextCellValue(g.name),
+            TextCellValue(c.name),
+          ]);
+        }
       }
     }
 

@@ -70,7 +70,6 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
   final Color? _notSelectedButtonColor = Colors.grey[50];
   final bool _showTime = true;
   bool _multipleAccounts = false;
-  bool _multipleCategories = false;
 
   @override
   void initState() {
@@ -140,9 +139,7 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
     }
     
     if (_categories.isNotEmpty) {
-      if (_categories.length > 1) {
-        _multipleCategories = true;
-      } else {
+      if (_categories.length == 1) {
         _selectedCategory ??= _categories[0].id;
       }
     }
@@ -183,12 +180,17 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
         ? _selectedAccount != null && _selectedSourceAccount != null
         : _selectedAccount != null && _selectedCategory != null;
     
-    if (canProceed && _pageController.hasClients) {
-      _pageController.animateToPage(
-        1,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+    if (canProceed) {
+      // Use post-frame callback to ensure PageController is ready
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageController.hasClients) {
+          _pageController.animateToPage(
+            1,
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
     }
   }
 
@@ -433,23 +435,20 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
     if (_selectedType == TransactionType.TRANSFER) return const SizedBox();
     return Column(
       children: [
-        _multipleCategories 
-          ? SectionDivider(
-              text: 'Select category',
-            ) 
-          : const SizedBox(),
+        SectionDivider(
+          text: 'Select category',
+        ),
         const SizedBox(height: 6),
-        if (_multipleCategories)
-          _buildEmojiGrid(
-            items: _categories,
-            selectedId: _selectedCategory,
-            onPressed: (id) async {
-              setState(() => _selectedCategory = id);
-              await _loadSelectedObjects();
-              _checkAndNavigateToStep2();
-            },
-            onAddButtonPressed: _navigateToCreateCategory,
-          ),
+        _buildEmojiGrid(
+          items: _categories,
+          selectedId: _selectedCategory,
+          onPressed: (id) async {
+            setState(() => _selectedCategory = id);
+            await _loadSelectedObjects();
+            _checkAndNavigateToStep2();
+          },
+          onAddButtonPressed: _navigateToCreateCategory,
+        ),
       ],
     );
   }
@@ -487,12 +486,6 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
     _categories = await CategoryEntityService.getAllCategories(
       _selectedType == TransactionType.EXPENSE ? CategoryType.EXPENSE : CategoryType.INCOME
     );
-    
-    // Update multipleCategories flag
-    if (_categories.isNotEmpty && _categories.length > 1) {
-      _multipleCategories = true;
-    }
-    
     setState(() {});
   }
 

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:myfinance2/model/account.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/configuration.dart';
+import 'package:myfinance2/model/group.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/transaction_type.dart';
@@ -13,6 +14,7 @@ import 'package:myfinance2/services/app_config.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:excel/excel.dart';
 import 'package:myfinance2/services/configuration_entity_service.dart';
+import 'package:myfinance2/services/group_entity_service.dart';
 import 'package:myfinance2/services/monthly_account_entity_service.dart';
 import 'package:myfinance2/services/monthly_category_transaction_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
@@ -67,6 +69,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
   List<String> _newExpenseCategories = [];
   List<String> _newIncomeCategories = [];
   List<String> _newAccounts = [];
+  List<String> _newGroups = [];
 
   @override
   void initState() {
@@ -373,6 +376,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     _newExpenseCategories = [];
     _newIncomeCategories = [];
     _newAccounts = [];
+    _newGroups = [];
 
     var bytes = File(_filePath).readAsBytesSync();
     var excel = Excel.decodeBytes(bytes);
@@ -533,6 +537,107 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
       }
     }
 
+    // import groups
+    Map<String, int> groupNameToIdMap = {};
+    var groupsSheet = excel.tables['Groups'];
+    if (groupsSheet != null) {
+      int iconCol = 0;
+      int nameCol = 1;
+      int orderCol = 2;
+      int monthThresholdCol = 3;
+      int yearThresholdCol = 4;
+      List<List<dynamic>> rows = groupsSheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
+
+      for (var row in rows.skip(1)) {
+        String importedIcon = row[iconCol]?.toString() ?? "";
+        String importedName = row[nameCol]?.toString() ?? "";
+        String importedOrder = row[orderCol]?.toString() ?? "";
+        String importedMonthThreshold = row[monthThresholdCol]?.toString() ?? "";
+        String importedYearThreshold = row[yearThresholdCol]?.toString() ?? "";
+        if (importedName == "") {
+          continue;
+        }
+        
+        // Check if group already exists by name
+        List<Group> existingGroups = await GroupEntityService.getAllGroups();
+        Group? existingGroup = existingGroups.where((g) => g.name == importedName).firstOrNull;
+        
+        if (existingGroup == null) {
+          _newGroups.add(importedName);
+          if (realImport) {
+            Group newGroup = Group(
+              icon: importedIcon,
+              name: importedName, 
+              sort: int.tryParse(importedOrder) ?? 0,
+              monthThreshold: double.tryParse(importedMonthThreshold),
+              yearThreshold: double.tryParse(importedYearThreshold),
+            );
+            int insertedGroupId = await GroupEntityService.insertGroup(newGroup);
+            groupNameToIdMap[importedName] = insertedGroupId;
+          }
+        } else {
+          if (realImport) {
+            // update group values
+            if (importedIcon != "") {
+              existingGroup.icon = importedIcon;
+            }
+            if (importedMonthThreshold != "") {
+              existingGroup.monthThreshold = double.tryParse(importedMonthThreshold);
+            }
+            if (importedYearThreshold != "") {
+              existingGroup.yearThreshold = double.tryParse(importedYearThreshold);
+            }
+            await GroupEntityService.updateGroup(existingGroup);
+            groupNameToIdMap[importedName] = existingGroup.id!;
+          }
+        }
+      }
+    }
+
+    // import groups-categories relationships
+    if (realImport) {
+      var groupsCategoriesSheet = excel.tables['Groups_Categories'];
+      if (groupsCategoriesSheet != null) {
+        int groupNameCol = 0;
+        int categoryNameCol = 1;
+        List<List<dynamic>> rows = groupsCategoriesSheet.rows.map((row) => row.map((cell) => cell?.value).toList()).toList();
+
+        // Build a map to track which categories should be in each group
+        Map<int, List<int>> groupCategoryLinks = {};
+
+        for (var row in rows.skip(1)) {
+          String importedGroupName = row[groupNameCol]?.toString() ?? "";
+          String importedCategoryName = row[categoryNameCol]?.toString() ?? "";
+          
+          if (importedGroupName == "" || importedCategoryName == "") {
+            continue;
+          }
+
+          // Find group ID by name
+          int? groupId = groupNameToIdMap[importedGroupName];
+          if (groupId == null) {
+            debugPrint("Warning: Group '$importedGroupName' not found while importing group-category relationships");
+            continue;
+          }
+
+          // Find category ID by name
+          int? categoryId = _categoryMapping[importedCategoryName];
+          if (categoryId == null) {
+            debugPrint("Warning: Category '$importedCategoryName' not found while importing group-category relationships");
+            continue;
+          }
+
+          // Add to the map
+          groupCategoryLinks.putIfAbsent(groupId, () => []).add(categoryId);
+        }
+
+        // Update all group-category links
+        for (var entry in groupCategoryLinks.entries) {
+          await GroupEntityService.updateGroupCategoriesLinks(entry.key, entry.value);
+        }
+      }
+    }
+
     // import configurations
     if (realImport) {
       var configSheet = excel.tables['Configurations'];
@@ -575,6 +680,7 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
     String newExpenseCategoriesThatWillBeImported = _formatStringList(_newExpenseCategories);
     String newIncomeCategoriesThatWillBeImported = _formatStringList(_newIncomeCategories);
     String newAccountsThatWillBeImported = _formatStringList(_newAccounts);
+    String newGroupsThatWillBeImported = _formatStringList(_newGroups);
     return showDialog<void>(
       context: context,
       barrierDismissible: true, 
@@ -592,6 +698,9 @@ class ImportXlsMapPageState extends State<ImportXlsMapPage> {
                 SizedBox(height: 4),
                 if (_newAccounts.isNotEmpty) Text("New accounts that will be imported:"),
                 if (_newAccounts.isNotEmpty) Text(newAccountsThatWillBeImported, style: TextStyle(fontWeight: FontWeight.bold),),
+                SizedBox(height: 4),
+                if (_newGroups.isNotEmpty) Text("New groups that will be imported:"),
+                if (_newGroups.isNotEmpty) Text(newGroupsThatWillBeImported, style: TextStyle(fontWeight: FontWeight.bold),),
                 SizedBox(height: 4),
                 Text("Proceed with the import process?"),
               ],
