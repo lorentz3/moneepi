@@ -52,3 +52,31 @@ Color backgroundGrey() {
 Color backgroundLightBlue() {
   return Colors.blue[50]!;
 }
+
+Color lightPurpleBackground() {
+  return Colors.deepPurple[50]!;
+}
+
+Color purpleBackground() {
+  return Colors.deepPurple[200]!;
+}
+
+Color lightPurpleBorder() {
+  return Colors.deepPurple[100]!;
+}
+
+Color purpleBorder() {
+  return Colors.deepPurple[200]!;
+}
+
+Color purpleText() {
+  return Colors.deepPurple[700]!;
+}
+
+Color darkPurpleText() {
+  return Colors.deepPurple[900]!;
+}
+
+Color white() {
+  return Colors.white;
+}

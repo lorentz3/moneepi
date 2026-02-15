@@ -4,12 +4,15 @@ import 'package:myfinance2/model/category.dart';
 import 'package:myfinance2/model/category_type.dart';
 import 'package:myfinance2/model/transaction.dart';
 import 'package:myfinance2/model/transaction_type.dart';
+import 'package:myfinance2/pages/account_form_page.dart';
+import 'package:myfinance2/pages/category_form_page.dart';
 import 'package:myfinance2/services/account_entity_service.dart';
 import 'package:myfinance2/services/category_entity_service.dart';
 import 'package:myfinance2/services/transaction_entity_service.dart';
 import 'package:myfinance2/utils/color_identity.dart';
 import 'package:myfinance2/utils/date_utils.dart';
 import 'package:myfinance2/widgets/amount_input_field.dart';
+import 'package:myfinance2/widgets/circular_add_button.dart';
 import 'package:myfinance2/widgets/emoji_button.dart';
 import 'package:myfinance2/widgets/footer_button.dart';
 import 'package:myfinance2/widgets/section_divider.dart';
@@ -66,7 +69,6 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
   final Color? _selectedButtonColor = Colors.deepPurple[200];
   final Color? _notSelectedButtonColor = Colors.grey[50];
   final bool _showTime = true;
-  final bool _showTiles = true;
   bool _multipleAccounts = false;
   bool _multipleCategories = false;
 
@@ -387,17 +389,19 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
     if (_selectedType != TransactionType.TRANSFER) return const SizedBox();
     return Column(
       children: [
-        SectionDivider(text: 'Source account'),
-        if (_showTiles)
-          _buildEmojiGrid(
-            items: _accounts,
-            selectedId: _selectedSourceAccount,
-            onPressed: (id) async {
-              setState(() => _selectedSourceAccount = id);
-              await _loadSelectedObjects();
-              _checkAndNavigateToStep2();
-            },
-          ),
+        SectionDivider(
+          text: 'Source account',
+        ),
+        _buildEmojiGrid(
+          items: _accounts,
+          selectedId: _selectedSourceAccount,
+          onPressed: (id) async {
+            setState(() => _selectedSourceAccount = id);
+            await _loadSelectedObjects();
+            _checkAndNavigateToStep2();
+          },
+          onAddButtonPressed: _navigateToCreateAccount,
+        ),
       ],
     );
   }
@@ -406,9 +410,11 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
     return Column(
       children: [
         _multipleAccounts 
-          ? SectionDivider(text: _selectedType == TransactionType.TRANSFER ? 'Target account' : 'Account') 
+          ? SectionDivider(
+              text: _selectedType == TransactionType.TRANSFER ? 'Target account' : 'Select account',
+            ) 
           : const SizedBox(),
-        if (_multipleAccounts && _showTiles)
+        if (_multipleAccounts)
           _buildEmojiGrid(
             items: _accounts,
             selectedId: _selectedAccount,
@@ -417,6 +423,7 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
               await _loadSelectedObjects();
               _checkAndNavigateToStep2();
             },
+            onAddButtonPressed: _navigateToCreateAccount,
           ),
       ],
     );
@@ -427,10 +434,12 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
     return Column(
       children: [
         _multipleCategories 
-          ? SectionDivider(text: 'Category') 
+          ? SectionDivider(
+              text: 'Select category',
+            ) 
           : const SizedBox(),
         const SizedBox(height: 6),
-        if (_multipleCategories && _showTiles)
+        if (_multipleCategories)
           _buildEmojiGrid(
             items: _categories,
             selectedId: _selectedCategory,
@@ -439,9 +448,85 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
               await _loadSelectedObjects();
               _checkAndNavigateToStep2();
             },
+            onAddButtonPressed: _navigateToCreateCategory,
           ),
       ],
     );
+  }
+
+  Future<void> _navigateToCreateCategory() async {
+    final CategoryType categoryType = _selectedType == TransactionType.EXPENSE 
+        ? CategoryType.EXPENSE 
+        : CategoryType.INCOME;
+    
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CategoryFormPage(
+          category: Category(
+            id: 0,
+            name: '',
+            type: categoryType,
+            sort: _categories.length + 1
+          ),
+          isNew: true,
+        ),
+      ),
+    );
+    
+    // If the category was created, reload the categories
+    if (result == true) {
+      debugPrint("Category list updated, reloading.");
+      await _reloadCategories();
+    } else {
+      debugPrint("No changes in category list");
+    }
+  }
+
+  Future<void> _reloadCategories() async {
+    _categories = await CategoryEntityService.getAllCategories(
+      _selectedType == TransactionType.EXPENSE ? CategoryType.EXPENSE : CategoryType.INCOME
+    );
+    
+    // Update multipleCategories flag
+    if (_categories.isNotEmpty && _categories.length > 1) {
+      _multipleCategories = true;
+    }
+    
+    setState(() {});
+  }
+
+  Future<void> _navigateToCreateAccount() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AccountFormPage(
+          account: Account(
+            id: 0,
+            name: '',
+            initialBalance: 0.0,
+            sort: _accounts.length + 1,
+          ),
+          isNew: true,
+        ),
+      ),
+    );
+    
+    // If the account was created, reload the accounts
+    if (result == true) {
+      await _reloadAccounts();
+    }
+  }
+
+  Future<void> _reloadAccounts() async {
+    _accounts = await AccountEntityService.getAllAccounts();
+    
+    // Update multipleAccounts flag
+    if (_accounts.isNotEmpty && _accounts.length > 1) {
+      _multipleAccounts = true;
+    }
+    
+    setState(() {});
   }
 
   Widget _buildEditAmountHint() {
@@ -484,26 +569,39 @@ class TransactionFormWizardPageState extends State<TransactionFormWizardPage> {
     required List<dynamic> items,
     required int? selectedId,
     required Function(int) onPressed,
+    VoidCallback? onAddButtonPressed,
   }) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double buttonSize = (screenWidth - (6 * 6) - 16 - 10) / 5;
+
+    List<Widget> children = items.map<Widget>((item) {
+      final String icon = item.icon ?? item.name.substring(0, 2);
+      return EmojiButton(
+        icon: icon,
+        label: item.name,
+        width: buttonSize,
+        height: buttonSize,
+        onPressed: () => onPressed(item.id),
+        backgroundColor: selectedId == item.id ? _selectedButtonColor : _notSelectedButtonColor,
+      );
+    }).toList();
+
+    // Add circular add button if callback is provided
+    if (onAddButtonPressed != null) {
+      children.add(
+        CircularAddButton(
+          size: buttonSize,
+          onPressed: onAddButtonPressed,
+        ),
+      );
+    }
 
     return Align(
       alignment: Alignment.center,
       child: Wrap(
         spacing: 6,
         runSpacing: 6,
-        children: items.map<Widget>((item) {
-          final String icon = item.icon ?? item.name.substring(0, 2);
-          return EmojiButton(
-            icon: icon,
-            label: item.name,
-            width: buttonSize,
-            height: buttonSize,
-            onPressed: () => onPressed(item.id),
-            backgroundColor: selectedId == item.id ? _selectedButtonColor : _notSelectedButtonColor,
-          );
-        }).toList(),
+        children: children,
       ),
     );
   }

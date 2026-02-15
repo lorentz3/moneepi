@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
 class SectionDivider extends StatelessWidget {
-  final String text;  
-  const SectionDivider({super.key, required this.text});
+  final String text;
+  
+  const SectionDivider({
+    super.key,
+    required this.text,
+  });
 
   @override
   Widget build(BuildContext context) {
